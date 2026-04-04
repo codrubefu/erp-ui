@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 type InputProps = {
   label: string;
@@ -80,9 +80,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     Draft: 'bg-slate-100 text-slate-700',
     Programat: 'bg-violet-100 text-violet-700',
     Publicat: 'bg-emerald-100 text-emerald-700',
-    Platit: 'bg-emerald-100 text-emerald-700',
-    '�n a?teptare': 'bg-amber-100 text-amber-700',
-    'E?uat': 'bg-rose-100 text-rose-700',
+    Plătit: 'bg-emerald-100 text-emerald-700',
+    'În așteptare': 'bg-amber-100 text-amber-700',
+    'Eșuat': 'bg-rose-100 text-rose-700',
   };
 
   return <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', map[status] || 'bg-slate-100 text-slate-700')}>{status}</span>;
@@ -116,4 +116,7 @@ export function Textarea({ label, ...props }: TextareaProps) {
     </label>
   );
 }
+
+
+
 

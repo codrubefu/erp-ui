@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -56,9 +56,9 @@ const navGroups = [
     items: [
       { id: 'members', label: 'Membri', icon: Users },
       { id: 'subscriptions', label: 'Abonamente', icon: BadgeEuro },
-      { id: 'announcements', label: 'Anun?uri', icon: Bell },
-      { id: 'sms', label: 'SMS & Notificari', icon: MessageSquare },
-      { id: 'payments', label: 'Pla?i & Facturare', icon: CreditCard },
+      { id: 'announcements', label: 'Anunțuri', icon: Bell },
+      { id: 'sms', label: 'SMS & Notificări', icon: MessageSquare },
+      { id: 'payments', label: 'Plăți & Facturare', icon: CreditCard },
       { id: 'reports', label: 'Rapoarte', icon: FileBarChart2 },
     ],
   },
@@ -75,14 +75,14 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
         <div className="hidden bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-700 p-10 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">Master ERP</p>
-            <h1 className="mt-5 text-4xl font-bold leading-tight">Autentificare �n platforma de management pentru membri ?i opera?iuni.</h1>
-            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, anun?uri, pla?i ?i rapoarte. Datele introduse �n interfa?a sunt salvate local ?i ram�n valabile dupa refresh.</p>
+            <h1 className="mt-5 text-4xl font-bold leading-tight">Autentificare în platforma de management pentru membri și operațiuni.</h1>
+            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, anunțuri, plăți și rapoarte. Datele introduse în interfață sunt salvate local și rămân valabile după refresh.</p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {[
-              ['Organizare', 'Filiale ?i administratori'],
-              ['Abonamente', 'Creare ?i editare'],
-              ['Pla?i', 'Istoric ?i facturare'],
+              ['Organizare', 'Filiale și administratori'],
+              ['Abonamente', 'Creare și editare'],
+              ['Plăți', 'Istoric și facturare'],
             ].map(([title, desc]) => (
               <div key={title} className="rounded-3xl bg-white/10 p-4 backdrop-blur-sm">
                 <p className="text-lg font-semibold">{title}</p>
@@ -129,7 +129,7 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
                 />
               </div>
               <button type="submit" className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200">
-                Intra �n aplica?ie
+                Intră în aplicație
               </button>
             </form>
           </div>
@@ -153,10 +153,10 @@ export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
           <Search className="h-4 w-4 text-slate-400" />
-          <input className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Cauta membri, facturi, anun?uri..." />
+          <input className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Caută membri, facturi, anunțuri..." />
         </div>
         <div className="hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600 md:block">{currentUser || 'Administrator'}</div>
-        <button onClick={onQuickCreate} className="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-200">Ac?iune rapida</button>
+        <button onClick={onQuickCreate} className="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-200">Acțiune rapidă</button>
         <button onClick={onLogout} className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">
           <LogOut className="mr-2 inline h-4 w-4" />Logout
         </button>
@@ -230,7 +230,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
           <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
             <div>
               <p className="text-sm font-semibold text-slate-900">Administrator</p>
-              <p className="text-xs text-slate-500">Acces complet module ?i rapoarte</p>
+              <p className="text-xs text-slate-500">Acces complet module și rapoarte</p>
             </div>
             <UserCheck className="h-5 w-5 text-violet-600" />
           </div>
@@ -239,3 +239,6 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
     </aside>
   );
 }
+
+
+

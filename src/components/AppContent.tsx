@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import {
   Users,
   BadgeEuro,
@@ -170,9 +170,9 @@ const initialMembers: Member[] = [
     subscription: 'Premium 12 luni',
     status: 'Activ',
     lastContact: '2026-04-01',
-    address: 'IaÈ™i, Str. PrimÄƒverii 24',
-    notes: 'PreferÄƒ notificare prin SMS Ã®nainte de expirare.',
-    branch: 'IaÈ™i Centru',
+    address: 'Iași, Str. Primăverii 24',
+    notes: 'Preferă notificare prin SMS înainte de expirare.',
+    branch: 'Iași Centru',
   },
   {
     id: 'MBR-002',
@@ -885,4 +885,5 @@ export function Content({ current, page, membersData, subscriptionsData, announc
 
 
 export default Content;
+
 
