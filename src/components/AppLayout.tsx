@@ -16,7 +16,7 @@ import {
   Building2,
   UserCheck,
 } from 'lucide-react';
-import type { Credentials, SectionId } from '../App';
+import type { Credentials, SectionId } from '../types/erp';
 
 type LoginViewProps = {
   credentials: Credentials;
@@ -239,6 +239,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
     </aside>
   );
 }
+
 
 
 

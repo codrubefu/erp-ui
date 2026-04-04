@@ -43,7 +43,7 @@ import type {
   Payment,
   SectionId,
   Subscription,
-} from '../App';
+} from '../types/erp';
 import { LoginView, Header, Sidebar } from './AppLayout';
 export { LoginView, Header, Sidebar };
 import { cn, parsePrice, StatCard, SectionCard, StatusBadge, Input, Select, Textarea } from './AppPrimitives';
@@ -885,5 +885,6 @@ export function Content({ current, page, membersData, subscriptionsData, announc
 
 
 export default Content;
+
 
 
