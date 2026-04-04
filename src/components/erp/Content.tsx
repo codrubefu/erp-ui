@@ -1,26 +1,25 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import type { Announcement, FormType, Member, Payment, Subscription } from '../../types/erp';
 import { AdminsView } from './admins/AdminsView';
 import { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 import { AnnouncementsView } from './announcements/AnnouncementsView';
 import { BranchesView } from './branches/BranchesView';
 import { DashboardView } from './dashboard/DashboardView';
-import { MemberFormPage } from './members/MemberFormPage';
+import MemberFormPage from './members/MemberFormPage';
 import { MembersView } from './members/MembersView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
 import { ReportsView } from './reports/ReportsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
-import { initialBranches } from './shared/constants';
 import type { ContentProps } from './shared/types';
 import { SmsView } from './sms/SmsView';
 import { SubscriptionFormPage } from './subscriptions/SubscriptionFormPage';
 import { SubscriptionsView } from './subscriptions/SubscriptionsView';
 
-export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, navigateToForm, memberForm, setMemberForm, subscriptionForm, setSubscriptionForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveMember, saveSubscription, saveAnnouncement, savePayment }: ContentProps) {
+export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, branchesData, activityData, navigateToForm, memberForm, setMemberForm, subscriptionForm, setSubscriptionForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveMember, saveSubscription, saveAnnouncement, savePayment }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
-      return <MemberFormPage mode={page.mode ?? 'create'} data={memberForm} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />;
+      return <MemberFormPage mode={page.mode ?? 'create'} data={memberForm} branchOptions={branchesData} subscriptionOptions={subscriptionsData} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />;
     }
     if (page.section === 'subscriptionForm') {
       return <SubscriptionFormPage mode={page.mode ?? 'create'} data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />;
@@ -36,7 +35,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
       case 'members':
         return <MembersView items={membersData} onCreate={() => navigateToForm('member', 'create')} onEdit={(item: Member) => navigateToForm('member', 'edit', item)} />;
       case 'branches':
-        return <BranchesView branches={initialBranches} membersData={membersData} />;
+        return <BranchesView branches={branchesData} membersData={membersData} />;
       case 'admins':
         return <AdminsView />;
       case 'subscriptions':
@@ -53,11 +52,12 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return (
           <div className="space-y-6">
             <QuickCreateMenu onNavigate={(type: FormType) => navigateToForm(type, 'create')} />
-            <DashboardView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} />
+            <DashboardView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} activityData={activityData} />
           </div>
         );
     }
-  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, navigateToForm, memberForm, subscriptionForm, announcementForm, paymentForm, setMemberForm, setSubscriptionForm, setAnnouncementForm, setPaymentForm, goBackToList, saveMember, saveSubscription, saveAnnouncement, savePayment]);
+  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, branchesData, activityData, navigateToForm, memberForm, subscriptionForm, announcementForm, paymentForm, setMemberForm, setSubscriptionForm, setAnnouncementForm, setPaymentForm, goBackToList, saveMember, saveSubscription, saveAnnouncement, savePayment]);
 
   return <main className="space-y-6 p-4 md:p-8">{view}</main>;
 }
+

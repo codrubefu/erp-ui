@@ -11,7 +11,6 @@ export function PageShell({ title, subtitle, backLabel, onBack, children }: Page
               <ArrowLeft className="h-4 w-4" />
               {backLabel}
             </button>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Form Page</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-900">{title}</h2>
             <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
           </div>

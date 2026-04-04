@@ -1,0 +1,20 @@
+﻿[
+  {
+    "id": "SUB-001",
+    "name": "Premium 12 luni",
+    "duration": "12 luni",
+    "price": "2400 RON",
+    "status": "Activ",
+    "renewals": 34,
+    "description": "Acces complet și beneficii premium."
+  },
+  {
+    "id": "SUB-002",
+    "name": "Standard 3 luni",
+    "duration": "3 luni",
+    "price": "650 RON",
+    "status": "Activ",
+    "renewals": 51,
+    "description": "Abonament standard cu acces programat."
+  }
+]

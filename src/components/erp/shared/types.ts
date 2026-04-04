@@ -1,4 +1,4 @@
-import type React from 'react';
+﻿import type React from 'react';
 import type {
   Announcement,
   AppPage,
@@ -9,11 +9,13 @@ import type {
   SectionId,
   Subscription,
 } from '../../../types/erp';
+import type { ActivityPoint } from '../../../services/ErpJsonDataService';
 
 export type DashboardViewProps = {
   membersData: Member[];
   subscriptionsData: Subscription[];
   paymentsData: Payment[];
+  activityData: ActivityPoint[];
 };
 
 export type MembersViewProps = {
@@ -63,6 +65,8 @@ export type PageShellProps = {
 export type MemberFormPageProps = {
   mode: Exclude<FormMode, null>;
   data: Member;
+  branchOptions: string[];
+  subscriptionOptions: Subscription[];
   onChange: (field: keyof Member, value: string) => void;
   onBack: () => void;
   onSave: () => void;
@@ -103,6 +107,8 @@ export type ContentProps = {
   subscriptionsData: Subscription[];
   announcementsData: Announcement[];
   paymentsData: Payment[];
+  branchesData: string[];
+  activityData: ActivityPoint[];
   navigateToForm: (type: FormType, mode?: Exclude<FormMode, null>, item?: Member | Subscription | Announcement | Payment | null) => void;
   memberForm: Member;
   setMemberForm: React.Dispatch<React.SetStateAction<Member>>;

@@ -1,0 +1,62 @@
+﻿[
+  {
+    "id": "MBR-001",
+    "name": "Andrei Popescu",
+    "email": "andrei.popescu@example.com",
+    "phone": "+40 723 123 456",
+    "subscription": "Premium 12 luni",
+    "status": "Activ",
+    "lastContact": "2026-04-01",
+    "address": "Iași, Str. Primăverii 24",
+    "notes": "Preferă notificare prin SMS înainte de expirare.",
+    "branch": "Iași Centru"
+  },
+  {
+    "id": "MBR-002",
+    "name": "Ioana Mihai",
+    "email": "ioana.mihai@example.com",
+    "phone": "+40 744 222 111",
+    "subscription": "Standard 3 luni",
+    "status": "Suspendat",
+    "lastContact": "2026-03-29",
+    "address": "Iași, Bd. Independenței 11",
+    "notes": "Suspendare temporară la cerere.",
+    "branch": "Iași Copou"
+  },
+  {
+    "id": "MBR-003",
+    "name": "Radu Neagu",
+    "email": "radu.neagu@example.com",
+    "phone": "+40 752 889 110",
+    "subscription": "Premium 12 luni",
+    "status": "Expirat",
+    "lastContact": "2026-03-27",
+    "address": "Iași, Str. Sărărie 70",
+    "notes": "Necesită follow-up pentru reactivare.",
+    "branch": "Iași Nicolina"
+  },
+  {
+    "id": "MBR-004",
+    "name": "Elena Tudor",
+    "email": "elena.tudor@example.com",
+    "phone": "+40 733 909 818",
+    "subscription": "Standard 3 luni",
+    "status": "Activ",
+    "lastContact": "2026-04-02",
+    "address": "Iași, Str. Anastasie Panu 8",
+    "notes": "Contact principal pentru părinte / tutore.",
+    "branch": "Iași Centru"
+  },
+  {
+    "id": "MBR-005",
+    "name": "Mihai Dobre",
+    "email": "mihai.dobre@example.com",
+    "phone": "+40 745 500 123",
+    "subscription": "Premium 12 luni",
+    "status": "Rezervat",
+    "lastContact": "2026-03-31",
+    "address": "Iași, Str. Toma Cozma 14",
+    "notes": "Așteaptă confirmarea slotului de antrenament.",
+    "branch": "Iași Copou"
+  }
+]

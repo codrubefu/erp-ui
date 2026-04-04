@@ -1,7 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Content from '../components/erp/Content';
 import { Header, LoginView, Sidebar } from '../components/AppLayout';
+import { erpJsonDataService, type ActivityPoint } from '../services/ErpJsonDataService';
 import type {
   Announcement,
   AppPage,
@@ -13,8 +14,8 @@ import type {
   SectionId,
   Subscription,
 } from '../types/erp';
-const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
 
+const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -24,123 +25,7 @@ const STORAGE_KEYS = {
   announcements: 'master-erp-announcements',
   payments: 'master-erp-payments',
 };
-const initialMembers: Member[] = [
-  {
-    id: 'MBR-001',
-    name: 'Andrei Popescu',
-    email: 'andrei.popescu@example.com',
-    phone: '+40 723 123 456',
-    subscription: 'Premium 12 luni',
-    status: 'Activ',
-    lastContact: '2026-04-01',
-    address: 'Iași, Str. Primăverii 24',
-    notes: 'Preferă notificare prin SMS înainte de expirare.',
-    branch: 'Iași Centru',
-  },
-  {
-    id: 'MBR-002',
-    name: 'Ioana Mihai',
-    email: 'ioana.mihai@example.com',
-    phone: '+40 744 222 111',
-    subscription: 'Standard 3 luni',
-    status: 'Suspendat',
-    lastContact: '2026-03-29',
-    address: 'Iași, Bd. Independenței 11',
-    notes: 'Suspendare temporară la cerere.',
-    branch: 'Iași Copou',
-  },
-  {
-    id: 'MBR-003',
-    name: 'Radu Neagu',
-    email: 'radu.neagu@example.com',
-    phone: '+40 752 889 110',
-    subscription: 'Premium 12 luni',
-    status: 'Expirat',
-    lastContact: '2026-03-27',
-    address: 'Iași, Str. Sărărie 70',
-    notes: 'Necesită follow-up pentru reactivare.',
-    branch: 'Iași Nicolina',
-  },
-  {
-    id: 'MBR-004',
-    name: 'Elena Tudor',
-    email: 'elena.tudor@example.com',
-    phone: '+40 733 909 818',
-    subscription: 'Standard 3 luni',
-    status: 'Activ',
-    lastContact: '2026-04-02',
-    address: 'Iași, Str. Anastasie Panu 8',
-    notes: 'Contact principal pentru părinte / tutore.',
-    branch: 'Iași Centru',
-  },
-  {
-    id: 'MBR-005',
-    name: 'Mihai Dobre',
-    email: 'mihai.dobre@example.com',
-    phone: '+40 745 500 123',
-    subscription: 'Premium 12 luni',
-    status: 'Rezervat',
-    lastContact: '2026-03-31',
-    address: 'Iași, Str. Toma Cozma 14',
-    notes: 'Așteaptă confirmarea slotului de antrenament.',
-    branch: 'Iași Copou',
-  },
-];
 
-const initialSubscriptions: Subscription[] = [
-  {
-    id: 'SUB-001',
-    name: 'Premium 12 luni',
-    duration: '12 luni',
-    price: '2400 RON',
-    status: 'Activ',
-    renewals: 34,
-    description: 'Acces complet și beneficii premium.',
-  },
-  {
-    id: 'SUB-002',
-    name: 'Standard 3 luni',
-    duration: '3 luni',
-    price: '650 RON',
-    status: 'Activ',
-    renewals: 51,
-    description: 'Abonament standard cu acces programat.',
-  },
-];
-
-const initialAnnouncements: Announcement[] = [
-  {
-    id: 'ANN-001',
-    title: 'Program special de Paște',
-    audience: 'Toți membrii activi',
-    scheduled: '2026-04-12 10:00',
-    status: 'Programat',
-    content: 'Programul de sărbători va avea intervale speciale și clase reorganizate.',
-  },
-  {
-    id: 'ANN-002',
-    title: 'Mentenanță sistem plăți',
-    audience: 'Administrator / Operator',
-    scheduled: '2026-04-05 22:00',
-    status: 'Draft',
-    content: 'Sistemul de plăți va intra în mentenanță pentru actualizări API.',
-  },
-  {
-    id: 'ANN-003',
-    title: 'Open Day & înscrieri noi',
-    audience: 'Lead-uri și membri expirați',
-    scheduled: '2026-04-08 09:00',
-    status: 'Publicat',
-    content: 'Invitație la evenimentul de prezentare și înscrieri noi.',
-  },
-];
-
-const initialPayments: Payment[] = [
-  { id: 'PAY-001', invoice: 'INV-2026-101', member: 'Andrei Popescu', amount: '650 RON', method: 'Card', status: 'Plătit', transactionDate: '2026-04-01' },
-  { id: 'PAY-002', invoice: 'INV-2026-102', member: 'Elena Tudor', amount: '300 RON', method: 'Numerar', status: 'Plătit', transactionDate: '2026-04-02' },
-  { id: 'PAY-003', invoice: 'INV-2026-103', member: 'Mihai Dobre', amount: '1200 RON', method: 'Transfer', status: 'În așteptare', transactionDate: '2026-04-02' },
-  { id: 'PAY-004', invoice: 'INV-2026-104', member: 'Radu Neagu', amount: '650 RON', method: 'Card', status: 'Eșuat', transactionDate: '2026-03-29' },
-];
 const emptyForms: {
   member: Member;
   subscription: Subscription;
@@ -206,14 +91,15 @@ function formatDate(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
-
 export default function ERPAdminPanel() {
   const navigate = useNavigate();
-  const { section: routeSection } = useParams<{ section?: string }>();
+  const { pathname } = useLocation();
+  const routeSection = pathname.split('/')[2];
 
   const resolvedRouteSection: SectionId = routeSection && SECTION_IDS.includes(routeSection as SectionId)
     ? (routeSection as SectionId)
     : 'dashboard';
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => loadStoredValue(STORAGE_KEYS.auth, false));
   const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
   const [currentUser, setCurrentUser] = useState(() => loadStoredValue(STORAGE_KEYS.user, 'Administrator'));
@@ -222,10 +108,12 @@ export default function ERPAdminPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [page, setPage] = useState<AppPage>({ section: 'list', mode: null });
 
-  const [membersData, setMembersData] = useState<Member[]>(() => loadStoredValue(STORAGE_KEYS.members, initialMembers));
-  const [subscriptionsData, setSubscriptionsData] = useState<Subscription[]>(() => loadStoredValue(STORAGE_KEYS.subscriptions, initialSubscriptions));
-  const [announcementsData, setAnnouncementsData] = useState<Announcement[]>(() => loadStoredValue(STORAGE_KEYS.announcements, initialAnnouncements));
-  const [paymentsData, setPaymentsData] = useState<Payment[]>(() => loadStoredValue(STORAGE_KEYS.payments, initialPayments));
+  const [membersData, setMembersData] = useState<Member[]>(() => loadStoredValue(STORAGE_KEYS.members, []));
+  const [subscriptionsData, setSubscriptionsData] = useState<Subscription[]>(() => loadStoredValue(STORAGE_KEYS.subscriptions, []));
+  const [announcementsData, setAnnouncementsData] = useState<Announcement[]>(() => loadStoredValue(STORAGE_KEYS.announcements, []));
+  const [paymentsData, setPaymentsData] = useState<Payment[]>(() => loadStoredValue(STORAGE_KEYS.payments, []));
+  const [branchesData, setBranchesData] = useState<string[]>([]);
+  const [activityData, setActivityData] = useState<ActivityPoint[]>([]);
 
   const [memberForm, setMemberForm] = useState(emptyForms.member);
   const [subscriptionForm, setSubscriptionForm] = useState(emptyForms.subscription);
@@ -238,6 +126,7 @@ export default function ERPAdminPanel() {
   useEffect(() => saveStoredValue(STORAGE_KEYS.subscriptions, subscriptionsData), [subscriptionsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.announcements, announcementsData), [announcementsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.payments, paymentsData), [paymentsData]);
+
   useEffect(() => {
     if (!routeSection) return;
     if (SECTION_IDS.includes(routeSection as SectionId)) {
@@ -246,6 +135,32 @@ export default function ERPAdminPanel() {
     }
     navigate('/erp/dashboard', { replace: true });
   }, [routeSection, navigate]);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const loadSeedData = async () => {
+      try {
+        const seed = await erpJsonDataService.loadSeedData();
+        if (disposed) return;
+
+        setBranchesData(seed.branches);
+        setActivityData(seed.activity);
+
+        setMembersData((prev) => (prev.length > 0 ? prev : seed.members));
+        setSubscriptionsData((prev) => (prev.length > 0 ? prev : seed.subscriptions));
+        setAnnouncementsData((prev) => (prev.length > 0 ? prev : seed.announcements));
+        setPaymentsData((prev) => (prev.length > 0 ? prev : seed.payments));
+      } catch (error) {
+        console.error('Failed loading ERP seed data from /public/json', error);
+      }
+    };
+
+    void loadSeedData();
+    return () => {
+      disposed = true;
+    };
+  }, []);
 
   const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Subscription | Announcement | Payment | null = null) => {
     if (type === 'member') {
@@ -289,7 +204,8 @@ export default function ERPAdminPanel() {
   };
 
   const saveMember = () => {
-    const payload = { ...memberForm, branch: memberForm.branch || 'Iași Centru', lastContact: formatDate() };
+    const defaultBranch = branchesData[0] ?? 'Iași Centru';
+    const payload = { ...memberForm, branch: memberForm.branch || defaultBranch, lastContact: formatDate() };
     setMembersData((prev) => upsertById(prev, payload));
     goBackToList('members');
   };
@@ -352,6 +268,8 @@ export default function ERPAdminPanel() {
             subscriptionsData={subscriptionsData}
             announcementsData={announcementsData}
             paymentsData={paymentsData}
+            branchesData={branchesData}
+            activityData={activityData}
             navigateToForm={navigateToForm}
             memberForm={memberForm}
             setMemberForm={setMemberForm}
@@ -372,14 +290,5 @@ export default function ERPAdminPanel() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
 
 

@@ -1,11 +1,10 @@
-import { BadgeEuro, Building2, CalendarClock, UserCheck } from 'lucide-react';
+﻿import { BadgeEuro, Building2, CalendarClock, UserCheck } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { SectionCard, StatCard } from '../../primitives';
 import { parsePrice } from '../../../utils/erp/parsePrice';
-import { activityData } from '../shared/constants';
 import type { DashboardViewProps } from '../shared/types';
 
-export function DashboardView({ membersData, subscriptionsData, paymentsData }: DashboardViewProps) {
+export function DashboardView({ membersData, subscriptionsData, paymentsData, activityData }: DashboardViewProps) {
   const branchesCount = new Set(membersData.map((item) => item.branch).filter(Boolean)).size;
   const activeMembers = membersData.filter((item) => item.status === 'Activ').length;
   const expiringSoon = membersData.filter((item) => item.status === 'Expirat' || item.status === 'Suspendat').length;

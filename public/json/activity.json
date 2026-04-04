@@ -1,0 +1,9 @@
+﻿[
+  { "day": "Lun", "active": 112, "messages": 18 },
+  { "day": "Mar", "active": 120, "messages": 25 },
+  { "day": "Mie", "active": 117, "messages": 22 },
+  { "day": "Joi", "active": 134, "messages": 29 },
+  { "day": "Vin", "active": 142, "messages": 35 },
+  { "day": "Sâm", "active": 156, "messages": 31 },
+  { "day": "Dum", "active": 98, "messages": 12 }
+]

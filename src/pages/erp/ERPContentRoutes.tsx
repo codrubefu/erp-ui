@@ -25,12 +25,15 @@ import type {
   SectionId,
   Subscription,
 } from '../../types/erp';
+import type { ActivityPoint } from '../../services/ErpJsonDataService';
 
 type ERPContentRoutesProps = {
   membersData: Member[];
   subscriptionsData: Subscription[];
   announcementsData: Announcement[];
   paymentsData: Payment[];
+  branchesData: string[];
+  activityData: ActivityPoint[];
   navigateToForm: (type: FormType, mode?: Exclude<FormMode, null>, item?: Member | Subscription | Announcement | Payment | null) => void;
   memberForm: Member;
   setMemberForm: React.Dispatch<React.SetStateAction<Member>>;
@@ -52,6 +55,8 @@ export default function ERPContentRoutes({
   subscriptionsData,
   announcementsData,
   paymentsData,
+  branchesData,
+  activityData,
   navigateToForm,
   memberForm,
   setMemberForm,
@@ -74,17 +79,17 @@ export default function ERPContentRoutes({
         element={
           <div className="space-y-6">
             <QuickCreateMenu onNavigate={(type) => navigateToForm(type, 'create')} />
-            <DashboardView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} />
+            <DashboardView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} activityData={activityData} />
           </div>
         }
       />
 
-      <Route path="branches" element={<BranchesView branches={['Iași Centru', 'Iași Copou', 'Iași Nicolina']} membersData={membersData} />} />
+      <Route path="branches" element={<BranchesView branches={branchesData} membersData={membersData} />} />
       <Route path="admins" element={<AdminsView />} />
 
       <Route path="members" element={<MembersView items={membersData} onCreate={() => navigateToForm('member', 'create')} onEdit={(item) => navigateToForm('member', 'edit', item)} />} />
-      <Route path="members/new" element={<MemberFormPage mode="create" data={memberForm} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />} />
-      <Route path="members/edit" element={<MemberFormPage mode="edit" data={memberForm} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />} />
+      <Route path="members/new" element={<MemberFormPage mode="create" data={memberForm} branchOptions={branchesData} subscriptionOptions={subscriptionsData} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />} />
+      <Route path="members/edit" element={<MemberFormPage mode="edit" data={memberForm} branchOptions={branchesData} subscriptionOptions={subscriptionsData} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />} />
 
       <Route path="subscriptions" element={<SubscriptionsView items={subscriptionsData} onCreate={() => navigateToForm('subscription', 'create')} onEdit={(item) => navigateToForm('subscription', 'edit', item)} />} />
       <Route path="subscriptions/new" element={<SubscriptionFormPage mode="create" data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />} />

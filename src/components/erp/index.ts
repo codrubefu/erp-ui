@@ -1,4 +1,4 @@
-export { AdminsView } from './admins/AdminsView';
+﻿export { AdminsView } from './admins/AdminsView';
 export { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 export { AnnouncementsView } from './announcements/AnnouncementsView';
 export { BranchesView } from './branches/BranchesView';
@@ -13,5 +13,4 @@ export { PageShell } from './shared/PageShell';
 export { SmsView } from './sms/SmsView';
 export { SubscriptionFormPage } from './subscriptions/SubscriptionFormPage';
 export { SubscriptionsView } from './subscriptions/SubscriptionsView';
-export { initialBranches, initialSubscriptions, activityData } from './shared/constants';
 export type * from './shared/types';

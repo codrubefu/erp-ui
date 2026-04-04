@@ -1,4 +1,6 @@
-﻿export { default } from './pages/ERPPage';
+﻿import ERPPage from './pages/ERPPage';
+
+export default ERPPage;
 
 export type {
   Announcement,
