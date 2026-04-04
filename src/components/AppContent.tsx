@@ -44,8 +44,6 @@ import type {
   SectionId,
   Subscription,
 } from '../types/erp';
-import { LoginView, Header, Sidebar } from './AppLayout';
-export { LoginView, Header, Sidebar };
 import { cn, parsePrice, StatCard, SectionCard, StatusBadge, Input, Select, Textarea } from './AppPrimitives';
 
 
@@ -256,7 +254,7 @@ const activityData = [
   { day: 'Dum', active: 98, messages: 12 },
 ];
 
-function DashboardView({ membersData, subscriptionsData, paymentsData }: DashboardViewProps) {
+export function DashboardView({ membersData, subscriptionsData, paymentsData }: DashboardViewProps) {
   const branchesCount = new Set(membersData.map((item) => item.branch).filter(Boolean)).size;
   const activeMembers = membersData.filter((item) => item.status === 'Activ').length;
   const expiringSoon = membersData.filter((item) => item.status === 'Expirat' || item.status === 'Suspendat').length;
@@ -363,7 +361,7 @@ function DashboardView({ membersData, subscriptionsData, paymentsData }: Dashboa
   );
 }
 
-function MembersView({ items, onCreate, onEdit }: MembersViewProps) {
+export function MembersView({ items, onCreate, onEdit }: MembersViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Toate');
   const [subscriptionFilter, setSubscriptionFilter] = useState('Toate');
@@ -508,7 +506,7 @@ function MembersView({ items, onCreate, onEdit }: MembersViewProps) {
   );
 }
 
-function BranchesView({ branches, membersData }: BranchesViewProps) {
+export function BranchesView({ branches, membersData }: BranchesViewProps) {
   return (
     <SectionCard title="Filiale" action={<span className="rounded-2xl bg-violet-100 px-4 py-2 text-sm font-semibold text-violet-700">{branches.length} filiale</span>}>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -538,7 +536,7 @@ function BranchesView({ branches, membersData }: BranchesViewProps) {
   );
 }
 
-function AdminsView() {
+export function AdminsView() {
   return (
     <SectionCard title="Administratori" action={<button className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">Adaugă administrator</button>}>
       <div className="space-y-3">
@@ -556,7 +554,7 @@ function AdminsView() {
   );
 }
 
-function SubscriptionsView({ items, onCreate, onEdit }: SubscriptionsViewProps) {
+export function SubscriptionsView({ items, onCreate, onEdit }: SubscriptionsViewProps) {
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <div className="xl:col-span-2">
@@ -591,7 +589,7 @@ function SubscriptionsView({ items, onCreate, onEdit }: SubscriptionsViewProps) 
   );
 }
 
-function AnnouncementsView({ items, onCreate, onEdit }: AnnouncementsViewProps) {
+export function AnnouncementsView({ items, onCreate, onEdit }: AnnouncementsViewProps) {
   return (
     <SectionCard title="Anunțuri" action={<button onClick={onCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">Anunț nou</button>}>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -616,7 +614,7 @@ function AnnouncementsView({ items, onCreate, onEdit }: AnnouncementsViewProps) 
   );
 }
 
-function SmsView() {
+export function SmsView() {
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <div className="xl:col-span-2">
@@ -644,7 +642,7 @@ function SmsView() {
   );
 }
 
-function PaymentsView({ items, onCreate, onEdit }: PaymentsViewProps) {
+export function PaymentsView({ items, onCreate, onEdit }: PaymentsViewProps) {
   return (
     <SectionCard title="Plăți și facturare" action={<div className="flex gap-2"><button className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><Download className="mr-2 inline h-4 w-4" />Export</button><button onClick={onCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">Adaugă plată</button></div>}>
       <div className="overflow-x-auto">
@@ -677,7 +675,7 @@ function PaymentsView({ items, onCreate, onEdit }: PaymentsViewProps) {
   );
 }
 
-function ReportsView({ membersData, subscriptionsData, paymentsData, announcementsData }: ReportsViewProps) {
+export function ReportsView({ membersData, subscriptionsData, paymentsData, announcementsData }: ReportsViewProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
       {[
@@ -716,7 +714,7 @@ function PageShell({ title, subtitle, backLabel, onBack, children }: PageShellPr
   );
 }
 
-function MemberFormPage({ mode, data, onChange, onBack, onSave }: MemberFormPageProps) {
+export function MemberFormPage({ mode, data, onChange, onBack, onSave }: MemberFormPageProps) {
   return (
     <PageShell title={mode === 'edit' ? 'Editare membru' : 'Adăugare membru'} subtitle="Profil complet membru / client, date contact, abonament și observații interne." backLabel="Înapoi la membri" onBack={onBack}>
       <SectionCard title="Date membru" action={<StatusBadge status={data.status} />}>
@@ -746,7 +744,7 @@ function MemberFormPage({ mode, data, onChange, onBack, onSave }: MemberFormPage
   );
 }
 
-function SubscriptionFormPage({ mode, data, onChange, onBack, onSave }: SubscriptionFormPageProps) {
+export function SubscriptionFormPage({ mode, data, onChange, onBack, onSave }: SubscriptionFormPageProps) {
   return (
     <PageShell title={mode === 'edit' ? 'Editare abonament' : 'Adăugare abonament'} subtitle="Configurare durată, preț, status și descriere pentru serviciu sau plan." backLabel="Înapoi la abonamente" onBack={onBack}>
       <SectionCard title="Detalii abonament" action={<StatusBadge status={data.status} />}>
@@ -768,7 +766,7 @@ function SubscriptionFormPage({ mode, data, onChange, onBack, onSave }: Subscrip
   );
 }
 
-function AnnouncementFormPage({ mode, data, onChange, onBack, onSave }: AnnouncementFormPageProps) {
+export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave }: AnnouncementFormPageProps) {
   return (
     <PageShell title={mode === 'edit' ? 'Editare anunț' : 'Adăugare anunț'} subtitle="Segmentare, programare publicare și conținut pentru comunicarea către membri." backLabel="Înapoi la anunțuri" onBack={onBack}>
       <SectionCard title="Detalii anunț" action={<StatusBadge status={data.status} />}>
@@ -790,7 +788,7 @@ function AnnouncementFormPage({ mode, data, onChange, onBack, onSave }: Announce
   );
 }
 
-function PaymentFormPage({ mode, data, onChange, onBack, onSave }: PaymentFormPageProps) {
+export function PaymentFormPage({ mode, data, onChange, onBack, onSave }: PaymentFormPageProps) {
   return (
     <PageShell title={mode === 'edit' ? 'Editare plată / factură' : 'Adăugare plată / factură'} subtitle="Gestionare tranzacții, statusuri și asociere cu membrul și factura." backLabel="Înapoi la plăți" onBack={onBack}>
       <SectionCard title="Detalii tranzacție" action={<StatusBadge status={data.status} />}>
@@ -812,7 +810,7 @@ function PaymentFormPage({ mode, data, onChange, onBack, onSave }: PaymentFormPa
   );
 }
 
-function QuickCreateMenu({ onNavigate }: QuickCreateMenuProps) {
+export function QuickCreateMenu({ onNavigate }: QuickCreateMenuProps) {
   const actions: Array<{ key: FormType; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { key: 'member', label: 'Membru nou', icon: Users },
     { key: 'subscription', label: 'Abonament nou', icon: BadgeEuro },
@@ -885,6 +883,8 @@ export function Content({ current, page, membersData, subscriptionsData, announc
 
 
 export default Content;
+
+
 
 
 
