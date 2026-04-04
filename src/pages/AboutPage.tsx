@@ -8,7 +8,7 @@ export default function AboutPage() {
         <p className="mt-3 text-slate-600">Aceasta pagina este creata prin React Router.</p>
 
         <div className="mt-8 flex gap-3">
-          <Link to="/" className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">Înapoi acasa</Link>
+          <Link to="/" className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">Inapoi acasa</Link>
           <Link to="/erp" className="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white">ERP</Link>
         </div>
       </div>

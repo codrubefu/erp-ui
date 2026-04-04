@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 type SectionId = 'dashboard' | 'branches' | 'admins' | 'members' | 'subscriptions' | 'announcements' | 'sms' | 'payments' | 'reports';
 
@@ -20,7 +21,20 @@ type SidebarProps = {
   open: boolean;
 };
 
-const navGroups = [
+type NavItem = {
+  id: SectionId;
+  label: string;
+  icon: LucideIcon;
+};
+
+type NavGroup = {
+  id: string;
+  label?: string;
+  icon?: LucideIcon;
+  items: readonly NavItem[];
+};
+
+const navGroups: readonly NavGroup[] = [
   {
     id: 'general',
     items: [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }],
@@ -45,7 +59,7 @@ const navGroups = [
       { id: 'reports', label: 'Rapoarte', icon: FileBarChart2 },
     ],
   },
-] as const;
+];
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');

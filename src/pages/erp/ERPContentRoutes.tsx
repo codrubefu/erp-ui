@@ -15,7 +15,7 @@ import {
   SmsView,
   SubscriptionFormPage,
   SubscriptionsView,
-} from '../../components/AppContent';
+} from '../../components/erp';
 import type {
   Announcement,
   FormMode,

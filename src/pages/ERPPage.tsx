@@ -1,11 +1,10 @@
 ﻿import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Header } from '../components/layout/Header';
-import { Sidebar } from '../components/layout/Sidebar';
-import { LoginView } from '../components/auth/LoginView';
-import ERPContentRoutes from './erp/ERPContentRoutes';
+import { useNavigate, useParams } from 'react-router-dom';
+import Content from '../components/erp/Content';
+import { Header, LoginView, Sidebar } from '../components/AppLayout';
 import type {
   Announcement,
+  AppPage,
   Credentials,
   FormMode,
   FormType,
@@ -14,8 +13,8 @@ import type {
   SectionId,
   Subscription,
 } from '../types/erp';
-
 const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
+
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -25,7 +24,6 @@ const STORAGE_KEYS = {
   announcements: 'master-erp-announcements',
   payments: 'master-erp-payments',
 };
-
 const initialMembers: Member[] = [
   {
     id: 'MBR-001',
@@ -143,15 +141,19 @@ const initialPayments: Payment[] = [
   { id: 'PAY-003', invoice: 'INV-2026-103', member: 'Mihai Dobre', amount: '1200 RON', method: 'Transfer', status: 'În așteptare', transactionDate: '2026-04-02' },
   { id: 'PAY-004', invoice: 'INV-2026-104', member: 'Radu Neagu', amount: '650 RON', method: 'Card', status: 'Eșuat', transactionDate: '2026-03-29' },
 ];
-
-const emptyForms = {
+const emptyForms: {
+  member: Member;
+  subscription: Subscription;
+  announcement: Announcement;
+  payment: Payment;
+} = {
   member: {
     id: '',
     name: '',
     email: '',
     phone: '',
     subscription: '',
-    status: 'Activ' as Member['status'],
+    status: 'Activ',
     lastContact: '',
     address: '',
     notes: '',
@@ -162,7 +164,7 @@ const emptyForms = {
     name: '',
     duration: '',
     price: '',
-    status: 'Activ' as Subscription['status'],
+    status: 'Activ',
     renewals: 0,
     description: '',
   },
@@ -171,7 +173,7 @@ const emptyForms = {
     title: '',
     audience: '',
     scheduled: '',
-    status: 'Draft' as Announcement['status'],
+    status: 'Draft',
     content: '',
   },
   payment: {
@@ -179,8 +181,8 @@ const emptyForms = {
     invoice: '',
     member: '',
     amount: '',
-    method: 'Card' as Payment['method'],
-    status: 'În așteptare' as Payment['status'],
+    method: 'Card',
+    status: 'În așteptare',
     transactionDate: '',
   },
 };
@@ -204,27 +206,31 @@ function formatDate(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+
 export default function ERPAdminPanel() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { section: routeSection } = useParams<{ section?: string }>();
 
-  const routeSection = pathname.split('/')[2];
-  const resolvedRouteSection: SectionId = SECTION_IDS.includes(routeSection as SectionId) ? (routeSection as SectionId) : 'dashboard';
-
+  const resolvedRouteSection: SectionId = routeSection && SECTION_IDS.includes(routeSection as SectionId)
+    ? (routeSection as SectionId)
+    : 'dashboard';
   const [isAuthenticated, setIsAuthenticated] = useState(() => loadStoredValue(STORAGE_KEYS.auth, false));
   const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
   const [currentUser, setCurrentUser] = useState(() => loadStoredValue(STORAGE_KEYS.user, 'Administrator'));
+
+  const [current, setCurrent] = useState<SectionId>(resolvedRouteSection);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [page, setPage] = useState<AppPage>({ section: 'list', mode: null });
 
   const [membersData, setMembersData] = useState<Member[]>(() => loadStoredValue(STORAGE_KEYS.members, initialMembers));
   const [subscriptionsData, setSubscriptionsData] = useState<Subscription[]>(() => loadStoredValue(STORAGE_KEYS.subscriptions, initialSubscriptions));
   const [announcementsData, setAnnouncementsData] = useState<Announcement[]>(() => loadStoredValue(STORAGE_KEYS.announcements, initialAnnouncements));
   const [paymentsData, setPaymentsData] = useState<Payment[]>(() => loadStoredValue(STORAGE_KEYS.payments, initialPayments));
 
-  const [memberForm, setMemberForm] = useState<Member>(emptyForms.member);
-  const [subscriptionForm, setSubscriptionForm] = useState<Subscription>(emptyForms.subscription);
-  const [announcementForm, setAnnouncementForm] = useState<Announcement>(emptyForms.announcement);
-  const [paymentForm, setPaymentForm] = useState<Payment>(emptyForms.payment);
+  const [memberForm, setMemberForm] = useState(emptyForms.member);
+  const [subscriptionForm, setSubscriptionForm] = useState(emptyForms.subscription);
+  const [announcementForm, setAnnouncementForm] = useState(emptyForms.announcement);
+  const [paymentForm, setPaymentForm] = useState(emptyForms.payment);
 
   useEffect(() => saveStoredValue(STORAGE_KEYS.auth, isAuthenticated), [isAuthenticated]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.user, currentUser), [currentUser]);
@@ -232,43 +238,49 @@ export default function ERPAdminPanel() {
   useEffect(() => saveStoredValue(STORAGE_KEYS.subscriptions, subscriptionsData), [subscriptionsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.announcements, announcementsData), [announcementsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.payments, paymentsData), [paymentsData]);
+  useEffect(() => {
+    if (!routeSection) return;
+    if (SECTION_IDS.includes(routeSection as SectionId)) {
+      setCurrent(routeSection as SectionId);
+      return;
+    }
+    navigate('/erp/dashboard', { replace: true });
+  }, [routeSection, navigate]);
 
-  const navigateToForm = (
-    type: FormType,
-    mode: Exclude<FormMode, null> = 'create',
-    item: Member | Subscription | Announcement | Payment | null = null,
-  ) => {
+  const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Subscription | Announcement | Payment | null = null) => {
     if (type === 'member') {
       setMemberForm(item ? { ...(item as Member) } : { ...emptyForms.member, id: `MBR-${String(membersData.length + 1).padStart(3, '0')}` });
-      navigate(mode === 'edit' ? '/erp/members/edit' : '/erp/members/new');
+      setCurrent('members');
+      navigate('/erp/members');
+      setPage({ section: 'memberForm', mode });
       return;
     }
-
     if (type === 'subscription') {
       setSubscriptionForm(item ? { ...(item as Subscription) } : { ...emptyForms.subscription, id: `SUB-${String(subscriptionsData.length + 1).padStart(3, '0')}` });
-      navigate(mode === 'edit' ? '/erp/subscriptions/edit' : '/erp/subscriptions/new');
+      setCurrent('subscriptions');
+      navigate('/erp/subscriptions');
+      setPage({ section: 'subscriptionForm', mode });
       return;
     }
-
     if (type === 'announcement') {
       setAnnouncementForm(item ? { ...(item as Announcement) } : { ...emptyForms.announcement, id: `ANN-${String(announcementsData.length + 1).padStart(3, '0')}`, scheduled: `${formatDate()} 10:00` });
-      navigate(mode === 'edit' ? '/erp/announcements/edit' : '/erp/announcements/new');
+      setCurrent('announcements');
+      navigate('/erp/announcements');
+      setPage({ section: 'announcementForm', mode });
       return;
     }
-
     if (type === 'payment') {
-      setPaymentForm(item ? { ...(item as Payment) } : {
-        ...emptyForms.payment,
-        id: `PAY-${String(paymentsData.length + 1).padStart(3, '0')}`,
-        invoice: `INV-${new Date().getFullYear()}-${String(paymentsData.length + 101).padStart(3, '0')}`,
-        transactionDate: formatDate(),
-      });
-      navigate(mode === 'edit' ? '/erp/payments/edit' : '/erp/payments/new');
+      setPaymentForm(item ? { ...(item as Payment) } : { ...emptyForms.payment, id: `PAY-${String(paymentsData.length + 1).padStart(3, '0')}`, invoice: `INV-${new Date().getFullYear()}-${String(paymentsData.length + 101).padStart(3, '0')}`, transactionDate: formatDate() });
+      setCurrent('payments');
+      navigate('/erp/payments');
+      setPage({ section: 'paymentForm', mode });
     }
   };
 
   const goBackToList = (targetSection: SectionId) => {
+    setCurrent(targetSection);
     navigate(`/erp/${targetSection}`);
+    setPage({ section: 'list', mode: null });
   };
 
   const upsertById = <T extends { id: string }>(list: T[], item: T) => {
@@ -299,15 +311,17 @@ export default function ERPAdminPanel() {
   };
 
   const handleSidebarChange = (id: SectionId) => {
+    setCurrent(id);
     navigate(`/erp/${id}`);
+    setPage({ section: 'list', mode: null });
     setSidebarOpen(false);
   };
 
   const handleQuickCreate = () => {
-    if (resolvedRouteSection === 'members') return navigateToForm('member', 'create');
-    if (resolvedRouteSection === 'subscriptions') return navigateToForm('subscription', 'create');
-    if (resolvedRouteSection === 'announcements') return navigateToForm('announcement', 'create');
-    if (resolvedRouteSection === 'payments') return navigateToForm('payment', 'create');
+    if (current === 'members') return navigateToForm('member', 'create');
+    if (current === 'subscriptions') return navigateToForm('subscription', 'create');
+    if (current === 'announcements') return navigateToForm('announcement', 'create');
+    if (current === 'payments') return navigateToForm('payment', 'create');
     return navigateToForm('member', 'create');
   };
 
@@ -328,34 +342,44 @@ export default function ERPAdminPanel() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen">
-        <Sidebar current={resolvedRouteSection} setCurrent={handleSidebarChange} open={sidebarOpen} />
+        <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} />
         <div className="min-w-0 flex-1">
           <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onQuickCreate={handleQuickCreate} onLogout={handleLogout} currentUser={currentUser} />
-          <main className="space-y-6 p-4 md:p-8">
-            <ERPContentRoutes
-              membersData={membersData}
-              subscriptionsData={subscriptionsData}
-              announcementsData={announcementsData}
-              paymentsData={paymentsData}
-              navigateToForm={navigateToForm}
-              memberForm={memberForm}
-              setMemberForm={setMemberForm}
-              subscriptionForm={subscriptionForm}
-              setSubscriptionForm={setSubscriptionForm}
-              announcementForm={announcementForm}
-              setAnnouncementForm={setAnnouncementForm}
-              paymentForm={paymentForm}
-              setPaymentForm={setPaymentForm}
-              goBackToList={goBackToList}
-              saveMember={saveMember}
-              saveSubscription={saveSubscription}
-              saveAnnouncement={saveAnnouncement}
-              savePayment={savePayment}
-            />
-          </main>
+          <Content
+            current={current}
+            page={page}
+            membersData={membersData}
+            subscriptionsData={subscriptionsData}
+            announcementsData={announcementsData}
+            paymentsData={paymentsData}
+            navigateToForm={navigateToForm}
+            memberForm={memberForm}
+            setMemberForm={setMemberForm}
+            subscriptionForm={subscriptionForm}
+            setSubscriptionForm={setSubscriptionForm}
+            announcementForm={announcementForm}
+            setAnnouncementForm={setAnnouncementForm}
+            paymentForm={paymentForm}
+            setPaymentForm={setPaymentForm}
+            goBackToList={goBackToList}
+            saveMember={saveMember}
+            saveSubscription={saveSubscription}
+            saveAnnouncement={saveAnnouncement}
+            savePayment={savePayment}
+          />
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
