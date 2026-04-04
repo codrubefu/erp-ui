@@ -15,8 +15,7 @@ export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }
           <Menu className="h-5 w-5" />
         </button>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Master ERP</p>
-          <h1 className="text-xl font-bold text-slate-900 md:text-2xl">Panou administrare membri si operatiuni</h1>
+          <h1 className="text-xl font-bold text-slate-900 md:text-2xl">Master Erp</h1>
         </div>
       </div>
       <div className="flex items-center gap-3">

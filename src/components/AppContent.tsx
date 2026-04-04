@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Users,
   BadgeEuro,
@@ -885,3 +885,4 @@ export function Content({ current, page, membersData, subscriptionsData, announc
 
 
 export default Content;
+

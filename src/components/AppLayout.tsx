@@ -75,8 +75,8 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
         <div className="hidden bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-700 p-10 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">Master ERP</p>
-            <h1 className="mt-5 text-4xl font-bold leading-tight">Autentificare în platforma de management pentru membri ?i opera?iuni.</h1>
-            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, anun?uri, pla?i ?i rapoarte. Datele introduse în interfa?a sunt salvate local ?i ramân valabile dupa refresh.</p>
+            <h1 className="mt-5 text-4xl font-bold leading-tight">Autentificare ï¿½n platforma de management pentru membri ?i opera?iuni.</h1>
+            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, anun?uri, pla?i ?i rapoarte. Datele introduse ï¿½n interfa?a sunt salvate local ?i ramï¿½n valabile dupa refresh.</p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {[
@@ -129,7 +129,7 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
                 />
               </div>
               <button type="submit" className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200">
-                Intra în aplica?ie
+                Intra ï¿½n aplica?ie
               </button>
             </form>
           </div>
@@ -147,8 +147,7 @@ export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }
           <Menu className="h-5 w-5" />
         </button>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Master ERP</p>
-          <h1 className="text-xl font-bold text-slate-900 md:text-2xl">Panou administrare membri ?i opera?iuni</h1>
+          <h1 className="text-xl font-bold text-slate-900 md:text-2xl">Master ERP</h1>
         </div>
       </div>
       <div className="flex items-center gap-3">

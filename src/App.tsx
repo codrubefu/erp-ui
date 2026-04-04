@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Content from './components/AppContent';
 import { Header, LoginView, Sidebar } from './components/AppLayout';
 
@@ -63,6 +64,8 @@ export type AppPage = {
   section: FormSection;
   mode: FormMode;
 };
+
+const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
 
 
 const STORAGE_KEYS = {
@@ -257,11 +260,17 @@ function formatDate(date = new Date()) {
 
 
 export default function ERPAdminPanel() {
+  const navigate = useNavigate();
+  const { section: routeSection } = useParams<{ section?: string }>();
+
+  const resolvedRouteSection: SectionId = routeSection && SECTION_IDS.includes(routeSection as SectionId)
+    ? (routeSection as SectionId)
+    : 'dashboard';
   const [isAuthenticated, setIsAuthenticated] = useState(() => loadStoredValue(STORAGE_KEYS.auth, false));
   const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
   const [currentUser, setCurrentUser] = useState(() => loadStoredValue(STORAGE_KEYS.user, 'Administrator'));
 
-  const [current, setCurrent] = useState<SectionId>('dashboard');
+  const [current, setCurrent] = useState<SectionId>(resolvedRouteSection);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [page, setPage] = useState<AppPage>({ section: 'list', mode: null });
 
@@ -281,35 +290,48 @@ export default function ERPAdminPanel() {
   useEffect(() => saveStoredValue(STORAGE_KEYS.subscriptions, subscriptionsData), [subscriptionsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.announcements, announcementsData), [announcementsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.payments, paymentsData), [paymentsData]);
+  useEffect(() => {
+    if (!routeSection) return;
+    if (SECTION_IDS.includes(routeSection as SectionId)) {
+      setCurrent(routeSection as SectionId);
+      return;
+    }
+    navigate('/erp/dashboard', { replace: true });
+  }, [routeSection, navigate]);
 
   const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Subscription | Announcement | Payment | null = null) => {
     if (type === 'member') {
       setMemberForm(item ? { ...(item as Member) } : { ...emptyForms.member, id: `MBR-${String(membersData.length + 1).padStart(3, '0')}` });
       setCurrent('members');
+      navigate('/erp/members');
       setPage({ section: 'memberForm', mode });
       return;
     }
     if (type === 'subscription') {
       setSubscriptionForm(item ? { ...(item as Subscription) } : { ...emptyForms.subscription, id: `SUB-${String(subscriptionsData.length + 1).padStart(3, '0')}` });
       setCurrent('subscriptions');
+      navigate('/erp/subscriptions');
       setPage({ section: 'subscriptionForm', mode });
       return;
     }
     if (type === 'announcement') {
       setAnnouncementForm(item ? { ...(item as Announcement) } : { ...emptyForms.announcement, id: `ANN-${String(announcementsData.length + 1).padStart(3, '0')}`, scheduled: `${formatDate()} 10:00` });
       setCurrent('announcements');
+      navigate('/erp/announcements');
       setPage({ section: 'announcementForm', mode });
       return;
     }
     if (type === 'payment') {
       setPaymentForm(item ? { ...(item as Payment) } : { ...emptyForms.payment, id: `PAY-${String(paymentsData.length + 1).padStart(3, '0')}`, invoice: `INV-${new Date().getFullYear()}-${String(paymentsData.length + 101).padStart(3, '0')}`, transactionDate: formatDate() });
       setCurrent('payments');
+      navigate('/erp/payments');
       setPage({ section: 'paymentForm', mode });
     }
   };
 
   const goBackToList = (targetSection: SectionId) => {
     setCurrent(targetSection);
+    navigate(`/erp/${targetSection}`);
     setPage({ section: 'list', mode: null });
   };
 
@@ -342,6 +364,7 @@ export default function ERPAdminPanel() {
 
   const handleSidebarChange = (id: SectionId) => {
     setCurrent(id);
+    navigate(`/erp/${id}`);
     setPage({ section: 'list', mode: null });
     setSidebarOpen(false);
   };
@@ -401,4 +424,11 @@ export default function ERPAdminPanel() {
     </div>
   );
 }
+
+
+
+
+
+
+
 
