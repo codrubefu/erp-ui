@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Content, Header, LoginView, Sidebar } from './components/AppContent';
+import Content from './components/AppContent';
+import { Header, LoginView, Sidebar } from './components/AppLayout';
 
 type MemberStatus = 'Activ' | 'Suspendat' | 'Expirat' | 'Rezervat';
 type SubscriptionStatus = 'Activ' | 'Expirat' | 'Suspendat' | 'Consumat' | 'Rezervat';
@@ -400,3 +401,4 @@ export default function ERPAdminPanel() {
     </div>
   );
 }
+

@@ -1,13 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import {
-  LayoutDashboard,
   Users,
   BadgeEuro,
   Bell,
   MessageSquare,
   CreditCard,
   FileBarChart2,
-  Search,
   Plus,
   Filter,
   Download,
@@ -15,16 +13,11 @@ import {
   CalendarClock,
   UserCheck,
   Receipt,
-  ChevronRight,
-  Menu,
   Pencil,
   Save,
   Eye,
   ArrowLeft,
   FileText,
-  LogOut,
-  Lock,
-  User,
   Building2,
 } from 'lucide-react';
 import {
@@ -44,7 +37,6 @@ import {
 import type {
   Announcement,
   AppPage,
-  Credentials,
   FormMode,
   FormType,
   Member,
@@ -52,56 +44,10 @@ import type {
   SectionId,
   Subscription,
 } from '../App';
+import { LoginView, Header, Sidebar } from './AppLayout';
+export { LoginView, Header, Sidebar };
+import { cn, parsePrice, StatCard, SectionCard, StatusBadge, Input, Select, Textarea } from './AppPrimitives';
 
-type InputProps = {
-  label: string;
-} & React.InputHTMLAttributes<HTMLInputElement>;
-
-type SelectProps = {
-  label: string;
-  children: React.ReactNode;
-} & React.SelectHTMLAttributes<HTMLSelectElement>;
-
-type TextareaProps = {
-  label: string;
-} & React.TextareaHTMLAttributes<HTMLTextAreaElement>;
-
-type StatCardProps = {
-  title: string;
-  value: string;
-  change: string;
-  icon: React.ComponentType<{ className?: string }>;
-  helper: string;
-};
-
-type SectionCardProps = {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-};
-
-type StatusBadgeProps = {
-  status: string;
-};
-
-type LoginViewProps = {
-  credentials: Credentials;
-  onChange: (field: keyof Credentials, value: string) => void;
-  onSubmit: () => void;
-};
-
-type HeaderProps = {
-  onToggleSidebar: () => void;
-  onQuickCreate: () => void;
-  onLogout: () => void;
-  currentUser: string;
-};
-
-type SidebarProps = {
-  current: SectionId;
-  setCurrent: (id: SectionId) => void;
-  open: boolean;
-};
 
 type DashboardViewProps = {
   membersData: Member[];
@@ -212,32 +158,6 @@ type ContentProps = {
   savePayment: () => void;
 };
 
-const navGroups = [
-  {
-    id: 'general',
-    items: [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }],
-  },
-  {
-    id: 'organization',
-    label: 'Organizare',
-    icon: Building2,
-    items: [
-      { id: 'branches', label: 'Filiale', icon: Building2 },
-      { id: 'admins', label: 'Administratori', icon: UserCheck },
-    ],
-  },
-  {
-    id: 'management',
-    items: [
-      { id: 'members', label: 'Membri', icon: Users },
-      { id: 'subscriptions', label: 'Abonamente', icon: BadgeEuro },
-      { id: 'announcements', label: 'Anun?uri', icon: Bell },
-      { id: 'sms', label: 'SMS & Notificari', icon: MessageSquare },
-      { id: 'payments', label: 'Pla?i & Facturare', icon: CreditCard },
-      { id: 'reports', label: 'Rapoarte', icon: FileBarChart2 },
-    ],
-  },
-];
 
 const initialBranches = ['Iași Centru', 'Iași Copou', 'Iași Nicolina'];
 
@@ -335,265 +255,6 @@ const activityData = [
   { day: 'Sâm', active: 156, messages: 31 },
   { day: 'Dum', active: 98, messages: 12 },
 ];
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
-}
-
-function parsePrice(value: string | number) {
-  const numeric = Number(String(value).replace(/[^\d.]/g, ''));
-  return Number.isFinite(numeric) ? numeric : 0;
-}
-
-function StatCard({ title, value, change, icon: Icon, helper }: StatCardProps) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
-          <p className="mt-2 text-sm text-emerald-600">{change}</p>
-          <p className="mt-1 text-xs text-slate-500">{helper}</p>
-        </div>
-        <div className="rounded-2xl bg-violet-100 p-3 text-violet-700">
-          <Icon className="h-6 w-6" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SectionCard({ title, action, children }: SectionCardProps) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-4">
-        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-        {action}
-      </div>
-      <div className="p-6">{children}</div>
-    </div>
-  );
-}
-
-function StatusBadge({ status }: StatusBadgeProps) {
-  const map: Record<string, string> = {
-    Activ: 'bg-emerald-100 text-emerald-700',
-    Expirat: 'bg-amber-100 text-amber-700',
-    Suspendat: 'bg-rose-100 text-rose-700',
-    Consumat: 'bg-slate-200 text-slate-700',
-    Rezervat: 'bg-cyan-100 text-cyan-700',
-    Draft: 'bg-slate-100 text-slate-700',
-    Programat: 'bg-violet-100 text-violet-700',
-    Publicat: 'bg-emerald-100 text-emerald-700',
-    Plătit: 'bg-emerald-100 text-emerald-700',
-    'În așteptare': 'bg-amber-100 text-amber-700',
-    Eșuat: 'bg-rose-100 text-rose-700',
-  };
-
-  return <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', map[status] || 'bg-slate-100 text-slate-700')}>{status}</span>;
-}
-
-function Input({ label, ...props }: InputProps) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <input {...props} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
-    </label>
-  );
-}
-
-function Select({ label, children, ...props }: SelectProps) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <select {...props} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
-        {children}
-      </select>
-    </label>
-  );
-}
-
-function Textarea({ label, ...props }: TextareaProps) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <textarea {...props} className="min-h-[120px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
-    </label>
-  );
-}
-
-export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-violet-50 to-fuchsia-50 p-6">
-      <div className="grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="hidden bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-700 p-10 text-white lg:flex lg:flex-col lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">Master ERP</p>
-            <h1 className="mt-5 text-4xl font-bold leading-tight">Autentificare în platforma de management pentru membri și operațiuni.</h1>
-            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, anunțuri, plăți și rapoarte. Datele introduse în interfață sunt salvate local și rămân valabile după refresh.</p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {[
-              ['Organizare', 'Filiale și administratori'],
-              ['Abonamente', 'Creare și editare'],
-              ['Plăți', 'Istoric și facturare'],
-            ].map(([title, desc]) => (
-              <div key={title} className="rounded-3xl bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-lg font-semibold">{title}</p>
-                <p className="mt-1 text-sm text-white/70">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="p-8 md:p-12">
-          <div className="mx-auto max-w-md">
-            <div className="mb-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-600">Login</p>
-              <h2 className="mt-3 text-3xl font-bold text-slate-900">Conectare cont</h2>
-              <p className="mt-2 text-sm text-slate-500">Pentru demo, orice date introduse sunt acceptate.</p>
-            </div>
-            <form
-              className="space-y-5"
-              onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
-                e.preventDefault();
-                onSubmit();
-              }}
-            >
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <User className="h-4 w-4 text-violet-600" /> Utilizator / E-mail
-                </div>
-                <input
-                  value={credentials.username}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('username', e.target.value)}
-                  placeholder="admin@master-erp.ro"
-                  className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                />
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Lock className="h-4 w-4 text-violet-600" /> Parolă
-                </div>
-                <input
-                  type="password"
-                  value={credentials.password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('password', e.target.value)}
-                  placeholder="Introdu parola"
-                  className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                />
-              </div>
-              <button type="submit" className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200">
-                Intră în aplicație
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }: HeaderProps) {
-  return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:px-8">
-      <div className="flex items-center gap-3">
-        <button onClick={onToggleSidebar} className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-700 lg:hidden">
-          <Menu className="h-5 w-5" />
-        </button>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Master ERP</p>
-          <h1 className="text-xl font-bold text-slate-900 md:text-2xl">Panou administrare membri și operațiuni</h1>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
-          <Search className="h-4 w-4 text-slate-400" />
-          <input className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Caută membri, facturi, anunțuri..." />
-        </div>
-        <div className="hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600 md:block">{currentUser || 'Administrator'}</div>
-        <button onClick={onQuickCreate} className="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-200">Acțiune rapidă</button>
-        <button onClick={onLogout} className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">
-          <LogOut className="mr-2 inline h-4 w-4" />Logout
-        </button>
-      </div>
-    </header>
-  );
-}
-
-export function Sidebar({ current, setCurrent, open }: SidebarProps) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
-
-  return (
-    <aside className={cn('fixed inset-y-0 left-0 z-30 w-72 border-r border-slate-200 bg-[#faf7ff] p-5 transition-transform lg:static lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
-      <div className="flex h-full flex-col">
-        <nav className="mt-6 space-y-4">
-          {navGroups.map((group) => {
-            const GroupIcon = group.icon ?? Building2;
-            const isGrouped = Boolean(group.label);
-            const isOpen = openGroups[group.id] ?? true;
-
-            return (
-              <div key={group.id} className="space-y-1">
-                {isGrouped ? (
-                  <button
-                    onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-                    className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-white"
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="rounded-xl bg-slate-100 p-2 text-slate-700">
-                        <GroupIcon className="h-4 w-4" />
-                      </span>
-                      {group.label}
-                    </span>
-                    <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
-                  </button>
-                ) : null}
-
-                {(!isGrouped || isOpen) && (
-                  <div className={cn('space-y-1', isGrouped && 'ml-4 border-l border-violet-100 pl-3')}>
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      const active = current === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => setCurrent(item.id as SectionId)}
-                          className={cn(
-                            'flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition',
-                            active ? 'bg-white text-violet-700 shadow-md ring-1 ring-violet-100' : 'text-slate-600 hover:bg-white hover:shadow-sm'
-                          )}
-                        >
-                          <span className="flex items-center gap-3 font-medium">
-                            <span className={cn('rounded-xl p-2', active ? 'bg-violet-100' : 'bg-slate-100')}>
-                              <Icon className="h-4 w-4" />
-                            </span>
-                            {item.label}
-                          </span>
-                          <ChevronRight className="h-4 w-4 opacity-60" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto rounded-3xl border border-violet-100 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-900">Rol activ</p>
-          <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Administrator</p>
-              <p className="text-xs text-slate-500">Acces complet module și rapoarte</p>
-            </div>
-            <UserCheck className="h-5 w-5 text-violet-600" />
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
 
 function DashboardView({ membersData, subscriptionsData, paymentsData }: DashboardViewProps) {
   const branchesCount = new Set(membersData.map((item) => item.branch).filter(Boolean)).size;
@@ -1221,3 +882,6 @@ export function Content({ current, page, membersData, subscriptionsData, announc
 
   return <main className="space-y-6 p-4 md:p-8">{view}</main>;
 }
+
+
+export default Content;
