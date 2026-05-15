@@ -2,6 +2,7 @@ import { Building2, Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react
 import { useCallback, useEffect, useState } from 'react';
 import { Input, SectionCard } from '../../primitives';
 import { erpApiService, type ApiLocation } from '../../../services/ErpApiService';
+import { PageShell } from '../shared/PageShell';
 
 type LocationForm = {
   name: string;
@@ -84,6 +85,12 @@ export function BranchesView() {
     setFormOpen(true);
   };
 
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditing(null);
+    setForm(emptyForm);
+  };
+
   const saveLocation = async () => {
     setSaving(true);
     setError('');
@@ -93,9 +100,7 @@ export function BranchesView() {
       } else {
         await erpApiService.create<ApiLocation>('locations', buildPayload(form));
       }
-      setFormOpen(false);
-      setEditing(null);
-      setForm(emptyForm);
+      closeForm();
       await loadLocations();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut salva locatia.');
@@ -114,6 +119,42 @@ export function BranchesView() {
       setError(err instanceof Error ? err.message : 'Nu am putut sterge locatia.');
     }
   };
+
+  if (formOpen) {
+    return (
+      <PageShell
+        title={editing ? 'Editare locatie' : 'Adaugare locatie'}
+        subtitle="Formularul de locatie este afisat separat fata de lista de locatii."
+        backLabel="Inapoi la locatii"
+        onBack={closeForm}
+      >
+        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        <SectionCard
+          title={editing ? `Editare locatie #${editing.id}` : 'Adaugare locatie'}
+          action={
+            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+              <X className="h-4 w-4" />Inchide
+            </button>
+          }
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input label="Nume" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Main Office" />
+            <Input label="Descriere" value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Headquarters" />
+            <div className="md:col-span-2">
+              <Input label="ID utilizatori" value={form.user_ids} onChange={(event) => setForm((prev) => ({ ...prev, user_ids: event.target.value }))} placeholder="1, 2" />
+              <p className="mt-2 text-xs text-slate-500">Optional, lista de ID-uri separate prin virgula pentru asocierea utilizatorilor.</p>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+            <button onClick={() => void saveLocation()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza locatie'}
+            </button>
+          </div>
+        </SectionCard>
+      </PageShell>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -182,31 +223,6 @@ export function BranchesView() {
         </div>
       </SectionCard>
 
-      {formOpen ? (
-        <SectionCard
-          title={editing ? `Editare locatie #${editing.id}` : 'Adaugare locatie'}
-          action={
-            <button onClick={() => setFormOpen(false)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
-            </button>
-          }
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input label="Nume" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Main Office" />
-            <Input label="Descriere" value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Headquarters" />
-            <div className="md:col-span-2">
-              <Input label="ID utilizatori" value={form.user_ids} onChange={(event) => setForm((prev) => ({ ...prev, user_ids: event.target.value }))} placeholder="1, 2" />
-              <p className="mt-2 text-xs text-slate-500">Optional, lista de ID-uri separate prin virgula pentru asocierea utilizatorilor.</p>
-            </div>
-          </div>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={() => setFormOpen(false)} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
-            <button onClick={() => void saveLocation()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza locatie'}
-            </button>
-          </div>
-        </SectionCard>
-      ) : null}
     </div>
   );
 }

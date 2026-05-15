@@ -2,6 +2,7 @@ import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, SectionCard, Select, StatusBadge, Textarea } from '../../primitives';
 import { erpApiService, type ApiSubscription, type ApiSubscriptionUser, type ApiUser } from '../../../services/ErpApiService';
+import { PageShell } from '../shared/PageShell';
 
 type SubscriptionForm = {
   name: string;
@@ -188,6 +189,12 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     setFormOpen(true);
   };
 
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditing(null);
+    setForm(emptyForm);
+  };
+
   const saveSubscription = async () => {
     setSaving(true);
     setError('');
@@ -197,9 +204,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       } else {
         await erpApiService.create<ApiSubscription>('subscriptions', buildPayload(form));
       }
-      setFormOpen(false);
-      setEditing(null);
-      setForm(emptyForm);
+      closeForm();
       await loadSubscriptions();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut salva abonamentul.');
@@ -256,6 +261,53 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     if (users.length > 0 || assignableUsersLoading) return;
     void loadAssignableUsers();
   };
+
+  if (formOpen) {
+    return (
+      <PageShell
+        title={editing ? 'Editare abonament' : 'Adaugare abonament'}
+        subtitle="Formularul de abonament este afisat separat, fara lista din fundal."
+        backLabel="Inapoi la abonamente"
+        onBack={closeForm}
+      >
+        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        <SectionCard
+          title={editing ? `Editare abonament #${editing.id}` : 'Adaugare abonament'}
+          action={
+            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+              <X className="h-4 w-4" />Inchide
+            </button>
+          }
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input label="Nume" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
+            <Input label="Pret" type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
+            <Input label="Moneda" maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
+            <Select label="Interval facturare" value={form.billing_interval} onChange={(event) => setForm((prev) => ({ ...prev, billing_interval: event.target.value as SubscriptionForm['billing_interval'] }))}>
+              <option value="monthly">Lunar</option>
+              <option value="yearly">Anual</option>
+            </Select>
+            <Input label="Durata in zile" type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
+            <Input label="Zile trial" type="number" min="0" value={form.trial_days} onChange={(event) => setForm((prev) => ({ ...prev, trial_days: event.target.value }))} placeholder="14" />
+            <Input label="Numar maxim utilizatori" type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+              <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
+              Abonament activ
+            </label>
+            <div className="md:col-span-2">
+              <Textarea label="Descriere" value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Enterprise subscription" />
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+            <button onClick={() => void saveSubscription()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza abonament'}
+            </button>
+          </div>
+        </SectionCard>
+      </PageShell>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -363,43 +415,6 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
           </table>
         </div>
       </SectionCard>
-
-      {formOpen ? (
-        <SectionCard
-          title={editing ? `Editare abonament #${editing.id}` : 'Adaugare abonament'}
-          action={
-            <button onClick={() => setFormOpen(false)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
-            </button>
-          }
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input label="Nume" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
-            <Input label="Pret" type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
-            <Input label="Moneda" maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
-            <Select label="Interval facturare" value={form.billing_interval} onChange={(event) => setForm((prev) => ({ ...prev, billing_interval: event.target.value as SubscriptionForm['billing_interval'] }))}>
-              <option value="monthly">Lunar</option>
-              <option value="yearly">Anual</option>
-            </Select>
-            <Input label="Durata in zile" type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
-            <Input label="Zile trial" type="number" min="0" value={form.trial_days} onChange={(event) => setForm((prev) => ({ ...prev, trial_days: event.target.value }))} placeholder="14" />
-            <Input label="Numar maxim utilizatori" type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
-              <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
-              Abonament activ
-            </label>
-            <div className="md:col-span-2">
-              <Textarea label="Descriere" value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Enterprise subscription" />
-            </div>
-          </div>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={() => setFormOpen(false)} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
-            <button onClick={() => void saveSubscription()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza abonament'}
-            </button>
-          </div>
-        </SectionCard>
-      ) : null}
 
       {selectedSubscription ? (
         <SectionCard

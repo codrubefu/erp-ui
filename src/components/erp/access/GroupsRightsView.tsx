@@ -2,6 +2,7 @@ import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, SectionCard } from '../../primitives';
 import { erpApiService, type ApiGroup, type ApiRight, type ApiUser } from '../../../services/ErpApiService';
+import { PageShell } from '../shared/PageShell';
 
 type ResourceKey = 'groups' | 'rights';
 type ApiRecord = (ApiGroup | ApiRight) & { id: number };
@@ -153,6 +154,7 @@ export function GroupsRightsView() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<ApiRecord | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(() => emptyForm(resources[0]));
 
   const config = useMemo(() => resources.find((resource) => resource.key === activeKey) ?? resources[0], [activeKey]);
@@ -195,6 +197,7 @@ export function GroupsRightsView() {
 
   useEffect(() => {
     setEditing(null);
+    setFormOpen(false);
     setSearch('');
     setForm(emptyForm(config));
     void loadItems(config.key, '');
@@ -203,11 +206,19 @@ export function GroupsRightsView() {
   const startCreate = () => {
     setEditing(null);
     setForm(emptyForm(config));
+    setFormOpen(true);
   };
 
   const startEdit = (item: ApiRecord) => {
     setEditing(item);
     setForm(itemToForm(config, item));
+    setFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setEditing(null);
+    setForm(emptyForm(config));
+    setFormOpen(false);
   };
 
   const save = async () => {
@@ -220,8 +231,7 @@ export function GroupsRightsView() {
       } else {
         await erpApiService.create(config.key, payload);
       }
-      setEditing(null);
-      setForm(emptyForm(config));
+      closeForm();
       await loadItems(config.key, search);
       await loadUsers();
       await loadRights();
@@ -245,93 +255,20 @@ export function GroupsRightsView() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <SectionCard
-        title="Grupuri si Drepturi"
-        action={
-          <button onClick={() => loadItems(config.key, search)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-            <RefreshCw className="h-4 w-4" /> Refresh
-          </button>
-        }
+  if (formOpen) {
+    return (
+      <PageShell
+        title={editing ? `Editare ${config.label.toLowerCase()}` : `Adauga ${config.label.toLowerCase()}`}
+        subtitle="Formularul pentru grupuri si drepturi este afisat separat de lista activa."
+        backLabel={`Inapoi la ${config.title.toLowerCase()}`}
+        onBack={closeForm}
       >
-        <div className="flex flex-wrap gap-2">
-          {resources.map((resource) => (
-            <button
-              key={resource.key}
-              onClick={() => setActiveKey(resource.key)}
-              className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${activeKey === resource.key ? 'bg-violet-600 text-white shadow-lg shadow-violet-100' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-            >
-              {resource.label}
-            </button>
-          ))}
-        </div>
-      </SectionCard>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <SectionCard
-          title={config.title}
-          action={
-            <div className="flex items-center gap-2">
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') void loadItems(config.key, search);
-                }}
-                placeholder={config.searchPlaceholder}
-                className="w-56 rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-violet-400"
-              />
-              <button onClick={() => loadItems(config.key, search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Cauta</button>
-            </div>
-          }
-        >
-          {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase text-slate-500">
-                  <th className="px-3 py-3">ID</th>
-                  {config.columns.map((column) => <th key={column.key} className="px-3 py-3">{column.label}</th>)}
-                  <th className="px-3 py-3 text-right">Actiuni</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items[config.key].map((item) => (
-                  <tr key={item.id} className="align-top">
-                    <td className="px-3 py-4 font-semibold text-slate-900">{item.id}</td>
-                    {config.columns.map((column) => (
-                      <td key={column.key} className="max-w-[320px] px-3 py-4 text-slate-600">{column.render ? column.render(item, users) : readValue(item, column.key)}</td>
-                    ))}
-                    <td className="px-3 py-4">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => startEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700" title="Editeaza">
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => remove(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 text-red-600" title="Sterge">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {!loading && items[config.key].length === 0 ? (
-                  <tr>
-                    <td colSpan={config.columns.length + 2} className="px-3 py-8 text-center text-slate-500">Nu exista inregistrari pentru filtrul curent.</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-          {loading ? <p className="mt-4 text-sm text-slate-500">Se incarca...</p> : null}
-        </SectionCard>
-
+        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         <SectionCard
           title={editing ? `Editare #${editing.id}` : `Adauga ${config.label.toLowerCase()}`}
           action={
-            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              {editing ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {editing ? 'Anuleaza' : 'Nou'}
+            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+              <X className="h-4 w-4" />Inchide
             </button>
           }
         >
@@ -379,12 +316,102 @@ export function GroupsRightsView() {
                 />
               );
             })}
-            <button onClick={save} disabled={saving} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-100 disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="h-4 w-4" /> {saving ? 'Se salveaza...' : 'Salveaza'}
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+              <button onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-100 disabled:cursor-not-allowed disabled:opacity-60">
+                <Save className="h-4 w-4" /> {saving ? 'Se salveaza...' : 'Salveaza'}
+              </button>
+            </div>
           </div>
         </SectionCard>
-      </div>
+      </PageShell>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionCard
+        title="Grupuri si Drepturi"
+        action={
+          <div className="flex items-center gap-2">
+            <button onClick={() => loadItems(config.key, search)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </button>
+            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+              <Plus className="h-4 w-4" /> Nou
+            </button>
+          </div>
+        }
+      >
+        <div className="flex flex-wrap gap-2">
+          {resources.map((resource) => (
+            <button
+              key={resource.key}
+              onClick={() => setActiveKey(resource.key)}
+              className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${activeKey === resource.key ? 'bg-violet-600 text-white shadow-lg shadow-violet-100' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+            >
+              {resource.label}
+            </button>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title={config.title}
+        action={
+          <div className="flex items-center gap-2">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') void loadItems(config.key, search);
+              }}
+              placeholder={config.searchPlaceholder}
+              className="w-56 rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-violet-400"
+            />
+            <button onClick={() => loadItems(config.key, search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Cauta</button>
+          </div>
+        }
+      >
+          {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase text-slate-500">
+                  <th className="px-3 py-3">ID</th>
+                  {config.columns.map((column) => <th key={column.key} className="px-3 py-3">{column.label}</th>)}
+                  <th className="px-3 py-3 text-right">Actiuni</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {items[config.key].map((item) => (
+                  <tr key={item.id} className="align-top">
+                    <td className="px-3 py-4 font-semibold text-slate-900">{item.id}</td>
+                    {config.columns.map((column) => (
+                      <td key={column.key} className="max-w-[320px] px-3 py-4 text-slate-600">{column.render ? column.render(item, users) : readValue(item, column.key)}</td>
+                    ))}
+                    <td className="px-3 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => startEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700" title="Editeaza">
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => remove(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 text-red-600" title="Sterge">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!loading && items[config.key].length === 0 ? (
+                  <tr>
+                    <td colSpan={config.columns.length + 2} className="px-3 py-8 text-center text-slate-500">Nu exista inregistrari pentru filtrul curent.</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+          {loading ? <p className="mt-4 text-sm text-slate-500">Se incarca...</p> : null}
+      </SectionCard>
     </div>
   );
 }

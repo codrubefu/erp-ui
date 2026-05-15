@@ -2,6 +2,7 @@ import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, SectionCard, StatusBadge } from '../../primitives';
 import { erpApiService, type ApiGroup, type ApiLocation, type ApiSubscription, type ApiUser } from '../../../services/ErpApiService';
+import { PageShell } from '../shared/PageShell';
 
 type UserForm = {
   first_name: string;
@@ -180,6 +181,12 @@ export function MembersView({
     setFormOpen(true);
   };
 
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditing(null);
+    setForm(emptyForm);
+  };
+
   const saveUser = async () => {
     setSaving(true);
     setError('');
@@ -189,9 +196,7 @@ export function MembersView({
       } else {
         await erpApiService.create<ApiUser>(resource, buildPayload(form, 'create'));
       }
-      setFormOpen(false);
-      setEditing(null);
-      setForm(emptyForm);
+      closeForm();
       await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : `Nu am putut salva ${singularLabel}.`);
@@ -210,6 +215,88 @@ export function MembersView({
       setError(err instanceof Error ? err.message : `Nu am putut sterge ${singularLabel}.`);
     }
   };
+
+  if (formOpen) {
+    return (
+      <PageShell
+        title={editing ? `Editare ${singularLabel}` : addLabel}
+        subtitle={`Configureaza datele pentru ${editing ? singularLabel : 'un membru nou'} fara a afisa lista in fundal.`}
+        backLabel={`Inapoi la ${countLabel}`}
+        onBack={closeForm}
+      >
+        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        <SectionCard
+          title={editing ? `Editare user #${editing.id}` : 'Adaugare user'}
+          action={
+            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+              <X className="h-4 w-4" />Inchide
+            </button>
+          }
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input label="Prenume" value={form.first_name} onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))} placeholder="John" />
+            <Input label="Nume" value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
+            <Input label="Email" type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
+            <Input label="Telefon" value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
+            <Input label={editing ? 'Parola noua' : 'Parola'} type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder={editing ? 'Completeaza doar daca o schimbi' : 'password'} />
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+              <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
+              User activ
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Grupuri</span>
+              <select
+                multiple
+                value={selectedGroupIds}
+                onChange={(event) => {
+                  const groupIds = idsFromSelect(event.currentTarget.selectedOptions);
+                  setForm((prev) => ({ ...prev, group_ids: groupIds }));
+                }}
+                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              >
+                {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Locatii</span>
+              <select
+                multiple
+                value={selectedLocationIds}
+                onChange={(event) => {
+                  const locationIds = idsFromSelect(event.currentTarget.selectedOptions);
+                  setForm((prev) => ({ ...prev, location_ids: locationIds }));
+                }}
+                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              >
+                {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
+              </select>
+            </label>
+            <label className="block md:col-span-2">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Abonamente</span>
+              <select
+                multiple
+                value={selectedSubscriptionIds}
+                onChange={(event) => {
+                  const subscriptionIds = idsFromSelect(event.currentTarget.selectedOptions);
+                  setForm((prev) => ({ ...prev, subscription_ids: subscriptionIds }));
+                }}
+                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              >
+                {subscriptions.map((subscription) => <option key={subscription.id} value={subscription.id}>{subscription.name}</option>)}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">Selecteaza zero, unul sau mai multe abonamente pentru acest membru.</p>
+            </label>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+            <button onClick={() => void saveUser()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza user'}
+            </button>
+          </div>
+        </SectionCard>
+      </PageShell>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -305,77 +392,6 @@ export function MembersView({
         </div>
       </SectionCard>
 
-      {formOpen ? (
-        <SectionCard
-          title={editing ? `Editare user #${editing.id}` : 'Adaugare user'}
-          action={
-            <button onClick={() => setFormOpen(false)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
-            </button>
-          }
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input label="Prenume" value={form.first_name} onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))} placeholder="John" />
-            <Input label="Nume" value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
-            <Input label="Email" type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
-            <Input label="Telefon" value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
-            <Input label={editing ? 'Parola noua' : 'Parola'} type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder={editing ? 'Completeaza doar daca o schimbi' : 'password'} />
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
-              <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
-              User activ
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Grupuri</span>
-              <select
-                multiple
-                value={selectedGroupIds}
-                onChange={(event) => {
-                  const groupIds = idsFromSelect(event.currentTarget.selectedOptions);
-                  setForm((prev) => ({ ...prev, group_ids: groupIds }));
-                }}
-                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-              >
-                {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Locatii</span>
-              <select
-                multiple
-                value={selectedLocationIds}
-                onChange={(event) => {
-                  const locationIds = idsFromSelect(event.currentTarget.selectedOptions);
-                  setForm((prev) => ({ ...prev, location_ids: locationIds }));
-                }}
-                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-              >
-                {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
-              </select>
-            </label>
-            <label className="block md:col-span-2">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Abonamente</span>
-              <select
-                multiple
-                value={selectedSubscriptionIds}
-                onChange={(event) => {
-                  const subscriptionIds = idsFromSelect(event.currentTarget.selectedOptions);
-                  setForm((prev) => ({ ...prev, subscription_ids: subscriptionIds }));
-                }}
-                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-              >
-                {subscriptions.map((subscription) => <option key={subscription.id} value={subscription.id}>{subscription.name}</option>)}
-              </select>
-              <p className="mt-2 text-xs text-slate-500">Selecteaza zero, unul sau mai multe abonamente pentru acest membru.</p>
-            </label>
-          </div>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={() => setFormOpen(false)} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
-            <button onClick={() => void saveUser()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza user'}
-            </button>
-          </div>
-        </SectionCard>
-      ) : null}
     </div>
   );
 }
