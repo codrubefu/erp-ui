@@ -7,6 +7,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/erp/dashboard" replace />} />
+      <Route path="/login" element={<App />} />
       <Route path="/erp/*" element={<App />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/home" element={<Navigate to="/" replace />} />

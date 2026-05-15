@@ -8,6 +8,7 @@ export type SectionId =
   | 'dashboard'
   | 'branches'
   | 'admins'
+  | 'access'
   | 'members'
   | 'subscriptions'
   | 'announcements'

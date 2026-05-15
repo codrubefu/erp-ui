@@ -10,9 +10,11 @@ type LoginViewProps = {
   credentials: Credentials;
   onChange: (field: keyof Credentials, value: string) => void;
   onSubmit: () => void;
+  loading?: boolean;
+  error?: string;
 };
 
-export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
+export function LoginView({ credentials, onChange, onSubmit, loading = false, error }: LoginViewProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-violet-50 to-fuchsia-50 p-6">
       <div className="grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[1.1fr_0.9fr]">
@@ -40,7 +42,7 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
             <div className="mb-8">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-600">Login</p>
               <h2 className="mt-3 text-3xl font-bold text-slate-900">Conectare cont</h2>
-              <p className="mt-2 text-sm text-slate-500">Pentru demo, orice date introduse sunt acceptate.</p>
+              <p className="mt-2 text-sm text-slate-500">Conectare prin endpoint-ul bearer token din API.</p>
             </div>
             <form
               className="space-y-5"
@@ -54,9 +56,10 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
                   <User className="h-4 w-4 text-violet-600" /> Utilizator / E-mail
                 </div>
                 <input
+                  type="email"
                   value={credentials.username}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('username', e.target.value)}
-                  placeholder="admin@master-erp.ro"
+                  placeholder="test@example.com"
                   className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                 />
               </div>
@@ -68,12 +71,13 @@ export function LoginView({ credentials, onChange, onSubmit }: LoginViewProps) {
                   type="password"
                   value={credentials.password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('password', e.target.value)}
-                  placeholder="Introdu parola"
+                  placeholder="password"
                   className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                 />
               </div>
-              <button type="submit" className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200">
-                Intra in aplicatie
+              {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+              <button type="submit" disabled={loading} className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200 disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? 'Se conecteaza...' : 'Intra in aplicatie'}
               </button>
             </form>
           </div>

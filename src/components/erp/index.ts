@@ -14,3 +14,4 @@ export { SmsView } from './sms/SmsView';
 export { SubscriptionFormPage } from './subscriptions/SubscriptionFormPage';
 export { SubscriptionsView } from './subscriptions/SubscriptionsView';
 export type * from './shared/types';
+export { GroupsRightsView } from './access/GroupsRightsView';

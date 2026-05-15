@@ -1,11 +1,11 @@
 ﻿import { useMemo } from 'react';
-import type { Announcement, FormType, Member, Payment, Subscription } from '../../types/erp';
+import type { Announcement, FormType, Payment, Subscription } from '../../types/erp';
+import { GroupsRightsView } from './access/GroupsRightsView';
 import { AdminsView } from './admins/AdminsView';
 import { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 import { AnnouncementsView } from './announcements/AnnouncementsView';
 import { BranchesView } from './branches/BranchesView';
 import { DashboardView } from './dashboard/DashboardView';
-import MemberFormPage from './members/MemberFormPage';
 import { MembersView } from './members/MembersView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
@@ -16,10 +16,10 @@ import { SmsView } from './sms/SmsView';
 import { SubscriptionFormPage } from './subscriptions/SubscriptionFormPage';
 import { SubscriptionsView } from './subscriptions/SubscriptionsView';
 
-export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, branchesData, activityData, navigateToForm, memberForm, setMemberForm, subscriptionForm, setSubscriptionForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveMember, saveSubscription, saveAnnouncement, savePayment }: ContentProps) {
+export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, subscriptionForm, setSubscriptionForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveSubscription, saveAnnouncement, savePayment }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
-      return <MemberFormPage mode={page.mode ?? 'create'} data={memberForm} branchOptions={branchesData} subscriptionOptions={subscriptionsData} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />;
+      return <MembersView />;
     }
     if (page.section === 'subscriptionForm') {
       return <SubscriptionFormPage mode={page.mode ?? 'create'} data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />;
@@ -33,11 +33,13 @@ export default function Content({ current, page, membersData, subscriptionsData,
 
     switch (current) {
       case 'members':
-        return <MembersView items={membersData} onCreate={() => navigateToForm('member', 'create')} onEdit={(item: Member) => navigateToForm('member', 'edit', item)} />;
+        return <MembersView />;
       case 'branches':
-        return <BranchesView branches={branchesData} membersData={membersData} />;
+        return <BranchesView />;
       case 'admins':
         return <AdminsView />;
+      case 'access':
+        return <GroupsRightsView />;
       case 'subscriptions':
         return <SubscriptionsView items={subscriptionsData} onCreate={() => navigateToForm('subscription', 'create')} onEdit={(item: Subscription) => navigateToForm('subscription', 'edit', item)} />;
       case 'announcements':
@@ -56,7 +58,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
           </div>
         );
     }
-  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, branchesData, activityData, navigateToForm, memberForm, subscriptionForm, announcementForm, paymentForm, setMemberForm, setSubscriptionForm, setAnnouncementForm, setPaymentForm, goBackToList, saveMember, saveSubscription, saveAnnouncement, savePayment]);
+  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, subscriptionForm, announcementForm, paymentForm, setSubscriptionForm, setAnnouncementForm, setPaymentForm, goBackToList, saveSubscription, saveAnnouncement, savePayment]);
 
   return <main className="space-y-6 p-4 md:p-8">{view}</main>;
 }

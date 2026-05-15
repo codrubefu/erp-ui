@@ -7,13 +7,14 @@ import {
   FileBarChart2,
   LayoutDashboard,
   MessageSquare,
+  ShieldCheck,
   UserCheck,
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-type SectionId = 'dashboard' | 'branches' | 'admins' | 'members' | 'subscriptions' | 'announcements' | 'sms' | 'payments' | 'reports';
+type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'announcements' | 'sms' | 'payments' | 'reports';
 
 type SidebarProps = {
   current: SectionId;
@@ -46,6 +47,7 @@ const navGroups: readonly NavGroup[] = [
     items: [
       { id: 'branches', label: 'Filiale', icon: Building2 },
       { id: 'admins', label: 'Administratori', icon: UserCheck },
+      { id: 'access', label: 'Grupuri si Drepturi', icon: ShieldCheck },
     ],
   },
   {

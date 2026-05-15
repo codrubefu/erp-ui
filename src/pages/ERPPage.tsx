@@ -1,7 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Content from '../components/erp/Content';
 import { Header, LoginView, Sidebar } from '../components/AppLayout';
+import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { erpJsonDataService, type ActivityPoint } from '../services/ErpJsonDataService';
 import type {
   Announcement,
@@ -15,7 +16,7 @@ import type {
   Subscription,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -91,18 +92,32 @@ function formatDate(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+function getUserDisplayName(user: AuthenticatedUser | null, fallback: string) {
+  if (!user) return fallback;
+  if ('first_name' in user || 'last_name' in user) {
+    const name = `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim();
+    if (name) return name;
+  }
+  if ('name' in user && user.name) return user.name;
+  if ('email' in user && user.email) return user.email;
+  return fallback;
+}
+
 export default function ERPAdminPanel() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const routeSection = pathname.split('/')[2];
 
   const resolvedRouteSection: SectionId = routeSection && SECTION_IDS.includes(routeSection as SectionId)
     ? (routeSection as SectionId)
     : 'dashboard';
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => loadStoredValue(STORAGE_KEYS.auth, false));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(erpApiService.getToken()) || loadStoredValue(STORAGE_KEYS.auth, false));
   const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
   const [currentUser, setCurrentUser] = useState(() => loadStoredValue(STORAGE_KEYS.user, 'Administrator'));
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   const [current, setCurrent] = useState<SectionId>(resolvedRouteSection);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,6 +141,29 @@ export default function ERPAdminPanel() {
   useEffect(() => saveStoredValue(STORAGE_KEYS.subscriptions, subscriptionsData), [subscriptionsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.announcements, announcementsData), [announcementsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.payments, paymentsData), [paymentsData]);
+
+  useEffect(() => {
+    if (!erpApiService.getToken()) return;
+    let disposed = false;
+
+    const restoreSession = async () => {
+      try {
+        const user = await erpApiService.me();
+        if (disposed) return;
+        setCurrentUser(getUserDisplayName(user, 'Administrator'));
+        setIsAuthenticated(true);
+      } catch {
+        if (disposed) return;
+        erpApiService.clearToken();
+        setIsAuthenticated(false);
+      }
+    };
+
+    void restoreSession();
+    return () => {
+      disposed = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!routeSection) return;
@@ -164,10 +202,9 @@ export default function ERPAdminPanel() {
 
   const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Subscription | Announcement | Payment | null = null) => {
     if (type === 'member') {
-      setMemberForm(item ? { ...(item as Member) } : { ...emptyForms.member, id: `MBR-${String(membersData.length + 1).padStart(3, '0')}` });
       setCurrent('members');
       navigate('/erp/members');
-      setPage({ section: 'memberForm', mode });
+      setPage({ section: 'list', mode: null });
       return;
     }
     if (type === 'subscription') {
@@ -234,25 +271,51 @@ export default function ERPAdminPanel() {
   };
 
   const handleQuickCreate = () => {
-    if (current === 'members') return navigateToForm('member', 'create');
+    if (current === 'members') {
+      setPage({ section: 'list', mode: null });
+      navigate('/erp/members');
+      return;
+    }
     if (current === 'subscriptions') return navigateToForm('subscription', 'create');
     if (current === 'announcements') return navigateToForm('announcement', 'create');
     if (current === 'payments') return navigateToForm('payment', 'create');
     return navigateToForm('member', 'create');
   };
 
-  const handleLogin = () => {
-    setCurrentUser(credentials.username || 'Administrator');
-    setIsAuthenticated(true);
+  const handleLogin = async () => {
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const result = await erpApiService.login(credentials.username, credentials.password);
+      setCurrentUser(getUserDisplayName(result.user, credentials.username || 'Administrator'));
+      setIsAuthenticated(true);
+      const redirectTo = typeof location.state === 'object' && location.state && 'from' in location.state
+        ? String((location.state as { from?: string }).from)
+        : '/erp/dashboard';
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Autentificarea a esuat.');
+      setIsAuthenticated(false);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await erpApiService.logout();
     setIsAuthenticated(false);
     setCredentials({ username: '', password: '' });
   };
 
   if (!isAuthenticated) {
-    return <LoginView credentials={credentials} onChange={(field, value) => setCredentials((prev) => ({ ...prev, [field]: value }))} onSubmit={handleLogin} />;
+    if (pathname !== '/login') {
+      return <Navigate to="/login" replace state={{ from: pathname }} />;
+    }
+    return <LoginView credentials={credentials} onChange={(field, value) => setCredentials((prev) => ({ ...prev, [field]: value }))} onSubmit={handleLogin} loading={authLoading} error={authError} />;
+  }
+
+  if (pathname === '/login') {
+    return <Navigate to="/erp/dashboard" replace />;
   }
 
   return (

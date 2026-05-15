@@ -6,7 +6,7 @@ import {
   AnnouncementsView,
   BranchesView,
   DashboardView,
-  MemberFormPage,
+  GroupsRightsView,
   MembersView,
   PaymentFormPage,
   PaymentsView,
@@ -55,11 +55,8 @@ export default function ERPContentRoutes({
   subscriptionsData,
   announcementsData,
   paymentsData,
-  branchesData,
   activityData,
   navigateToForm,
-  memberForm,
-  setMemberForm,
   subscriptionForm,
   setSubscriptionForm,
   announcementForm,
@@ -67,7 +64,6 @@ export default function ERPContentRoutes({
   paymentForm,
   setPaymentForm,
   goBackToList,
-  saveMember,
   saveSubscription,
   saveAnnouncement,
   savePayment,
@@ -84,12 +80,13 @@ export default function ERPContentRoutes({
         }
       />
 
-      <Route path="branches" element={<BranchesView branches={branchesData} membersData={membersData} />} />
+      <Route path="branches" element={<BranchesView />} />
       <Route path="admins" element={<AdminsView />} />
+      <Route path="access" element={<GroupsRightsView />} />
 
-      <Route path="members" element={<MembersView items={membersData} onCreate={() => navigateToForm('member', 'create')} onEdit={(item) => navigateToForm('member', 'edit', item)} />} />
-      <Route path="members/new" element={<MemberFormPage mode="create" data={memberForm} branchOptions={branchesData} subscriptionOptions={subscriptionsData} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />} />
-      <Route path="members/edit" element={<MemberFormPage mode="edit" data={memberForm} branchOptions={branchesData} subscriptionOptions={subscriptionsData} onChange={(field, value) => setMemberForm((prev) => ({ ...prev, [field]: value } as Member))} onBack={() => goBackToList('members')} onSave={saveMember} />} />
+      <Route path="members" element={<MembersView />} />
+      <Route path="members/new" element={<MembersView />} />
+      <Route path="members/edit" element={<MembersView />} />
 
       <Route path="subscriptions" element={<SubscriptionsView items={subscriptionsData} onCreate={() => navigateToForm('subscription', 'create')} onEdit={(item) => navigateToForm('subscription', 'edit', item)} />} />
       <Route path="subscriptions/new" element={<SubscriptionFormPage mode="create" data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />} />
