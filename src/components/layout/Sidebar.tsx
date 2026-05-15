@@ -4,6 +4,7 @@ import {
   Building2,
   ChevronRight,
   CreditCard,
+  CalendarDays,
   FileBarChart2,
   LayoutDashboard,
   MessageSquare,
@@ -14,7 +15,7 @@ import {
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'announcements' | 'sms' | 'payments' | 'reports';
+type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'events' | 'announcements' | 'sms' | 'payments' | 'reports';
 
 type SidebarProps = {
   current: SectionId;
@@ -55,6 +56,7 @@ const navGroups: readonly NavGroup[] = [
     items: [
       { id: 'members', label: 'Membri', icon: Users },
       { id: 'subscriptions', label: 'Abonamente', icon: BadgeEuro },
+      { id: 'events', label: 'Evenimente', icon: CalendarDays },
       { id: 'announcements', label: 'Anunturi', icon: Bell },
       { id: 'sms', label: 'SMS & Notificari', icon: MessageSquare },
       { id: 'payments', label: 'Plati & Facturare', icon: CreditCard },

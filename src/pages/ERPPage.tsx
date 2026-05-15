@@ -16,7 +16,7 @@ import type {
   Subscription,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'members', 'subscriptions', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'members', 'subscriptions', 'events', 'announcements', 'sms', 'payments', 'reports'];
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -277,6 +277,10 @@ export default function ERPAdminPanel() {
       return;
     }
     if (current === 'subscriptions') return navigateToForm('subscription', 'create');
+    if (current === 'events') {
+      navigate('/erp/events/new');
+      return;
+    }
     if (current === 'announcements') return navigateToForm('announcement', 'create');
     if (current === 'payments') return navigateToForm('payment', 'create');
     return navigateToForm('member', 'create');

@@ -3,6 +3,7 @@ export { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 export { AnnouncementsView } from './announcements/AnnouncementsView';
 export { BranchesView } from './branches/BranchesView';
 export { DashboardView } from './dashboard/DashboardView';
+export { EventsModuleRoutes } from './events/EventsModule';
 export { MemberFormPage } from './members/MemberFormPage';
 export { MembersView } from './members/MembersView';
 export { PaymentFormPage } from './payments/PaymentFormPage';

@@ -11,6 +11,7 @@ export type SectionId =
   | 'access'
   | 'members'
   | 'subscriptions'
+  | 'events'
   | 'announcements'
   | 'sms'
   | 'payments'

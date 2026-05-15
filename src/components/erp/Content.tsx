@@ -6,6 +6,7 @@ import { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 import { AnnouncementsView } from './announcements/AnnouncementsView';
 import { BranchesView } from './branches/BranchesView';
 import { DashboardView } from './dashboard/DashboardView';
+import { EventsModuleRoutes } from './events/EventsModule';
 import { MembersView } from './members/MembersView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
@@ -41,6 +42,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <GroupsRightsView />;
       case 'subscriptions':
         return <SubscriptionsView />;
+      case 'events':
+        return <EventsModuleRoutes />;
       case 'announcements':
         return <AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item: Announcement) => navigateToForm('announcement', 'edit', item)} />;
       case 'sms':
