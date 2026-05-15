@@ -13,7 +13,6 @@ import {
   QuickCreateMenu,
   ReportsView,
   SmsView,
-  SubscriptionFormPage,
   SubscriptionsView,
 } from '../../components/erp';
 import type {
@@ -57,14 +56,11 @@ export default function ERPContentRoutes({
   paymentsData,
   activityData,
   navigateToForm,
-  subscriptionForm,
-  setSubscriptionForm,
   announcementForm,
   setAnnouncementForm,
   paymentForm,
   setPaymentForm,
   goBackToList,
-  saveSubscription,
   saveAnnouncement,
   savePayment,
 }: ERPContentRoutesProps) {
@@ -88,9 +84,9 @@ export default function ERPContentRoutes({
       <Route path="members/new" element={<MembersView />} />
       <Route path="members/edit" element={<MembersView />} />
 
-      <Route path="subscriptions" element={<SubscriptionsView items={subscriptionsData} onCreate={() => navigateToForm('subscription', 'create')} onEdit={(item) => navigateToForm('subscription', 'edit', item)} />} />
-      <Route path="subscriptions/new" element={<SubscriptionFormPage mode="create" data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />} />
-      <Route path="subscriptions/edit" element={<SubscriptionFormPage mode="edit" data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />} />
+      <Route path="subscriptions" element={<SubscriptionsView />} />
+      <Route path="subscriptions/new" element={<SubscriptionsView openOnMount />} />
+      <Route path="subscriptions/edit" element={<SubscriptionsView />} />
 
       <Route path="announcements" element={<AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item) => navigateToForm('announcement', 'edit', item)} />} />
       <Route path="announcements/new" element={<AnnouncementFormPage mode="create" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} />} />

@@ -8,6 +8,7 @@ export type ApiUser = {
   email_verified_at?: string | null;
   groups?: ApiGroup[];
   locations?: ApiLocation[];
+  subscriptions?: ApiUserSubscription[];
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -36,6 +37,40 @@ export type ApiLocation = {
   users_count?: number;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type ApiUserSubscription = {
+  id: number;
+  name: string;
+  description?: string | null;
+  is_active?: boolean;
+};
+
+export type ApiSubscriptionUser = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+  active: boolean;
+  email: string;
+};
+
+export type ApiSubscription = {
+  id: number;
+  name: string;
+  description: string | null;
+  price: string;
+  currency: string;
+  billing_interval: 'monthly' | 'yearly';
+  duration_days: number | null;
+  trial_days: number;
+  max_users: number | null;
+  is_active: boolean;
+  users?: ApiSubscriptionUser[];
+  users_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
 };
 
 export type AuthenticatedUser = ApiUser | {
@@ -169,6 +204,10 @@ export class ErpApiService {
       if (value !== undefined && value !== '') query.set(key, String(value));
     });
     return this.request<T[]>(`/${resource}${query.size ? `?${query.toString()}` : ''}`);
+  }
+
+  async get<T>(resource: string, id: number) {
+    return this.request<T>(`/${resource}/${id}`);
   }
 
   async create<T>(resource: string, data: Record<string, unknown>) {

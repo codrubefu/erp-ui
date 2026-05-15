@@ -1,7 +1,7 @@
 import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, SectionCard, StatusBadge } from '../../primitives';
-import { erpApiService, type ApiGroup, type ApiLocation, type ApiUser } from '../../../services/ErpApiService';
+import { erpApiService, type ApiGroup, type ApiLocation, type ApiSubscription, type ApiUser } from '../../../services/ErpApiService';
 
 type UserForm = {
   first_name: string;
@@ -12,6 +12,7 @@ type UserForm = {
   active: boolean;
   group_ids: string;
   location_ids: string;
+  subscription_ids: string;
 };
 
 type MembersViewProps = {
@@ -32,6 +33,7 @@ const emptyForm: UserForm = {
   active: true,
   group_ids: '',
   location_ids: '',
+  subscription_ids: '',
 };
 
 function toIdList(value: string) {
@@ -74,6 +76,7 @@ function buildPayload(form: UserForm, mode: 'create' | 'edit') {
     active: form.active,
     group_ids: toIdList(form.group_ids),
     location_ids: toIdList(form.location_ids),
+    subscription_ids: toIdList(form.subscription_ids),
   };
 
   if (mode === 'create' || form.password.trim()) {
@@ -93,6 +96,7 @@ function formFromUser(user: ApiUser): UserForm {
     active: Boolean(user.active),
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
+    subscription_ids: relationIds(user.subscriptions),
   };
 }
 
@@ -107,6 +111,7 @@ export function MembersView({
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
+  const [subscriptions, setSubscriptions] = useState<ApiSubscription[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [perPage, setPerPage] = useState(15);
   const [loading, setLoading] = useState(false);
@@ -118,18 +123,22 @@ export function MembersView({
 
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
+  const selectedSubscriptionIds = useMemo(() => selectedIds(form.subscription_ids), [form.subscription_ids]);
 
   const loadLookups = useCallback(async () => {
     try {
-      const [groupData, locationData] = await Promise.all([
+      const [groupData, locationData, subscriptionData] = await Promise.all([
         erpApiService.list<ApiGroup>('groups', { per_page: 100 }),
         erpApiService.list<ApiLocation>('locations', { per_page: 100 }),
+        erpApiService.list<ApiSubscription>('subscriptions', { per_page: 100, is_active: '1' }),
       ]);
       setGroups(groupData);
       setLocations(locationData);
+      setSubscriptions(subscriptionData);
     } catch {
       setGroups([]);
       setLocations([]);
+      setSubscriptions([]);
     }
   }, []);
 
@@ -254,6 +263,7 @@ export function MembersView({
                 <th className="pb-3 font-semibold">User</th>
                 <th className="pb-3 font-semibold">Contact</th>
                 {showGroupsInList ? <th className="pb-3 font-semibold">Grupuri</th> : null}
+                <th className="pb-3 font-semibold">Abonamente</th>
                 <th className="pb-3 font-semibold">Locatii</th>
                 <th className="pb-3 font-semibold">Status</th>
                 <th className="pb-3 font-semibold text-right">Actiuni</th>
@@ -271,6 +281,7 @@ export function MembersView({
                     <p className="text-xs text-slate-500">{user.phone || '-'}</p>
                   </td>
                   {showGroupsInList ? <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.groups)}</td> : null}
+                  <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.subscriptions)}</td>
                   <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.locations)}</td>
                   <td className="py-4"><StatusBadge status={user.active ? 'Activ' : 'Inactiv'} /></td>
                   <td className="py-4 text-right">
@@ -286,7 +297,7 @@ export function MembersView({
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={showGroupsInList ? 6 : 5} className="py-10 text-center text-sm text-slate-500">{loading ? `Se incarca ${countLabel}...` : `Nu exista ${countLabel} pentru filtrul curent.`}</td>
+                  <td colSpan={showGroupsInList ? 7 : 6} className="py-10 text-center text-sm text-slate-500">{loading ? `Se incarca ${countLabel}...` : `Nu exista ${countLabel} pentru filtrul curent.`}</td>
                 </tr>
               )}
             </tbody>
@@ -340,6 +351,21 @@ export function MembersView({
               >
                 {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
               </select>
+            </label>
+            <label className="block md:col-span-2">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Abonamente</span>
+              <select
+                multiple
+                value={selectedSubscriptionIds}
+                onChange={(event) => {
+                  const subscriptionIds = idsFromSelect(event.currentTarget.selectedOptions);
+                  setForm((prev) => ({ ...prev, subscription_ids: subscriptionIds }));
+                }}
+                className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              >
+                {subscriptions.map((subscription) => <option key={subscription.id} value={subscription.id}>{subscription.name}</option>)}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">Selecteaza zero, unul sau mai multe abonamente pentru acest membru.</p>
             </label>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">

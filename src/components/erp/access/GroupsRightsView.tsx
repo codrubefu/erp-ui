@@ -38,6 +38,30 @@ function groupUsers(group: ApiRecord, users: ApiUser[]) {
   return names.length ? names.join(', ') : '-';
 }
 
+function relationLabels(items?: Array<{ id?: number; label?: string; name?: string }>) {
+  if (!items?.length) return '-';
+  return items.map((item) => item.label || item.name || `#${item.id}`).join(', ');
+}
+
+function relationIds(items?: Array<{ id?: number }>) {
+  return items?.map((item) => item.id).filter(Boolean).join(', ') ?? '';
+}
+
+function selectedIds(value: string | boolean) {
+  return String(value ?? '')
+    .split(',')
+    .map((part) => Number(part.trim()))
+    .filter(Boolean)
+    .map(String);
+}
+
+function idsFromSelect(options: HTMLCollectionOf<HTMLOptionElement>) {
+  return Array.from(options)
+    .filter((option) => option.selected)
+    .map((option) => option.value)
+    .join(', ');
+}
+
 function emptyForm(config: ResourceConfig): FormState {
   return config.fields.reduce<FormState>((acc, field) => {
     acc[field.name] = '';
@@ -46,6 +70,7 @@ function emptyForm(config: ResourceConfig): FormState {
 }
 
 function valueFromItem(item: ApiRecord, field: FieldConfig) {
+  if (field.name === 'right_ids' && 'rights' in item) return relationIds(item.rights);
   const raw = (item as unknown as Record<string, unknown>)[field.name];
   if (Array.isArray(raw)) return raw.map((entry) => Number((entry as { id?: number }).id)).filter(Boolean).join(', ');
   return raw == null ? '' : String(raw);
@@ -89,12 +114,13 @@ const resources: ResourceConfig[] = [
       { name: 'name', label: 'Cod', required: true },
       { name: 'label', label: 'Denumire', required: true },
       { name: 'description', label: 'Descriere', kind: 'textarea' },
-      { name: 'right_ids', label: 'ID drepturi', kind: 'ids', placeholder: '1, 2, 3' },
+      { name: 'right_ids', label: 'Drepturi', kind: 'ids' },
     ],
     columns: [
       { key: 'name', label: 'Cod' },
       { key: 'label', label: 'Denumire' },
       { key: 'description', label: 'Descriere' },
+      { key: 'rights', label: 'Drepturi', render: (item) => ('rights' in item ? relationLabels(item.rights) : '-') },
       { key: 'users', label: 'Useri', render: groupUsers },
     ],
   },
@@ -120,6 +146,7 @@ const resources: ResourceConfig[] = [
 export function GroupsRightsView() {
   const [activeKey, setActiveKey] = useState<ResourceKey>('groups');
   const [items, setItems] = useState<Record<ResourceKey, ApiRecord[]>>({ groups: [], rights: [] });
+  const [rights, setRights] = useState<ApiRight[]>([]);
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -139,6 +166,15 @@ export function GroupsRightsView() {
     }
   }, []);
 
+  const loadRights = useCallback(async () => {
+    try {
+      const data = await erpApiService.list<ApiRight>('rights', { per_page: 100 });
+      setRights(data);
+    } catch {
+      setRights([]);
+    }
+  }, []);
+
   const loadItems = useCallback(async (resourceKey: ResourceKey, currentSearch: string) => {
     setLoading(true);
     setError('');
@@ -154,7 +190,8 @@ export function GroupsRightsView() {
 
   useEffect(() => {
     void loadUsers();
-  }, [loadUsers]);
+    void loadRights();
+  }, [loadRights, loadUsers]);
 
   useEffect(() => {
     setEditing(null);
@@ -187,6 +224,7 @@ export function GroupsRightsView() {
       setForm(emptyForm(config));
       await loadItems(config.key, search);
       await loadUsers();
+      await loadRights();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Salvarea a esuat.');
     } finally {
@@ -201,6 +239,7 @@ export function GroupsRightsView() {
       await erpApiService.remove(config.key, item.id);
       await loadItems(config.key, search);
       await loadUsers();
+      await loadRights();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Stergerea a esuat.');
     }
@@ -308,6 +347,24 @@ export function GroupsRightsView() {
                       onChange={(event) => setForm((prev) => ({ ...prev, [field.name]: event.target.value }))}
                       className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
                     />
+                  </label>
+                );
+              }
+              if (field.name === 'right_ids') {
+                return (
+                  <label key={field.name} className="block">
+                    <span className="mb-2 block text-sm font-medium text-slate-700">{field.label}</span>
+                    <select
+                      multiple
+                      value={selectedIds(value)}
+                      onChange={(event) => {
+                        const rightIds = idsFromSelect(event.currentTarget.selectedOptions);
+                        setForm((prev) => ({ ...prev, [field.name]: rightIds }));
+                      }}
+                      className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                    >
+                      {rights.map((right) => <option key={right.id} value={right.id}>{right.label || right.name}</option>)}
+                    </select>
                   </label>
                 );
               }

@@ -1,5 +1,5 @@
 ﻿import { useMemo } from 'react';
-import type { Announcement, FormType, Payment, Subscription } from '../../types/erp';
+import type { Announcement, FormType, Payment } from '../../types/erp';
 import { GroupsRightsView } from './access/GroupsRightsView';
 import { AdminsView } from './admins/AdminsView';
 import { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
@@ -13,16 +13,15 @@ import { ReportsView } from './reports/ReportsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
 import type { ContentProps } from './shared/types';
 import { SmsView } from './sms/SmsView';
-import { SubscriptionFormPage } from './subscriptions/SubscriptionFormPage';
 import { SubscriptionsView } from './subscriptions/SubscriptionsView';
 
-export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, subscriptionForm, setSubscriptionForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveSubscription, saveAnnouncement, savePayment }: ContentProps) {
+export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
       return <MembersView />;
     }
     if (page.section === 'subscriptionForm') {
-      return <SubscriptionFormPage mode={page.mode ?? 'create'} data={subscriptionForm} onChange={(field, value) => setSubscriptionForm((prev) => ({ ...prev, [field]: value } as Subscription))} onBack={() => goBackToList('subscriptions')} onSave={saveSubscription} />;
+      return <SubscriptionsView openOnMount={page.mode === 'create'} />;
     }
     if (page.section === 'announcementForm') {
       return <AnnouncementFormPage mode={page.mode ?? 'create'} data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} />;
@@ -41,7 +40,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
       case 'access':
         return <GroupsRightsView />;
       case 'subscriptions':
-        return <SubscriptionsView items={subscriptionsData} onCreate={() => navigateToForm('subscription', 'create')} onEdit={(item: Subscription) => navigateToForm('subscription', 'edit', item)} />;
+        return <SubscriptionsView />;
       case 'announcements':
         return <AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item: Announcement) => navigateToForm('announcement', 'edit', item)} />;
       case 'sms':
@@ -58,7 +57,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
           </div>
         );
     }
-  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, subscriptionForm, announcementForm, paymentForm, setSubscriptionForm, setAnnouncementForm, setPaymentForm, goBackToList, saveSubscription, saveAnnouncement, savePayment]);
+  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment]);
 
   return <main className="space-y-6 p-4 md:p-8">{view}</main>;
 }
