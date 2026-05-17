@@ -52,10 +52,10 @@ export default function Content({ current, page, membersData, subscriptionsData,
       case 'articles':
         return (
           <Routes>
-            <Route path="/erp/articles" element={<ArticlesList />} />
-            <Route path="/erp/articles/create" element={<ArticleCreate />} />
-            <Route path="/erp/articles/:id" element={<ArticleDetails />} />
-            <Route path="/erp/articles/:id/edit" element={<ArticleEdit />} />
+            <Route path="articles" element={<ArticlesList />} />
+            <Route path="articles/create" element={<ArticleCreate />} />
+            <Route path="articles/:id" element={<ArticleDetails />} />
+            <Route path="articles/:id/edit" element={<ArticleEdit />} />
           </Routes>
         );
       case 'announcements':
