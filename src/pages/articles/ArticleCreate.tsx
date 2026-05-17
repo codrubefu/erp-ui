@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArticleForm from '../../components/articles/ArticleForm';
+import ArticleForm from '../../components/erp/articles/ArticleForm';
 import { articlesService, type ArticlePayload } from '../../services/articlesService';
 import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { useTranslation } from 'react-i18next';
 
 export default function ArticleCreate() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -14,9 +16,9 @@ export default function ArticleCreate() {
     setError('');
     try {
       await articlesService.create(form);
-      navigate('/erp/articles', { state: { message: 'Article a fost creat.' } });
+      navigate('/erp/articles', { state: { message: t('articles.created') } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut crea article.');
+      setError(err instanceof Error ? err.message : t('articles.createError'));
     } finally {
       setSubmitting(false);
     }

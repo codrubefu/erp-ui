@@ -15,6 +15,8 @@ import {
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '../LanguageSelector';
 
 type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'events' | 'articles' | 'announcements' | 'sms' | 'payments' | 'reports';
 
@@ -26,14 +28,14 @@ type SidebarProps = {
 
 type NavItem = {
   id: SectionId;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   rights?: string[];
 };
 
 type NavGroup = {
   id: string;
-  label?: string;
+  labelKey?: string;
   icon?: LucideIcon;
   items: readonly NavItem[];
 };
@@ -41,28 +43,28 @@ type NavGroup = {
 const navGroups: readonly NavGroup[] = [
   {
     id: 'general',
-    items: [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }],
+    items: [{ id: 'dashboard', labelKey: 'menu.dashboard', icon: LayoutDashboard }],
   },
   {
     id: 'organization',
-    label: 'Organizare',
+    labelKey: 'menu.organization',
     icon: Building2,
     items: [
-      { id: 'branches', label: 'Filiale', icon: Building2, rights: ['locations.view', 'locations.manage'] },
-      { id: 'admins', label: 'Administratori', icon: UserCheck, rights: ['users.view', 'users.manage'] },
-      { id: 'access', label: 'Grupuri si Drepturi', icon: ShieldCheck, rights: ['groups.view', 'groups.manage', 'rights.view', 'rights.manage'] },
+      { id: 'branches', labelKey: 'menu.branches', icon: Building2, rights: ['locations.view', 'locations.manage'] },
+      { id: 'admins', labelKey: 'menu.admins', icon: UserCheck, rights: ['users.view', 'users.manage'] },
+      { id: 'access', labelKey: 'menu.access', icon: ShieldCheck, rights: ['groups.view', 'groups.manage', 'rights.view', 'rights.manage'] },
     ],
   },
   {
     id: 'management',
     items: [
-      { id: 'members', label: 'Membri', icon: Users, rights: ['users.view', 'users.manage'] },
-      { id: 'subscriptions', label: 'Abonamente', icon: BadgeEuro, rights: ['subscriptions.view', 'subscriptions.manage'] },
-      { id: 'events', label: 'Evenimente', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
-      { id: 'articles', label: 'Articles', icon: Bell, rights: ['articles.view', 'articles.manage'] },
-      { id: 'sms', label: 'SMS & Notificari', icon: MessageSquare },
-      { id: 'payments', label: 'Plati & Facturare', icon: CreditCard },
-      { id: 'reports', label: 'Rapoarte', icon: FileBarChart2 },
+      { id: 'members', labelKey: 'menu.users', icon: Users, rights: ['users.view', 'users.manage'] },
+      { id: 'subscriptions', labelKey: 'menu.subscriptions', icon: BadgeEuro, rights: ['subscriptions.view', 'subscriptions.manage'] },
+      { id: 'events', labelKey: 'menu.events', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
+      { id: 'articles', labelKey: 'menu.articles', icon: Bell, rights: ['articles.view', 'articles.manage'] },
+      { id: 'sms', labelKey: 'menu.sms', icon: MessageSquare },
+      { id: 'payments', labelKey: 'menu.payments', icon: CreditCard },
+      { id: 'reports', labelKey: 'menu.reports', icon: FileBarChart2 },
     ],
   },
 ];
@@ -74,6 +76,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 export function Sidebar({ current, setCurrent, open }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
   const { hasAnyRight } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <aside className={cn('fixed inset-y-0 left-0 z-30 w-72 border-r border-slate-200 bg-[#faf7ff] p-5 transition-transform lg:static lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
@@ -83,7 +86,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
             const visibleItems = group.items.filter((item) => !item.rights || hasAnyRight(item.rights));
             if (visibleItems.length === 0) return null;
             const GroupIcon = group.icon ?? Building2;
-            const isGrouped = Boolean(group.label);
+            const isGrouped = Boolean(group.labelKey);
             const isOpen = openGroups[group.id] ?? true;
 
             return (
@@ -97,7 +100,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                       <span className="rounded-xl bg-slate-100 p-2 text-slate-700">
                         <GroupIcon className="h-4 w-4" />
                       </span>
-                      {group.label}
+                      {group.labelKey ? t(group.labelKey) : ''}
                     </span>
                     <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
                   </button>
@@ -121,7 +124,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                             <span className={cn('rounded-xl p-2', active ? 'bg-violet-100' : 'bg-slate-100')}>
                               <Icon className="h-4 w-4" />
                             </span>
-                            {item.label}
+                            {t(item.labelKey)}
                           </span>
                           <ChevronRight className="h-4 w-4 opacity-60" />
                         </button>
@@ -135,11 +138,12 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
         </nav>
 
         <div className="mt-auto rounded-3xl border border-violet-100 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-900">Rol activ</p>
+          <div className="mb-3"><LanguageSelector /></div>
+          <p className="text-sm font-semibold text-slate-900">{t('common.currentRole')}</p>
           <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
             <div>
-              <p className="text-sm font-semibold text-slate-900">Administrator</p>
-              <p className="text-xs text-slate-500">Acces complet module si rapoarte</p>
+              <p className="text-sm font-semibold text-slate-900">{t('common.administrator')}</p>
+              <p className="text-xs text-slate-500">{t('common.fullAccess')}</p>
             </div>
             <UserCheck className="h-5 w-5 text-violet-600" />
           </div>

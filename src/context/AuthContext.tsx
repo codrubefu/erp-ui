@@ -68,10 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (err instanceof ApiClientError && err.status === 403) {
-        setError('Nu ai permisiunea necesara pentru aceasta sectiune.');
+        setError('common.unauthorized');
         return;
       }
-      setError(err instanceof Error ? err.message : 'Nu am putut incarca utilizatorul autentificat.');
+      setError(err instanceof Error ? err.message : 'auth.loadUserError');
     } finally {
       setLoading(false);
     }
