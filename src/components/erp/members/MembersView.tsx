@@ -1,5 +1,6 @@
 import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input, SectionCard, StatusBadge } from '../../primitives';
 import { erpApiService, type ApiGroup, type ApiLocation, type ApiSubscription, type ApiUser } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
@@ -22,6 +23,8 @@ type MembersViewProps = {
   addLabel?: string;
   countLabel?: string;
   singularLabel?: string;
+  entityLabel?: string;
+  newEntityLabel?: string;
   showGroupsInList?: boolean;
 };
 
@@ -103,12 +106,15 @@ function formFromUser(user: ApiUser): UserForm {
 
 export function MembersView({
   resource = 'clients',
-  title = 'Management membri',
-  addLabel = 'Adauga membru',
-  countLabel = 'membri',
-  singularLabel = 'membrul',
+  title,
+  addLabel,
+  countLabel,
+  singularLabel,
+  entityLabel,
+  newEntityLabel,
   showGroupsInList = false,
 }: MembersViewProps = {}) {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
@@ -121,6 +127,13 @@ export function MembersView({
   const [editing, setEditing] = useState<ApiUser | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<UserForm>(emptyForm);
+
+  const resolvedTitle = title ?? t('members.title');
+  const resolvedAddLabel = addLabel ?? t('members.add');
+  const resolvedCountLabel = countLabel ?? t('members.countLabel');
+  const resolvedSingularLabel = singularLabel ?? t('members.singularLabel');
+  const resolvedEntityLabel = entityLabel ?? t('members.entityLabel');
+  const resolvedNewEntityLabel = newEntityLabel ?? t('members.newEntityLabel');
 
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
@@ -150,11 +163,11 @@ export function MembersView({
       const data = await erpApiService.list<ApiUser>(resource, { search, per_page: limit });
       setUsers(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Nu am putut incarca ${countLabel}.`);
+      setError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedCountLabel }));
     } finally {
       setLoading(false);
     }
-  }, [countLabel, resource]);
+  }, [resolvedCountLabel, resource, t]);
 
   const loadUsers = useCallback(() => fetchUsers(searchTerm, perPage), [fetchUsers, searchTerm, perPage]);
 
@@ -199,52 +212,52 @@ export function MembersView({
       closeForm();
       await loadUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Nu am putut salva ${singularLabel}.`);
+      setError(err instanceof Error ? err.message : t('users.saveError', { label: resolvedSingularLabel }));
     } finally {
       setSaving(false);
     }
   };
 
   const deleteUser = async (user: ApiUser) => {
-    if (!window.confirm(`Stergi ${singularLabel} ${userName(user)}?`)) return;
+    if (!window.confirm(t('users.deleteConfirm', { label: resolvedSingularLabel, name: userName(user) }))) return;
     setError('');
     try {
       await erpApiService.remove(resource, user.id);
       await loadUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Nu am putut sterge ${singularLabel}.`);
+      setError(err instanceof Error ? err.message : t('users.deleteError', { label: resolvedSingularLabel }));
     }
   };
 
   if (formOpen) {
     return (
       <PageShell
-        title={editing ? `Editare ${singularLabel}` : addLabel}
-        subtitle={`Configureaza datele pentru ${editing ? singularLabel : 'un membru nou'} fara a afisa lista in fundal.`}
-        backLabel={`Inapoi la ${countLabel}`}
+        title={editing ? t('users.editTitle', { label: resolvedEntityLabel }) : resolvedAddLabel}
+        subtitle={t('users.formSubtitle', { target: editing ? resolvedEntityLabel : resolvedNewEntityLabel })}
+        backLabel={t('common.backToList', { list: resolvedCountLabel })}
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         <SectionCard
-          title={editing ? `Editare user #${editing.id}` : 'Adaugare user'}
+          title={editing ? t('users.editCardTitle', { label: resolvedEntityLabel, id: editing.id }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
             <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
+              <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input label="Prenume" value={form.first_name} onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))} placeholder="John" />
-            <Input label="Nume" value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
-            <Input label="Email" type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
-            <Input label="Telefon" value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
-            <Input label={editing ? 'Parola noua' : 'Parola'} type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder={editing ? 'Completeaza doar daca o schimbi' : 'password'} />
+            <Input label={t('users.firstName')} value={form.first_name} onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))} placeholder="John" />
+            <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
+            <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
+            <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
+            <Input label={editing ? t('users.newPassword') : t('users.password')} type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder={editing ? t('users.changePasswordHint') : 'password'} />
             <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
               <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
-              User activ
+              {t('users.activeUser')}
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Grupuri</span>
+              <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.groups')}</span>
               <select
                 multiple
                 value={selectedGroupIds}
@@ -258,7 +271,7 @@ export function MembersView({
               </select>
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Locatii</span>
+              <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.locations')}</span>
               <select
                 multiple
                 value={selectedLocationIds}
@@ -272,7 +285,7 @@ export function MembersView({
               </select>
             </label>
             <label className="block md:col-span-2">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Abonamente</span>
+              <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.subscriptions')}</span>
               <select
                 multiple
                 value={selectedSubscriptionIds}
@@ -284,13 +297,13 @@ export function MembersView({
               >
                 {subscriptions.map((subscription) => <option key={subscription.id} value={subscription.id}>{subscription.name}</option>)}
               </select>
-              <p className="mt-2 text-xs text-slate-500">Selecteaza zero, unul sau mai multe abonamente pentru acest membru.</p>
+              <p className="mt-2 text-xs text-slate-500">{t('users.subscriptionsHint')}</p>
             </label>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
             <button onClick={() => void saveUser()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza user'}
+              <Save className="mr-2 inline h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
             </button>
           </div>
         </SectionCard>
@@ -301,59 +314,59 @@ export function MembersView({
   return (
     <div className="space-y-6">
       <SectionCard
-        title={title}
+        title={resolvedTitle}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={resetFilters} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
-              <Filter className="mr-2 inline h-4 w-4" />Reseteaza filtre
+              <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
             <button onClick={() => void loadUsers()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
-              <RefreshCw className="mr-2 inline h-4 w-4" />Refresh
+              <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
             <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
-              <Plus className="mr-2 inline h-4 w-4" />{addLabel}
+              <Plus className="mr-2 inline h-4 w-4" />{resolvedAddLabel}
             </button>
           </div>
         }
       >
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_160px_auto]">
           <Input
-            label="Cautare"
+            label={t('common.search')}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') void loadUsers();
             }}
-            placeholder="Cauta dupa nume, email sau telefon"
+            placeholder={t('users.searchPlaceholder')}
           />
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Pe pagina</span>
+            <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.perPage')}</span>
             <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           <div className="flex items-end">
-            <button onClick={() => void loadUsers()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">Cauta</button>
+            <button onClick={() => void loadUsers()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
         <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Afisare <span className="font-semibold text-slate-900">{users.length}</span> {countLabel} din API
+          {t('users.showingCount', { count: users.length, label: resolvedCountLabel })}
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-3 font-semibold">User</th>
-                <th className="pb-3 font-semibold">Contact</th>
-                {showGroupsInList ? <th className="pb-3 font-semibold">Grupuri</th> : null}
-                <th className="pb-3 font-semibold">Abonamente</th>
-                <th className="pb-3 font-semibold">Locatii</th>
-                <th className="pb-3 font-semibold">Status</th>
-                <th className="pb-3 font-semibold text-right">Actiuni</th>
+                <th className="pb-3 font-semibold">{t('users.user')}</th>
+                <th className="pb-3 font-semibold">{t('users.contact')}</th>
+                {showGroupsInList ? <th className="pb-3 font-semibold">{t('users.groups')}</th> : null}
+                <th className="pb-3 font-semibold">{t('users.subscriptions')}</th>
+                <th className="pb-3 font-semibold">{t('articles.locations')}</th>
+                <th className="pb-3 font-semibold">{t('common.status')}</th>
+                <th className="pb-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -370,21 +383,21 @@ export function MembersView({
                   {showGroupsInList ? <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.groups)}</td> : null}
                   <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.subscriptions)}</td>
                   <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.locations)}</td>
-                  <td className="py-4"><StatusBadge status={user.active ? 'Activ' : 'Inactiv'} /></td>
+                  <td className="py-4"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
                   <td className="py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => startEdit(user)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                        <Edit3 className="mr-2 h-4 w-4" />Editeaza
+                        <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
                       </button>
                       <button onClick={() => void deleteUser(user)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                        <Trash2 className="mr-2 h-4 w-4" />Sterge
+                        <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                       </button>
                     </div>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={showGroupsInList ? 7 : 6} className="py-10 text-center text-sm text-slate-500">{loading ? `Se incarca ${countLabel}...` : `Nu exista ${countLabel} pentru filtrul curent.`}</td>
+                  <td colSpan={showGroupsInList ? 7 : 6} className="py-10 text-center text-sm text-slate-500">{loading ? t('users.loadingList', { label: resolvedCountLabel }) : t('users.emptyList', { label: resolvedCountLabel })}</td>
                 </tr>
               )}
             </tbody>

@@ -7,6 +7,7 @@ type StatusBadgeProps = {
 export function StatusBadge({ status }: StatusBadgeProps) {
   const map: Record<string, string> = {
     Activ: 'bg-emerald-100 text-emerald-700',
+    Inactiv: 'bg-slate-200 text-slate-700',
     Expirat: 'bg-amber-100 text-amber-700',
     Suspendat: 'bg-rose-100 text-rose-700',
     Consumat: 'bg-slate-200 text-slate-700',
@@ -17,6 +18,17 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     Plătit: 'bg-emerald-100 text-emerald-700',
     'În așteptare': 'bg-amber-100 text-amber-700',
     Eșuat: 'bg-rose-100 text-rose-700',
+    Active: 'bg-emerald-100 text-emerald-700',
+    Inactive: 'bg-slate-200 text-slate-700',
+    Expired: 'bg-amber-100 text-amber-700',
+    Suspended: 'bg-rose-100 text-rose-700',
+    Consumed: 'bg-slate-200 text-slate-700',
+    Reserved: 'bg-cyan-100 text-cyan-700',
+    Scheduled: 'bg-violet-100 text-violet-700',
+    Published: 'bg-emerald-100 text-emerald-700',
+    Paid: 'bg-emerald-100 text-emerald-700',
+    Pending: 'bg-amber-100 text-amber-700',
+    Failed: 'bg-rose-100 text-rose-700',
   };
 
   return <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', map[status] || 'bg-slate-100 text-slate-700')}>{status}</span>;
