@@ -9,6 +9,7 @@ export type ApiUser = {
   groups?: ApiGroup[];
   locations?: ApiLocation[];
   subscriptions?: ApiUserSubscription[];
+  active_subscriptions?: ApiUserSubscription[];
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -83,6 +84,7 @@ export type AuthenticatedUser = ApiUser | {
 
 type ApiEnvelope<T> = {
   data?: T;
+  user?: T;
   token?: string;
   access_token?: string;
   bearer_token?: string;
@@ -95,8 +97,8 @@ export type LoginResult = {
   user: AuthenticatedUser | null;
 };
 
-const API_BASE_URL = import.meta.env.VITE_ERP_API_URL ?? '/api';
-const TOKEN_KEY = 'master-erp-api-token';
+export const API_BASE_URL = import.meta.env.VITE_ERP_API_URL ?? 'http://localhost:8099/api';
+export const TOKEN_KEY = 'master-erp-api-token';
 
 function joinUrl(path: string) {
   return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -119,6 +121,16 @@ function unwrap<T>(payload: T | ApiEnvelope<T>): T {
     return (payload as ApiEnvelope<T>).data as T;
   }
   return payload as T;
+}
+
+function unwrapUser(payload: AuthenticatedUser | ApiEnvelope<AuthenticatedUser>): AuthenticatedUser {
+  if (payload && typeof payload === 'object' && 'user' in payload && payload.user) {
+    return payload.user;
+  }
+  if (payload && typeof payload === 'object' && 'data' in payload && payload.data) {
+    return payload.data;
+  }
+  return payload as AuthenticatedUser;
 }
 
 export class ErpApiService {
@@ -170,7 +182,8 @@ export class ErpApiService {
     });
 
     const data = payload.data as (AuthenticatedUser & { token?: string }) | undefined;
-    const token = String(payload.token ?? payload.access_token ?? payload.bearer_token ?? data?.token ?? '');
+    const userPayload = payload.user as (AuthenticatedUser & { token?: string }) | undefined;
+    const token = String(payload.token ?? payload.access_token ?? payload.bearer_token ?? data?.token ?? userPayload?.token ?? '');
     if (!token) {
       throw new Error('Raspunsul de login nu contine bearer token.');
     }
@@ -180,14 +193,15 @@ export class ErpApiService {
     try {
       user = await this.me();
     } catch {
-      user = (payload.data as AuthenticatedUser | undefined) ?? null;
+      user = (payload.user as AuthenticatedUser | undefined) ?? (payload.data as AuthenticatedUser | undefined) ?? null;
     }
 
     return { token, user };
   }
 
   async me() {
-    return this.request<AuthenticatedUser>('/me');
+    const payload = await this.request<AuthenticatedUser | ApiEnvelope<AuthenticatedUser>>('/me');
+    return unwrapUser(payload);
   }
 
   async logout() {

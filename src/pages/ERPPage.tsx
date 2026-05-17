@@ -4,6 +4,7 @@ import Content from '../components/erp/Content';
 import { Header, LoginView, Sidebar } from '../components/AppLayout';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { erpJsonDataService, type ActivityPoint } from '../services/ErpJsonDataService';
+import { useAuth } from '../context/AuthContext';
 import type {
   Announcement,
   AppPage,
@@ -16,7 +17,7 @@ import type {
   Subscription,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'members', 'subscriptions', 'events', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'members', 'subscriptions', 'events', 'articles', 'announcements', 'sms', 'payments', 'reports'];
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -106,6 +107,7 @@ function getUserDisplayName(user: AuthenticatedUser | null, fallback: string) {
 export default function ERPAdminPanel() {
   const navigate = useNavigate();
   const location = useLocation();
+  const auth = useAuth();
   const { pathname } = location;
   const routeSection = pathname.split('/')[2];
 
@@ -113,7 +115,7 @@ export default function ERPAdminPanel() {
     ? (routeSection as SectionId)
     : 'dashboard';
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(erpApiService.getToken()) || loadStoredValue(STORAGE_KEYS.auth, false));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(erpApiService.getToken()));
   const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
   const [currentUser, setCurrentUser] = useState(() => loadStoredValue(STORAGE_KEYS.user, 'Administrator'));
   const [authLoading, setAuthLoading] = useState(false);
@@ -214,6 +216,12 @@ export default function ERPAdminPanel() {
       setPage({ section: 'subscriptionForm', mode });
       return;
     }
+    if (type === 'article') {
+      setCurrent('articles');
+      navigate('/erp/articles/create');
+      setPage({ section: 'list', mode: null });
+      return;
+    }
     if (type === 'announcement') {
       setAnnouncementForm(item ? { ...(item as Announcement) } : { ...emptyForms.announcement, id: `ANN-${String(announcementsData.length + 1).padStart(3, '0')}`, scheduled: `${formatDate()} 10:00` });
       setCurrent('announcements');
@@ -281,6 +289,10 @@ export default function ERPAdminPanel() {
       navigate('/erp/events/new');
       return;
     }
+    if (current === 'articles') {
+      navigate('/erp/articles/create');
+      return;
+    }
     if (current === 'announcements') return navigateToForm('announcement', 'create');
     if (current === 'payments') return navigateToForm('payment', 'create');
     return navigateToForm('member', 'create');
@@ -291,6 +303,8 @@ export default function ERPAdminPanel() {
     setAuthError('');
     try {
       const result = await erpApiService.login(credentials.username, credentials.password);
+      auth.setAuthenticatedUser(result.user);
+      void auth.refreshUser();
       setCurrentUser(getUserDisplayName(result.user, credentials.username || 'Administrator'));
       setIsAuthenticated(true);
       const redirectTo = typeof location.state === 'object' && location.state && 'from' in location.state
@@ -307,6 +321,7 @@ export default function ERPAdminPanel() {
 
   const handleLogout = async () => {
     await erpApiService.logout();
+    auth.setAuthenticatedUser(null);
     setIsAuthenticated(false);
     setCredentials({ username: '', password: '' });
   };

@@ -3,6 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, SectionCard, Select, StatusBadge, Textarea } from '../../primitives';
 import { erpApiService, type ApiSubscription, type ApiSubscriptionUser, type ApiUser } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
+import { Can } from '../../Can';
+import { useAuth } from '../../../context/AuthContext';
+import { apiClient } from '../../../api/apiClient';
 
 type SubscriptionForm = {
   name: string;
@@ -88,6 +91,7 @@ function subscriptionUserIds(user: ApiUser) {
 }
 
 export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProps = {}) {
+  const { hasAnyRight } = useAuth();
   const [subscriptions, setSubscriptions] = useState<ApiSubscription[]>([]);
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [subscriptionMembers, setSubscriptionMembers] = useState<ApiSubscriptionUser[]>([]);
@@ -98,7 +102,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<ApiSubscription | null>(null);
-  const [formOpen, setFormOpen] = useState(openOnMount);
+  const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<SubscriptionForm>(emptyForm);
   const [selectedSubscription, setSelectedSubscription] = useState<ApiSubscription | null>(null);
   const [subscriptionUsersLoading, setSubscriptionUsersLoading] = useState(false);
@@ -153,8 +157,8 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   }, [fetchSubscriptions]);
 
   useEffect(() => {
-    if (openOnMount) setFormOpen(true);
-  }, [openOnMount]);
+    if (openOnMount && hasAnyRight(['subscriptions.create', 'subscriptions.manage'])) setFormOpen(true);
+  }, [hasAnyRight, openOnMount]);
 
   useEffect(() => {
     if (!selectedSubscription) return;
@@ -178,12 +182,14 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   };
 
   const startCreate = () => {
+    if (!hasAnyRight(['subscriptions.create', 'subscriptions.manage'])) return;
     setEditing(null);
     setForm(emptyForm);
     setFormOpen(true);
   };
 
   const startEdit = (subscription: ApiSubscription) => {
+    if (!hasAnyRight(['subscriptions.update', 'subscriptions.manage'])) return;
     setEditing(subscription);
     setForm(formFromSubscription(subscription));
     setFormOpen(true);
@@ -196,6 +202,8 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   };
 
   const saveSubscription = async () => {
+    if (editing && !hasAnyRight(['subscriptions.update', 'subscriptions.manage'])) return;
+    if (!editing && !hasAnyRight(['subscriptions.create', 'subscriptions.manage'])) return;
     setSaving(true);
     setError('');
     try {
@@ -214,6 +222,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   };
 
   const deleteSubscription = async (subscription: ApiSubscription) => {
+    if (!hasAnyRight(['subscriptions.delete', 'subscriptions.manage'])) return;
     if (!window.confirm(`Stergi abonamentul ${subscription.name}?`)) return;
     setError('');
     try {
@@ -221,6 +230,17 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       await loadSubscriptions();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut sterge abonamentul.');
+    }
+  };
+
+  const restoreSubscription = async (subscription: ApiSubscription) => {
+    if (!hasAnyRight(['subscriptions.restore', 'subscriptions.manage'])) return;
+    setError('');
+    try {
+      await apiClient<ApiSubscription>(`/subscriptions/${subscription.id}/restore`, { method: 'POST' });
+      await loadSubscriptions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nu am putut restaura abonamentul.');
     }
   };
 
@@ -262,6 +282,10 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     void loadAssignableUsers();
   };
 
+  if (!hasAnyRight(['subscriptions.view', 'subscriptions.manage'])) {
+    return <SectionCard title="Abonamente"><p className="text-sm text-slate-600">Nu ai dreptul subscriptions.view.</p></SectionCard>;
+  }
+
   if (formOpen) {
     return (
       <PageShell
@@ -300,9 +324,11 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
-            <button onClick={() => void saveSubscription()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza abonament'}
-            </button>
+            <Can anyOf={editing ? ['subscriptions.update', 'subscriptions.manage'] : ['subscriptions.create', 'subscriptions.manage']}>
+              <button onClick={() => void saveSubscription()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+                <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza abonament'}
+              </button>
+            </Can>
           </div>
         </SectionCard>
       </PageShell>
@@ -321,9 +347,11 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
             <button onClick={() => void loadSubscriptions()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
               <RefreshCw className="mr-2 inline h-4 w-4" />Refresh
             </button>
-            <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
-              <Plus className="mr-2 inline h-4 w-4" />Adauga abonament
-            </button>
+            <Can anyOf={['subscriptions.create', 'subscriptions.manage']}>
+              <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+                <Plus className="mr-2 inline h-4 w-4" />Adauga abonament
+              </button>
+            </Can>
           </div>
         }
       >
@@ -397,12 +425,26 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
                       <button onClick={() => openUsersPanel(subscription)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         Membri
                       </button>
-                      <button onClick={() => startEdit(subscription)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                        <Edit3 className="mr-2 h-4 w-4" />Editeaza
-                      </button>
-                      <button onClick={() => void deleteSubscription(subscription)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                        <Trash2 className="mr-2 h-4 w-4" />Sterge
-                      </button>
+                      {subscription.deleted_at ? (
+                        <Can anyOf={['subscriptions.restore', 'subscriptions.manage']}>
+                          <button onClick={() => void restoreSubscription(subscription)} className="inline-flex items-center rounded-2xl border border-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">
+                            <RefreshCw className="mr-2 h-4 w-4" />Restore
+                          </button>
+                        </Can>
+                      ) : (
+                        <>
+                          <Can anyOf={['subscriptions.update', 'subscriptions.manage']}>
+                            <button onClick={() => startEdit(subscription)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                              <Edit3 className="mr-2 h-4 w-4" />Editeaza
+                            </button>
+                          </Can>
+                          <Can anyOf={['subscriptions.delete', 'subscriptions.manage']}>
+                            <button onClick={() => void deleteSubscription(subscription)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                              <Trash2 className="mr-2 h-4 w-4" />Sterge
+                            </button>
+                          </Can>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -14,8 +14,9 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
-type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'events' | 'announcements' | 'sms' | 'payments' | 'reports';
+type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'events' | 'articles' | 'announcements' | 'sms' | 'payments' | 'reports';
 
 type SidebarProps = {
   current: SectionId;
@@ -27,6 +28,7 @@ type NavItem = {
   id: SectionId;
   label: string;
   icon: LucideIcon;
+  rights?: string[];
 };
 
 type NavGroup = {
@@ -46,18 +48,18 @@ const navGroups: readonly NavGroup[] = [
     label: 'Organizare',
     icon: Building2,
     items: [
-      { id: 'branches', label: 'Filiale', icon: Building2 },
-      { id: 'admins', label: 'Administratori', icon: UserCheck },
-      { id: 'access', label: 'Grupuri si Drepturi', icon: ShieldCheck },
+      { id: 'branches', label: 'Filiale', icon: Building2, rights: ['locations.view', 'locations.manage'] },
+      { id: 'admins', label: 'Administratori', icon: UserCheck, rights: ['users.view', 'users.manage'] },
+      { id: 'access', label: 'Grupuri si Drepturi', icon: ShieldCheck, rights: ['groups.view', 'groups.manage', 'rights.view', 'rights.manage'] },
     ],
   },
   {
     id: 'management',
     items: [
-      { id: 'members', label: 'Membri', icon: Users },
-      { id: 'subscriptions', label: 'Abonamente', icon: BadgeEuro },
-      { id: 'events', label: 'Evenimente', icon: CalendarDays },
-      { id: 'announcements', label: 'Anunturi', icon: Bell },
+      { id: 'members', label: 'Membri', icon: Users, rights: ['users.view', 'users.manage'] },
+      { id: 'subscriptions', label: 'Abonamente', icon: BadgeEuro, rights: ['subscriptions.view', 'subscriptions.manage'] },
+      { id: 'events', label: 'Evenimente', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
+      { id: 'articles', label: 'Articles', icon: Bell, rights: ['articles.view', 'articles.manage'] },
       { id: 'sms', label: 'SMS & Notificari', icon: MessageSquare },
       { id: 'payments', label: 'Plati & Facturare', icon: CreditCard },
       { id: 'reports', label: 'Rapoarte', icon: FileBarChart2 },
@@ -71,12 +73,15 @@ function cn(...classes: Array<string | false | null | undefined>) {
 
 export function Sidebar({ current, setCurrent, open }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
+  const { hasAnyRight } = useAuth();
 
   return (
     <aside className={cn('fixed inset-y-0 left-0 z-30 w-72 border-r border-slate-200 bg-[#faf7ff] p-5 transition-transform lg:static lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
       <div className="flex h-full flex-col">
         <nav className="mt-6 space-y-4">
           {navGroups.map((group) => {
+            const visibleItems = group.items.filter((item) => !item.rights || hasAnyRight(item.rights));
+            if (visibleItems.length === 0) return null;
             const GroupIcon = group.icon ?? Building2;
             const isGrouped = Boolean(group.label);
             const isOpen = openGroups[group.id] ?? true;
@@ -100,7 +105,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
 
                 {(!isGrouped || isOpen) && (
                   <div className={cn('space-y-1', isGrouped && 'ml-4 border-l border-violet-100 pl-3')}>
-                    {group.items.map((item) => {
+                    {visibleItems.map((item) => {
                       const Icon = item.icon;
                       const active = current === item.id;
                       return (

@@ -1,4 +1,5 @@
 ﻿import { useMemo } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import type { Announcement, FormType, Payment } from '../../types/erp';
 import { GroupsRightsView } from './access/GroupsRightsView';
 import { AdminsView } from './admins/AdminsView';
@@ -7,6 +8,10 @@ import { AnnouncementsView } from './announcements/AnnouncementsView';
 import { BranchesView } from './branches/BranchesView';
 import { DashboardView } from './dashboard/DashboardView';
 import { EventsModuleRoutes } from './events/EventsModule';
+import ArticlesList from '../../pages/articles/ArticlesList';
+import ArticleCreate from '../../pages/articles/ArticleCreate';
+import ArticleEdit from '../../pages/articles/ArticleEdit';
+import ArticleDetails from '../../pages/articles/ArticleDetails';
 import { MembersView } from './members/MembersView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
@@ -44,6 +49,15 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <SubscriptionsView />;
       case 'events':
         return <EventsModuleRoutes />;
+      case 'articles':
+        return (
+          <Routes>
+            <Route path="/erp/articles" element={<ArticlesList />} />
+            <Route path="/erp/articles/create" element={<ArticleCreate />} />
+            <Route path="/erp/articles/:id" element={<ArticleDetails />} />
+            <Route path="/erp/articles/:id/edit" element={<ArticleEdit />} />
+          </Routes>
+        );
       case 'announcements':
         return <AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item: Announcement) => navigateToForm('announcement', 'edit', item)} />;
       case 'sms':

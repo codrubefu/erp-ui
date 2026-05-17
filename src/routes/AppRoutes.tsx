@@ -2,6 +2,7 @@
 import App from '../App';
 import AboutPage from '../pages/AboutPage';
 import NotFoundPage from '../pages/NotFoundPage';
+import Unauthorized from '../pages/Unauthorized';
 
 export default function AppRoutes() {
   return (
@@ -9,6 +10,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Navigate to="/erp/dashboard" replace />} />
       <Route path="/login" element={<App />} />
       <Route path="/erp/*" element={<App />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFoundPage />} />

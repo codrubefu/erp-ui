@@ -21,7 +21,7 @@ export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
           <Search className="h-4 w-4 text-slate-400" />
-          <input className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Cauta membri, facturi, anunturi..." />
+          <input className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Cauta membri, facturi, articles..." />
         </div>
         <div className="hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600 md:block">{currentUser || 'Administrator'}</div>
         <button onClick={onQuickCreate} className="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-200">Actiune rapida</button>

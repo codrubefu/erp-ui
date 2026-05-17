@@ -22,7 +22,7 @@ export function LoginView({ credentials, onChange, onSubmit, loading = false, er
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">Master ERP</p>
             <h1 className="mt-5 text-4xl font-bold leading-tight">Autentificare in platforma de management pentru membri si operatiuni.</h1>
-            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, anunturi, plati si rapoarte. Datele introduse in interfata sunt salvate local si raman valabile dupa refresh.</p>
+            <p className="mt-4 max-w-xl text-base text-white/80">Acces rapid la membri, filiale, administratori, abonamente, articles, plati si rapoarte. Datele introduse in interfata sunt salvate local si raman valabile dupa refresh.</p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {[

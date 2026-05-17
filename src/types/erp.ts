@@ -12,6 +12,7 @@ export type SectionId =
   | 'members'
   | 'subscriptions'
   | 'events'
+  | 'articles'
   | 'announcements'
   | 'sms'
   | 'payments'
@@ -19,7 +20,7 @@ export type SectionId =
 
 export type FormSection = 'list' | 'memberForm' | 'subscriptionForm' | 'announcementForm' | 'paymentForm';
 export type FormMode = 'create' | 'edit' | null;
-export type FormType = 'member' | 'subscription' | 'announcement' | 'payment';
+export type FormType = 'member' | 'subscription' | 'article' | 'announcement' | 'payment';
 
 export type Credentials = {
   username: string;

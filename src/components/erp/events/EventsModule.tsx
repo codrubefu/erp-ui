@@ -2,10 +2,10 @@ import { AlertTriangle, CalendarClock, ChevronLeft, ChevronRight, Edit3, Eye, Pl
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import { erpApiService, type AuthenticatedUser } from '../../../services/ErpApiService';
 import { eventService, type ApiValidationError, type EventItem, type EventPayload, type EventStatus, type EventSubscription, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import { SectionCard } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
+import { useAuth } from '../../../context/AuthContext';
 
 const weekdays: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const weekdayLabels: Record<Weekday, string> = { monday: 'Luni', tuesday: 'Marti', wednesday: 'Miercuri', thursday: 'Joi', friday: 'Vineri', saturday: 'Sambata', sunday: 'Duminica' };
@@ -13,32 +13,13 @@ const eventStatuses: EventStatus[] = ['active', 'inactive', 'cancelled'];
 const occurrenceStatuses: OccurrenceStatus[] = ['scheduled', 'cancelled', 'completed'];
 const participantStatuses: ParticipantStatus[] = ['registered', 'attended', 'cancelled', 'no_show'];
 
-function userRights(user: AuthenticatedUser | null) {
-  const rights = new Set<string>();
-  if (user && 'groups' in user) {
-    user.groups?.forEach((group) => group.rights?.forEach((right) => rights.add(right.name)));
-  }
-  return rights;
-}
-
 function usePermissions() {
-  const [rights, setRights] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    let disposed = false;
-    erpApiService.me().then((user) => {
-      if (!disposed) setRights(userRights(user));
-    }).catch(() => {
-      if (!disposed) setRights(new Set(['events.view', 'events.manage', 'event_participants.view', 'event_participants.manage']));
-    });
-    return () => {
-      disposed = true;
-    };
-  }, []);
+  const { hasAnyRight } = useAuth();
   return {
-    canViewEvents: rights.has('events.view') || rights.has('events.manage') || rights.size === 0,
-    canManageEvents: rights.has('events.manage') || rights.size === 0,
-    canViewParticipants: rights.has('event_participants.view') || rights.has('event_participants.manage') || rights.size === 0,
-    canManageParticipants: rights.has('event_participants.manage') || rights.size === 0,
+    canViewEvents: hasAnyRight(['events.view', 'events.manage']),
+    canManageEvents: hasAnyRight(['events.manage']),
+    canViewParticipants: hasAnyRight(['event_participants.view', 'event_participants.manage']),
+    canManageParticipants: hasAnyRight(['event_participants.manage']),
   };
 }
 
