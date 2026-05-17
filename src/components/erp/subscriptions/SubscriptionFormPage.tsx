@@ -1,25 +1,28 @@
 import React from 'react';
 import { Save } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Input, SectionCard, Select, StatusBadge, Textarea } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 import type { SubscriptionFormPageProps } from '../shared/types';
 
 export function SubscriptionFormPage({ mode, data, onChange, onBack, onSave }: SubscriptionFormPageProps) {
+  const { t } = useTranslation();
+
   return (
-    <PageShell title={mode === 'edit' ? 'Editare abonament' : 'Adăugare abonament'} subtitle="Configurare durată, preț, status și descriere pentru serviciu sau plan." backLabel="Înapoi la abonamente" onBack={onBack}>
-      <SectionCard title="Detalii abonament" action={<StatusBadge status={data.status} />}>
+    <PageShell title={mode === 'edit' ? t('subscriptions.edit') : t('subscriptions.add')} subtitle={t('subscriptions.formSubtitle')} backLabel={t('subscriptions.backToList')} onBack={onBack}>
+      <SectionCard title={t('subscriptions.details')} action={<StatusBadge status={data.status} />}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input label="ID abonament" value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="SUB-005" />
-          <Select label="Status" value={data.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('status', e.target.value)}>{['Activ', 'Expirat', 'Suspendat', 'Consumat', 'Rezervat'].map((item) => <option key={item}>{item}</option>)}</Select>
-          <div className="md:col-span-2"><Input label="Denumire abonament" value={data.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('name', e.target.value)} placeholder="Premium 6 luni" /></div>
-          <Input label="Durată" value={data.duration} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('duration', e.target.value)} placeholder="6 luni / 10 ședințe" />
-          <Input label="Preț" value={data.price} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('price', e.target.value)} placeholder="1200 RON" />
-          <Input label="Număr reînnoiri" type="number" value={data.renewals} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('renewals', e.target.value)} placeholder="0" />
-          <div className="md:col-span-2"><Textarea label="Descriere" value={data.description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('description', e.target.value)} placeholder="Beneficii, acces, limitări, reguli de consum." /></div>
+          <Input label={t('subscriptions.id')} value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="SUB-005" />
+          <Select label={t('common.status')} value={data.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('status', e.target.value)}>{['Activ', 'Expirat', 'Suspendat', 'Consumat', 'Rezervat'].map((item) => <option key={item}>{item}</option>)}</Select>
+          <div className="md:col-span-2"><Input label={t('subscriptions.name')} value={data.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('name', e.target.value)} placeholder={t('subscriptions.namePlaceholder')} /></div>
+          <Input label={t('subscriptions.duration')} value={data.duration} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('duration', e.target.value)} placeholder={t('subscriptions.durationPlaceholder')} />
+          <Input label={t('subscriptions.price')} value={data.price} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('price', e.target.value)} placeholder="1200 RON" />
+          <Input label={t('subscriptions.renewals')} type="number" value={data.renewals} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('renewals', e.target.value)} placeholder="0" />
+          <div className="md:col-span-2"><Textarea label={t('subscriptions.description')} value={data.description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('description', e.target.value)} placeholder={t('subscriptions.descriptionPlaceholder')} /></div>
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anulează</button>
-          <button onClick={onSave} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Save className="mr-2 inline h-4 w-4" />Salvează abonament</button>
+          <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+          <button onClick={onSave} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Save className="mr-2 inline h-4 w-4" />{t('subscriptions.save')}</button>
         </div>
       </SectionCard>
     </PageShell>

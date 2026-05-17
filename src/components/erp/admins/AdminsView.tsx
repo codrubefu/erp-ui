@@ -1,13 +1,15 @@
 import { MembersView } from '../members/MembersView';
+import { useTranslation } from 'react-i18next';
 
 export function AdminsView() {
+  const { t } = useTranslation();
   return (
     <MembersView
       resource="administrators"
-      title="Management administratori"
-      addLabel="Adauga administrator"
-      countLabel="administratori"
-      singularLabel="administratorul"
+      title={t('admins.title')}
+      addLabel={t('admins.add')}
+      countLabel={t('admins.countLabel')}
+      singularLabel={t('admins.singularLabel')}
       showGroupsInList
     />
   );
