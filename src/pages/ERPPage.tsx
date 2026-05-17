@@ -145,27 +145,16 @@ export default function ERPAdminPanel() {
   useEffect(() => saveStoredValue(STORAGE_KEYS.payments, paymentsData), [paymentsData]);
 
   useEffect(() => {
-    if (!erpApiService.getToken()) return;
-    let disposed = false;
-
-    const restoreSession = async () => {
-      try {
-        const user = await erpApiService.me();
-        if (disposed) return;
-        setCurrentUser(getUserDisplayName(user, 'Administrator'));
-        setIsAuthenticated(true);
-      } catch {
-        if (disposed) return;
-        erpApiService.clearToken();
-        setIsAuthenticated(false);
-      }
-    };
-
-    void restoreSession();
-    return () => {
-      disposed = true;
-    };
-  }, []);
+    if (auth.user) {
+      setCurrentUser(getUserDisplayName(auth.user, 'Administrator'));
+      setIsAuthenticated(Boolean(erpApiService.getToken()));
+      return;
+    }
+    if (erpApiService.getToken()) {
+      erpApiService.clearToken();
+      setIsAuthenticated(false);
+    }
+  }, [auth.user]);
 
   useEffect(() => {
     if (!routeSection) return;
@@ -304,7 +293,6 @@ export default function ERPAdminPanel() {
     try {
       const result = await erpApiService.login(credentials.username, credentials.password);
       auth.setAuthenticatedUser(result.user);
-      void auth.refreshUser();
       setCurrentUser(getUserDisplayName(result.user, credentials.username || 'Administrator'));
       setIsAuthenticated(true);
       const redirectTo = typeof location.state === 'object' && location.state && 'from' in location.state
@@ -321,7 +309,7 @@ export default function ERPAdminPanel() {
 
   const handleLogout = async () => {
     await erpApiService.logout();
-    auth.setAuthenticatedUser(null);
+    auth.clearAuthenticatedUser();
     setIsAuthenticated(false);
     setCredentials({ username: '', password: '' });
   };

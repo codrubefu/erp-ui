@@ -21,7 +21,7 @@ export function ProtectedRoute({ requiredRights = [], requireAll = false, childr
     return <div className="min-h-screen bg-slate-50 p-8 text-sm font-semibold text-red-700">{error}</div>;
   }
 
-  if (!user && !erpApiService.getToken()) {
+  if (!user || !erpApiService.getToken()) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 

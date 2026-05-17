@@ -1,9 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { ApiClientError } from '../api/apiClient';
 import { getAuthenticatedUser } from '../api/authApi';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { extractUserRights, hasAllRights as hasAllRightsHelper, hasAnyRight as hasAnyRightHelper, hasRight as hasRightHelper } from '../permissions/permissions';
+
+const AUTH_USER_KEY = 'master-erp-auth-user';
 
 type AuthContextValue = {
   user: AuthenticatedUser | null;
@@ -13,6 +14,7 @@ type AuthContextValue = {
   error: string;
   refreshUser: () => Promise<void>;
   setAuthenticatedUser: (user: AuthenticatedUser | null) => void;
+  clearAuthenticatedUser: () => void;
   hasRight: (rightName: string) => boolean;
   hasAnyRight: (rightNames: string[]) => boolean;
   hasAllRights: (rightNames: string[]) => boolean;
@@ -20,11 +22,26 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function loadStoredUser() {
+  try {
+    const raw = window.localStorage.getItem(AUTH_USER_KEY);
+    return raw ? JSON.parse(raw) as AuthenticatedUser : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredUser(user: AuthenticatedUser | null) {
+  if (!user) {
+    window.localStorage.removeItem(AUTH_USER_KEY);
+    return;
+  }
+  window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [user, setUser] = useState<AuthenticatedUser | null>(null);
-  const [loading, setLoading] = useState(Boolean(erpApiService.getToken()));
+  const [user, setUser] = useState<AuthenticatedUser | null>(() => loadStoredUser());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const rights = useMemo(() => extractUserRights(user as Parameters<typeof extractUserRights>[0]), [user]);
@@ -33,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     if (!erpApiService.getToken()) {
       setUser(null);
+      saveStoredUser(null);
       setLoading(false);
       return;
     }
@@ -42,25 +60,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const currentUser = await getAuthenticatedUser();
       setUser(currentUser);
+      saveStoredUser(currentUser);
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 401) {
         setUser(null);
-        navigate('/login', { replace: true, state: { from: location.pathname } });
+        saveStoredUser(null);
         return;
       }
       if (err instanceof ApiClientError && err.status === 403) {
-        navigate('/unauthorized', { replace: true });
+        setError('Nu ai permisiunea necesara pentru aceasta sectiune.');
         return;
       }
       setError(err instanceof Error ? err.message : 'Nu am putut incarca utilizatorul autentificat.');
     } finally {
       setLoading(false);
     }
-  }, [location.pathname, navigate]);
+  }, []);
 
-  useEffect(() => {
-    void refreshUser();
-  }, [refreshUser]);
+  const setAuthenticatedUser = useCallback((nextUser: AuthenticatedUser | null) => {
+    setUser(nextUser);
+    saveStoredUser(nextUser);
+  }, []);
+
+  const clearAuthenticatedUser = useCallback(() => {
+    setUser(null);
+    saveStoredUser(null);
+    setError('');
+  }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
@@ -69,11 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     refreshUser,
-    setAuthenticatedUser: setUser,
+    setAuthenticatedUser,
+    clearAuthenticatedUser,
     hasRight: (rightName) => hasRightHelper(rights, rightName),
     hasAnyRight: (rightNames) => hasAnyRightHelper(rights, rightNames),
     hasAllRights: (rightNames) => hasAllRightsHelper(rights, rightNames),
-  }), [error, loading, permissions, refreshUser, rights, user]);
+  }), [clearAuthenticatedUser, error, loading, permissions, refreshUser, rights, setAuthenticatedUser, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
