@@ -4,6 +4,7 @@ import {
   AdminsView,
   AnnouncementFormPage,
   AnnouncementsView,
+  ArticlesModuleRoutes,
   BranchesView,
   DashboardView,
   EventsModuleRoutes,
@@ -90,6 +91,7 @@ export default function ERPContentRoutes({
       <Route path="subscriptions/edit" element={<SubscriptionsView />} />
 
       <Route path="events/*" element={<EventsModuleRoutes />} />
+      <Route path="articles/*" element={<ArticlesModuleRoutes />} />
 
       <Route path="announcements" element={<AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item) => navigateToForm('announcement', 'edit', item)} />} />
       <Route path="announcements/new" element={<AnnouncementFormPage mode="create" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} />} />

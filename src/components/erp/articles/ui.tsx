@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import type { ArticleRelation } from '../../services/articlesService';
+import type { ArticleRelation } from '../../../services/articlesService';
 
 export function Toast({ type, message, onClose }: { type: 'success' | 'error'; message: string; onClose: () => void }) {
   return (

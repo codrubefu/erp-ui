@@ -1,12 +1,12 @@
 import { Edit3, Eye, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { SectionCard } from '../../components/primitives';
-import { articlesService, type Article, type ArticleRelation } from '../../services/articlesService';
+import { SectionCard } from '../../primitives';
+import { articlesService, type Article, type ArticleRelation } from '../../../services/articlesService';
 import { names, normalizeList, Toast } from './ui';
-import { Can } from '../../components/Can';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
-import { useAuth } from '../../context/AuthContext';
+import { Can } from '../../Can';
+import { ProtectedRoute } from '../../ProtectedRoute';
+import { useAuth } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 
 function labelFor(item: ArticleRelation) {

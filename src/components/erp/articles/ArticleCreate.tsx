@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArticleForm from '../../components/erp/articles/ArticleForm';
-import { articlesService, type ArticlePayload } from '../../services/articlesService';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import ArticleForm from './ArticleForm';
+import { articlesService, type ArticlePayload } from '../../../services/articlesService';
+import { ProtectedRoute } from '../../ProtectedRoute';
 import { useTranslation } from 'react-i18next';
 
 export default function ArticleCreate() {

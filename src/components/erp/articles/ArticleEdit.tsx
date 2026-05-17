@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { SectionCard } from '../../components/primitives';
-import ArticleForm from '../../components/erp/articles/ArticleForm';
-import { articlesService, type Article, type ArticlePayload } from '../../services/articlesService';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { SectionCard } from '../../primitives';
+import ArticleForm from './ArticleForm';
+import { articlesService, type Article, type ArticlePayload } from '../../../services/articlesService';
+import { ProtectedRoute } from '../../ProtectedRoute';
 import { useTranslation } from 'react-i18next';
 
 export default function ArticleEdit() {

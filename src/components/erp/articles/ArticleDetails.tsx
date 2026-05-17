@@ -1,11 +1,11 @@
 import { Edit3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { SectionCard } from '../../components/primitives';
-import { articlesService, type Article } from '../../services/articlesService';
+import { SectionCard } from '../../primitives';
+import { articlesService, type Article } from '../../../services/articlesService';
 import { names } from './ui';
-import { Can } from '../../components/Can';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { Can } from '../../Can';
+import { ProtectedRoute } from '../../ProtectedRoute';
 import { useTranslation } from 'react-i18next';
 
 export default function ArticleDetails() {
