@@ -120,6 +120,7 @@ export default function ERPAdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(erpApiService.getToken()));
   const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
   const [currentUser, setCurrentUser] = useState(() => loadStoredValue(STORAGE_KEYS.user, 'Administrator'));
+  const [organizationName, setOrganizationName] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 
@@ -188,6 +189,26 @@ export default function ERPAdminPanel() {
     };
 
     void loadSeedData();
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const loadOrganizationName = async () => {
+      try {
+        const configuredOrganizationName = await organizationConfigService.getOrganizationNameForCurrentUrl();
+        if (!disposed) {
+          setOrganizationName(configuredOrganizationName);
+        }
+      } catch (error) {
+        console.error('Failed loading organization name from /public/json/organizations.json', error);
+      }
+    };
+
+    void loadOrganizationName();
     return () => {
       disposed = true;
     };
@@ -333,7 +354,7 @@ export default function ERPAdminPanel() {
       <div className="flex min-h-screen">
         <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} />
         <div className="min-w-0 flex-1">
-          <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onQuickCreate={handleQuickCreate} onLogout={handleLogout} currentUser={currentUser} />
+          <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onQuickCreate={handleQuickCreate} onLogout={handleLogout} currentUser={currentUser} organizationName={organizationName} />
           <Content
             current={current}
             page={page}

@@ -1,14 +1,17 @@
 [
   {
     "url": "http://localhost:5174",
-    "organisation_id": 1
+    "organisation_id": 1,
+    "organisation_name": "Default Organization"
   },
   {
     "url": "http://dao.localhost:5174",
-    "organisation_id": 5    
+    "organisation_id": 5,
+    "organisation_name": "Dao"
   },
   {
     "url": "http://kim.localhost:5174",
-    "organisation_id": 6
+    "organisation_id": 6,
+    "organisation_name": "Kim Long Dao"
   }
 ]

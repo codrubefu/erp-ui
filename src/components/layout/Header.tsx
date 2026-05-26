@@ -7,9 +7,10 @@ type HeaderProps = {
   onQuickCreate: () => void;
   onLogout: () => void;
   currentUser: string;
+  organizationName: string;
 };
 
-export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }: HeaderProps) {
+export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser, organizationName }: HeaderProps) {
   const { t } = useTranslation();
 
   return (
@@ -19,7 +20,7 @@ export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser }
           <Menu className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-lg font-bold text-slate-900 md:text-xl">Master Erp</h1>
+          <h1 className="text-[19px] font-bold text-slate-900">{organizationName}</h1>
         </div>
       </div>
       <div className="flex items-center gap-2.5">
