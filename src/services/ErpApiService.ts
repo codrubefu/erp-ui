@@ -226,10 +226,10 @@ export class ErpApiService {
     return unwrap<T>(payload as T | ApiEnvelope<T>);
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(email: string, password: string, organizationId: string | number): Promise<LoginResult> {
     const payload = await this.request<ApiEnvelope<AuthenticatedUser> & Record<string, unknown>>('/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, organization_id: organizationId }),
     });
 
     const data = payload.data as (AuthenticatedUser & { token?: string }) | undefined;

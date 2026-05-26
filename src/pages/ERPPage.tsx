@@ -4,6 +4,7 @@ import Content from '../components/erp/Content';
 import { Header, LoginView, Sidebar } from '../components/AppLayout';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { erpJsonDataService, type ActivityPoint } from '../services/ErpJsonDataService';
+import { organizationConfigService } from '../services/OrganizationConfigService';
 import { useAuth } from '../context/AuthContext';
 import type {
   Announcement,
@@ -292,7 +293,8 @@ export default function ERPAdminPanel() {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const result = await erpApiService.login(credentials.username, credentials.password);
+      const organizationId = await organizationConfigService.getOrganizationIdForCurrentUrl();
+      const result = await erpApiService.login(credentials.username, credentials.password, organizationId);
       auth.setAuthenticatedUser(result.user);
       setCurrentUser(getUserDisplayName(result.user, credentials.username || 'Administrator'));
       setIsAuthenticated(true);
