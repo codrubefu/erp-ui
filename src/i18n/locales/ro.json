@@ -223,6 +223,7 @@
     "newEntityLabel": "un administrator nou"
   },
   "users": {
+    "userCode": "Cod utilizator",
     "firstName": "Prenume",
     "lastName": "Nume",
     "password": "Parola",
@@ -233,7 +234,7 @@
     "subscriptions": "Abonamente",
     "subscriptionsHint": "Selecteaza zero, unul sau mai multe abonamente pentru acest utilizator.",
     "perPage": "Pe pagina",
-    "searchPlaceholder": "Cauta dupa nume, email sau telefon",
+    "searchPlaceholder": "Cauta dupa cod, nume, email sau telefon",
     "showingCount": "Afisare {{count}} {{label}} din API",
     "user": "Utilizator",
     "contact": "Contact",

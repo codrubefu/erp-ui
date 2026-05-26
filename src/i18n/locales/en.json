@@ -223,6 +223,7 @@
     "newEntityLabel": "a new administrator"
   },
   "users": {
+    "userCode": "User code",
     "firstName": "First name",
     "lastName": "Last name",
     "password": "Password",
@@ -233,7 +234,7 @@
     "subscriptions": "Subscriptions",
     "subscriptionsHint": "Select zero, one, or multiple subscriptions for this user.",
     "perPage": "Per page",
-    "searchPlaceholder": "Search by name, email, or phone",
+    "searchPlaceholder": "Search by code, name, email, or phone",
     "showingCount": "Showing {{count}} {{label}} from API",
     "user": "User",
     "contact": "Contact",

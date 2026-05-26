@@ -1,5 +1,6 @@
 export type ApiUser = {
   id: number;
+  user_code?: string | null;
   first_name: string;
   last_name: string;
   phone: string | null;
@@ -83,6 +84,7 @@ export type ApiUserSubscriptionHistory = {
 
 export type ApiSubscriptionUser = {
   id: number;
+  user_code?: string | null;
   first_name: string;
   last_name: string;
   phone: string | null;
@@ -125,6 +127,20 @@ type ApiEnvelope<T> = {
   bearer_token?: string;
   message?: string;
   errors?: Record<string, string[]>;
+};
+
+export type ApiPaginated<T> = {
+  data: T[];
+  current_page?: number;
+  last_page?: number;
+  per_page?: number;
+  total?: number;
+  meta?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 };
 
 export type LoginResult = {
@@ -253,6 +269,14 @@ export class ErpApiService {
       if (value !== undefined && value !== '') query.set(key, String(value));
     });
     return this.request<T[]>(`/${resource}${query.size ? `?${query.toString()}` : ''}`);
+  }
+
+  async searchUsersByCode(search: string, page = 1, perPage = 15) {
+    const query = new URLSearchParams();
+    query.set('search', search);
+    query.set('per_page', String(perPage));
+    query.set('page', String(page));
+    return this.request<ApiUser[] | ApiPaginated<ApiUser>>(`/users/search/user-code?${query.toString()}`);
   }
 
   async get<T>(resource: string, id: number) {

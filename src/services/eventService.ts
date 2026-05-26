@@ -1,5 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_ERP_API_URL ?? '/api';
-const TOKEN_KEY = 'master-erp-api-token';
+import { API_BASE_URL, TOKEN_KEY, erpApiService } from './ErpApiService';
 
 export type EventStatus = 'active' | 'inactive' | 'cancelled';
 export type RecurrenceType = 'once' | 'weekly' | 'monthly';
@@ -30,10 +29,12 @@ export type EventSubscription = {
 
 export type EventUser = {
   id: number;
+  user_code?: string | null;
   name?: string;
   first_name?: string;
   last_name?: string;
   email: string;
+  phone?: string | null;
   has_active_subscription?: boolean;
   active_subscriptions?: EventSubscription[];
 };
@@ -153,6 +154,7 @@ async function request<T>(path: string, options: RequestInit = {}, params?: Reco
     const text = await response.text();
     const payload = text ? JSON.parse(text) : null;
     if (!response.ok) {
+      if (response.status === 401) erpApiService.clearToken();
       const normalized = new Error(payload?.message ?? 'Cererea catre API a esuat.') as ApiValidationError;
       normalized.status = response.status;
       normalized.errors = payload?.errors;
@@ -178,6 +180,7 @@ export const eventService = {
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
   updateOccurrenceParticipantStatus: (occurrenceId: number, userId: number, payload: UpdateParticipantStatusPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   searchUsers: (search: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, page, per_page: perPage }),
+  searchUsersByCard: (cardCode: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users/search/user-code', {}, { search: cardCode, page, per_page: perPage }),
   getSubscriptions: () => request<EventSubscription[] | Paginated<EventSubscription>>('/subscriptions', {}, { per_page: 100, is_active: 1 }),
 };
 

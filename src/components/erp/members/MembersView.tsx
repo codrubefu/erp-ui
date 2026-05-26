@@ -8,6 +8,7 @@ import { PageShell } from '../shared/PageShell';
 type UserFormTab = 'details' | 'subscriptions';
 
 type UserForm = {
+  user_code: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -31,6 +32,7 @@ type MembersViewProps = {
 };
 
 const emptyForm: UserForm = {
+  user_code: '',
   first_name: '',
   last_name: '',
   email: '',
@@ -151,6 +153,7 @@ function userSubscriptionLabels(user: ApiUser) {
 
 function buildPayload(form: UserForm, mode: 'create' | 'edit') {
   const payload: Record<string, unknown> = {
+    user_code: form.user_code.trim() || null,
     first_name: form.first_name,
     last_name: form.last_name,
     email: form.email,
@@ -171,8 +174,13 @@ function buildPayload(form: UserForm, mode: 'create' | 'edit') {
   return payload;
 }
 
+function usersFromSearchPayload(payload: ApiUser[] | { data?: ApiUser[] }) {
+  return Array.isArray(payload) ? payload : payload.data ?? [];
+}
+
 function formFromUser(user: ApiUser): UserForm {
   return {
+    user_code: user.user_code ?? '',
     first_name: user.first_name ?? '',
     last_name: user.last_name ?? '',
     email: user.email ?? '',
@@ -244,7 +252,9 @@ export function MembersView({
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiUser>(resource, { search, per_page: limit });
+      const data = search.trim()
+        ? usersFromSearchPayload(await erpApiService.searchUsersByCode(search.trim(), 1, limit))
+        : await erpApiService.list<ApiUser>(resource, { per_page: limit });
       setUsers(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedCountLabel }));
@@ -392,6 +402,7 @@ export function MembersView({
 
           {activeFormTab === 'details' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Input label={t('users.userCode')} value={form.user_code} onChange={(event) => setForm((prev) => ({ ...prev, user_code: event.target.value }))} placeholder="USR00000000000000000000000000001" maxLength={32} />
               <Input label={t('users.firstName')} value={form.first_name} onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))} placeholder="John" />
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
@@ -602,7 +613,7 @@ export function MembersView({
                 <tr key={user.id} className="border-b border-slate-100 align-top">
                   <td className="py-4">
                     <p className="font-semibold text-slate-900">{userName(user)}</p>
-                    <p className="text-xs text-slate-500">#{user.id}</p>
+                    <p className="text-xs text-slate-500">{user.user_code || `#${user.id}`}</p>
                   </td>
                   <td className="py-4 text-slate-600">
                     <p>{user.email}</p>

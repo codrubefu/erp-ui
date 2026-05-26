@@ -326,6 +326,14 @@ function hasActiveSubscription(user: EventUser) {
   return Boolean(user.active_subscriptions?.length);
 }
 
+function usersFromPayload(payload: Awaited<ReturnType<typeof eventService.searchUsers>>) {
+  return Array.isArray(payload) ? payload : payload.data ?? [];
+}
+
+function usersFromCardPayload(payload: Awaited<ReturnType<typeof eventService.searchUsersByCard>>) {
+  return Array.isArray(payload) ? payload : payload.data ?? [];
+}
+
 function AddParticipantModal({ occurrenceId, event, availableSlots, existingParticipants, onClose, onSaved }: { occurrenceId: number; event?: EventItem; availableSlots?: number | null; existingParticipants: EventParticipant[]; onClose: () => void; onSaved: () => void }) {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<EventUser[]>([]);
@@ -359,7 +367,7 @@ function AddParticipantModal({ occurrenceId, event, availableSlots, existingPart
     const timeout = window.setTimeout(() => {
       eventService.searchUsers(query, usersPage, usersMeta.per_page).then((payload) => {
         if (!active) return;
-        setUsers(Array.isArray(payload) ? payload : payload.data ?? []);
+        setUsers(usersFromPayload(payload));
         if (!Array.isArray(payload)) {
           setUsersMeta({
             current_page: payload.meta?.current_page ?? payload.current_page ?? usersPage,
@@ -402,7 +410,57 @@ function AddParticipantModal({ occurrenceId, event, availableSlots, existingPart
     }
   };
 
-  return <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4"><div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold">Adauga participant</h3>{event?.requires_active_subscription ? <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />Evenimentul necesita abonament activ.</p> : null}{blocked ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">Nu exista locuri disponibile.</p> : null}{error ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><TextField label="Cauta user" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Minim 2 caractere" autoFocus />{search.trim().length >= 2 ? <><div className="overflow-hidden rounded-xl border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">User</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">Abonament</th><th className="px-4 py-3 text-right">Selectie</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${hasActiveSubscription(u) ? '' : 'bg-amber-50/60'}`}><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3">{hasActiveSubscription(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Activ</span> : <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Fara abonament activ</span>}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => setUserId(String(u.id))} disabled={blocked} className={`rounded-xl px-3 py-2 text-sm font-semibold ${userId === String(u.id) ? 'bg-violet-600 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>{userId === String(u.id) ? 'Selectat' : 'Selecteaza'}</button></td></tr>) : <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? 'Se incarca userii...' : users.length ? 'Userii gasiti sunt deja participanti la aceasta aparitie.' : 'Nu exista useri pentru cautarea curenta.'}</td></tr>}</tbody></table></div><div className="flex items-center justify-between gap-3 text-sm text-slate-600"><span>{usersMeta.total ? `${usersMeta.total} useri` : 'Fara rezultate'}</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div></> : null}<SelectField label="Status" value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><label><span className="mb-2 block text-sm font-medium">Note</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-xl border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm font-semibold">Inchide</button><button onClick={() => void save()} disabled={!userId || blocked || saving} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? 'Se adauga...' : 'Adauga'}</button></div></div></div>;
+  return <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4"><div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold">Adauga participant</h3>{event?.requires_active_subscription ? <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />Evenimentul necesita abonament activ.</p> : null}{blocked ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">Nu exista locuri disponibile.</p> : null}{error ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><TextField label="Cauta user" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cod, nume, email sau telefon" autoFocus />{search.trim().length >= 2 ? <><div className="overflow-hidden rounded-xl border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">User</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">Telefon</th><th className="px-4 py-3">Abonament</th><th className="px-4 py-3 text-right">Selectie</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${hasActiveSubscription(u) ? '' : 'bg-amber-50/60'}`}><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3 text-slate-600">{u.phone || '-'}</td><td className="px-4 py-3">{hasActiveSubscription(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Activ</span> : <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Fara abonament activ</span>}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => setUserId(String(u.id))} disabled={blocked} className={`rounded-xl px-3 py-2 text-sm font-semibold ${userId === String(u.id) ? 'bg-violet-600 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>{userId === String(u.id) ? 'Selectat' : 'Selecteaza'}</button></td></tr>) : <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? 'Se incarca userii...' : users.length ? 'Userii gasiti sunt deja participanti la aceasta aparitie.' : 'Nu exista useri pentru cautarea curenta.'}</td></tr>}</tbody></table></div><div className="flex items-center justify-between gap-3 text-sm text-slate-600"><span>{usersMeta.total ? `${usersMeta.total} useri` : 'Fara rezultate'}</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div></> : null}<SelectField label="Status" value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><label><span className="mb-2 block text-sm font-medium">Note</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-xl border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm font-semibold">Inchide</button><button onClick={() => void save()} disabled={!userId || blocked || saving} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? 'Se adauga...' : 'Adauga'}</button></div></div></div>;
+}
+
+function ScanParticipantPanel({ occurrenceId, availableSlots, existingParticipants, onSaved }: { occurrenceId: number; availableSlots?: number | null; existingParticipants: EventParticipant[]; onSaved: () => void }) {
+  const [cardCode, setCardCode] = useState('');
+  const [status, setStatus] = useState<ParticipantStatus>('attended');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const blocked = availableSlots !== null && availableSlots !== undefined && availableSlots <= 0;
+  const participantIds = useMemo(() => new Set(existingParticipants.map(participantUserId).filter(Boolean)), [existingParticipants]);
+
+  const addByCardCode = async () => {
+    const code = cardCode.trim();
+    if (!code || scanning || blocked) return;
+    setScanning(true);
+    setMessage(null);
+    try {
+      const users = usersFromCardPayload(await eventService.searchUsersByCard(code, 1, 10));
+      const exactMatch = users.find((user) => user.user_code?.trim().toLowerCase() === code.toLowerCase());
+      const user = exactMatch ?? (users.length === 1 ? users[0] : null);
+      if (!user) {
+        setMessage({ type: 'error', text: 'Cardul nu a fost gasit sau cautarea a intors mai multi useri.' });
+        return;
+      }
+      if (participantIds.has(user.id)) {
+        setMessage({ type: 'error', text: `${userLabel(user)} este deja participant la aceasta aparitie.` });
+        return;
+      }
+      await eventService.addOccurrenceParticipant(occurrenceId, { user_id: user.id, status, notes: `Adaugat prin scanare card: ${code}` });
+      setCardCode('');
+      setMessage({ type: 'success', text: `${userLabel(user)} a fost adaugat.` });
+      onSaved();
+    } catch (err) {
+      const apiError = err as ApiValidationError;
+      setMessage({ type: 'error', text: apiError.status === 422 ? (apiError.errors ? Object.values(apiError.errors)[0]?.[0] : '') || apiError.message || 'Userul nu indeplineste conditiile pentru acest eveniment.' : apiError.message });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  return (
+    <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
+        <TextField label="Scaneaza card" value={cardCode} onChange={(e) => setCardCode(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addByCardCode(); } }} placeholder="Scannerul completeaza codul si apasa Enter" disabled={blocked || scanning} autoFocus />
+        <SelectField label="Status" value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked || scanning}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
+        <button type="button" onClick={() => void addByCardCode()} disabled={!cardCode.trim() || blocked || scanning} className="mt-7 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{scanning ? 'Se adauga...' : 'Adauga rapid'}</button>
+      </div>
+      {blocked ? <p className="mt-3 text-sm font-medium text-red-700">Nu exista locuri disponibile.</p> : null}
+      {message ? <p className={`mt-3 text-sm font-medium ${message.type === 'success' ? 'text-emerald-700' : 'text-red-700'}`}>{message.text}</p> : null}
+    </div>
+  );
 }
 
 function EventParticipantsPage() {
@@ -445,7 +503,7 @@ function EventParticipantsPage() {
       setSavingParticipantId(null);
     }
   };
-  return <SectionCard title="Occurrence Participants" action={permissions.canManageParticipants ? <button onClick={() => setShowAdd(true)} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 inline h-4 w-4" />Add participant</button> : null}>{error ? <p className="text-red-600">{error}</p> : null}<div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">user name</th><th className="pb-3">email</th><th className="pb-3">status</th><th className="pb-3">registered_at</th><th className="pb-3">notes</th><th className="pb-3 text-right">Actiuni</th></tr></thead><tbody>{participants.length ? participants.map((p) => { const userId = participantUserId(p); const draft = participantDrafts[userId] ?? { status: p.status, notes: p.notes ?? '' }; const dirty = draft.status !== p.status || draft.notes !== (p.notes ?? ''); return <tr key={userId} className="border-b border-slate-100 align-top"><td className="py-4">{p.user?.name || `${p.user?.first_name ?? p.first_name ?? ''} ${p.user?.last_name ?? p.last_name ?? ''}`.trim() || '-'}</td><td className="py-4">{p.user?.email ?? p.email ?? '-'}</td><td className="py-4">{permissions.canManageParticipants ? <select value={draft.status} onChange={(e) => updateDraft(userId, { status: e.target.value as ParticipantStatus })} className="rounded-xl border px-3 py-2">{participantStatuses.map((s) => <option key={s}>{s}</option>)}</select> : <StatusBadge status={p.status} />}</td><td className="py-4">{p.registered_at}</td><td className="py-4">{permissions.canManageParticipants ? <textarea value={draft.notes} onChange={(e) => updateDraft(userId, { notes: e.target.value })} rows={2} className="min-w-64 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" /> : p.notes || '-'}</td><td className="py-4 text-right">{permissions.canManageParticipants ? <div className="flex justify-end gap-2"><button onClick={() => void saveParticipant(userId)} disabled={!dirty || savingParticipantId === userId} className="rounded-xl border border-slate-200 px-3 py-2 text-slate-700 disabled:opacity-40"><Save className="h-4 w-4" /></button><button onClick={() => void remove(userId)} className="rounded-xl border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div> : null}</td></tr>; }) : <tr><td colSpan={6} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista participanti.'}</td></tr>}</tbody></table></div>{showAdd ? <AddParticipantModal occurrenceId={id} event={occurrence?.event} availableSlots={occurrence?.available_places} existingParticipants={participants} onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); void reload(); }} /> : null}</SectionCard>;
+  return <SectionCard title="Occurrence Participants" action={permissions.canManageParticipants ? <button onClick={() => setShowAdd(true)} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 inline h-4 w-4" />Add participant</button> : null}>{permissions.canManageParticipants ? <ScanParticipantPanel occurrenceId={id} availableSlots={occurrence?.available_places} existingParticipants={participants} onSaved={() => void reload()} /> : null}{error ? <p className="text-red-600">{error}</p> : null}<div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">user name</th><th className="pb-3">email</th><th className="pb-3">status</th><th className="pb-3">registered_at</th><th className="pb-3">notes</th><th className="pb-3 text-right">Actiuni</th></tr></thead><tbody>{participants.length ? participants.map((p) => { const userId = participantUserId(p); const draft = participantDrafts[userId] ?? { status: p.status, notes: p.notes ?? '' }; const dirty = draft.status !== p.status || draft.notes !== (p.notes ?? ''); return <tr key={userId} className="border-b border-slate-100 align-top"><td className="py-4">{p.user?.name || `${p.user?.first_name ?? p.first_name ?? ''} ${p.user?.last_name ?? p.last_name ?? ''}`.trim() || '-'}</td><td className="py-4">{p.user?.email ?? p.email ?? '-'}</td><td className="py-4">{permissions.canManageParticipants ? <select value={draft.status} onChange={(e) => updateDraft(userId, { status: e.target.value as ParticipantStatus })} className="rounded-xl border px-3 py-2">{participantStatuses.map((s) => <option key={s}>{s}</option>)}</select> : <StatusBadge status={p.status} />}</td><td className="py-4">{p.registered_at}</td><td className="py-4">{permissions.canManageParticipants ? <textarea value={draft.notes} onChange={(e) => updateDraft(userId, { notes: e.target.value })} rows={2} className="min-w-64 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" /> : p.notes || '-'}</td><td className="py-4 text-right">{permissions.canManageParticipants ? <div className="flex justify-end gap-2"><button onClick={() => void saveParticipant(userId)} disabled={!dirty || savingParticipantId === userId} className="rounded-xl border border-slate-200 px-3 py-2 text-slate-700 disabled:opacity-40"><Save className="h-4 w-4" /></button><button onClick={() => void remove(userId)} className="rounded-xl border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div> : null}</td></tr>; }) : <tr><td colSpan={6} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista participanti.'}</td></tr>}</tbody></table></div>{showAdd ? <AddParticipantModal occurrenceId={id} event={occurrence?.event} availableSlots={occurrence?.available_places} existingParticipants={participants} onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); void reload(); }} /> : null}</SectionCard>;
 }
 
 export function EventsModuleRoutes() {
