@@ -151,7 +151,7 @@ function userSubscriptionLabels(user: ApiUser) {
   return relationLabels(mergeById(user.subscriptions, user.active_subscriptions));
 }
 
-function buildPayload(form: UserForm, mode: 'create' | 'edit') {
+function buildPayload(form: UserForm) {
   const payload: Record<string, unknown> = {
     user_code: form.user_code.trim() || null,
     first_name: form.first_name,
@@ -167,8 +167,9 @@ function buildPayload(form: UserForm, mode: 'create' | 'edit') {
     })),
   };
 
-  if (mode === 'create' || form.password.trim()) {
-    payload.password = form.password;
+  const password = form.password.trim();
+  if (password) {
+    payload.password = password;
   }
 
   return payload;
@@ -344,9 +345,9 @@ export function MembersView({
     setError('');
     try {
       if (editing) {
-        await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(form, 'edit'));
+        await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(form));
       } else {
-        await erpApiService.create<ApiUser>(resource, buildPayload(form, 'create'));
+        await erpApiService.create<ApiUser>(resource, buildPayload(form));
       }
       closeForm();
       await loadUsers();
