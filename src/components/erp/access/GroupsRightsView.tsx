@@ -1,12 +1,11 @@
 import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input, SectionCard } from '../../primitives';
 import { erpApiService, type ApiGroup, type ApiRight, type ApiUser } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
-type ResourceKey = 'groups' | 'rights';
-type ApiRecord = (ApiGroup | ApiRight) & { id: number };
+type ApiRecord = ApiGroup & { id: number };
 type FieldKind = 'text' | 'textarea' | 'ids';
 
 type FieldConfig = {
@@ -18,7 +17,6 @@ type FieldConfig = {
 };
 
 type ResourceConfig = {
-  key: ResourceKey;
   labelKey: string;
   titleKey: string;
   searchPlaceholderKey: string;
@@ -57,11 +55,54 @@ function selectedIds(value: string | boolean) {
     .map(String);
 }
 
-function idsFromSelect(options: HTMLCollectionOf<HTMLOptionElement>) {
-  return Array.from(options)
-    .filter((option) => option.selected)
-    .map((option) => option.value)
-    .join(', ');
+function toggleSelectedId(value: string | boolean, id: number, checked: boolean) {
+  const ids = new Set(selectedIds(value));
+  const normalizedId = String(id);
+
+  if (checked) {
+    ids.add(normalizedId);
+  } else {
+    ids.delete(normalizedId);
+  }
+
+  return Array.from(ids).join(', ');
+}
+
+function normalizeRightGroup(rawGroup: string) {
+  if (rawGroup.endsWith('ies')) return `${rawGroup.slice(0, -3)}y`;
+  if (rawGroup.endsWith('ses')) return rawGroup.slice(0, -2);
+  if (rawGroup.endsWith('s') && rawGroup.length > 1) return rawGroup.slice(0, -1);
+  return rawGroup;
+}
+
+function formatRightGroupLabel(rawGroup: string) {
+  const normalizedGroup = normalizeRightGroup(rawGroup)
+    .replace(/[_-]+/g, ' ')
+    .trim();
+
+  if (!normalizedGroup) return 'Other';
+
+  return normalizedGroup.charAt(0).toUpperCase() + normalizedGroup.slice(1);
+}
+
+function groupRights(rights: ApiRight[]) {
+  const groups = new Map<string, ApiRight[]>();
+
+  rights.forEach((right) => {
+    const rawGroup = right.name.split('.')[0] || 'other';
+    const groupKey = normalizeRightGroup(rawGroup);
+    const currentGroup = groups.get(groupKey) ?? [];
+    currentGroup.push(right);
+    groups.set(groupKey, currentGroup);
+  });
+
+  return Array.from(groups.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([groupKey, items]) => ({
+      key: groupKey,
+      label: formatRightGroupLabel(groupKey),
+      items: [...items].sort((left, right) => left.name.localeCompare(right.name)),
+    }));
 }
 
 function emptyForm(config: ResourceConfig): FormState {
@@ -106,49 +147,28 @@ function readValue(item: ApiRecord, key: string) {
   return String(value);
 }
 
-const resources: ResourceConfig[] = [
-  {
-    key: 'groups',
-    labelKey: 'access.groups',
-    titleKey: 'access.groups',
-    searchPlaceholderKey: 'access.searchGroups',
-    fields: [
-      { name: 'name', labelKey: 'access.code', required: true },
-      { name: 'label', labelKey: 'access.label', required: true },
-      { name: 'description', labelKey: 'access.description', kind: 'textarea' },
-      { name: 'right_ids', labelKey: 'access.rights', kind: 'ids' },
-    ],
-    columns: [
-      { key: 'name', labelKey: 'access.code' },
-      { key: 'label', labelKey: 'access.label' },
-      { key: 'description', labelKey: 'access.description' },
-      { key: 'rights', labelKey: 'access.rights', render: (item) => ('rights' in item ? relationLabels(item.rights) : '-') },
-      { key: 'users', labelKey: 'access.users', render: groupUsers },
-    ],
-  },
-  {
-    key: 'rights',
-    labelKey: 'access.rights',
-    titleKey: 'access.accessRights',
-    searchPlaceholderKey: 'access.searchRights',
-    fields: [
-      { name: 'name', labelKey: 'access.code', required: true },
-      { name: 'label', labelKey: 'access.label', required: true },
-      { name: 'description', labelKey: 'access.description', kind: 'textarea' },
-    ],
-    columns: [
-      { key: 'name', labelKey: 'access.code' },
-      { key: 'label', labelKey: 'access.label' },
-      { key: 'description', labelKey: 'access.description' },
-      { key: 'groups_count', labelKey: 'access.groupsColumn' },
-    ],
-  },
-];
+const config: ResourceConfig = {
+  labelKey: 'access.groups',
+  titleKey: 'access.groups',
+  searchPlaceholderKey: 'access.searchGroups',
+  fields: [
+    { name: 'name', labelKey: 'access.code', required: true },
+    { name: 'label', labelKey: 'access.label', required: true },
+    { name: 'description', labelKey: 'access.description', kind: 'textarea' },
+    { name: 'right_ids', labelKey: 'access.rights', kind: 'ids' },
+  ],
+  columns: [
+    { key: 'name', labelKey: 'access.code' },
+    { key: 'label', labelKey: 'access.label' },
+    { key: 'description', labelKey: 'access.description' },
+    { key: 'rights', labelKey: 'access.rights', render: (item) => relationLabels(item.rights) },
+    { key: 'users', labelKey: 'access.users', render: groupUsers },
+  ],
+};
 
 export function GroupsRightsView() {
   const { t } = useTranslation();
-  const [activeKey, setActiveKey] = useState<ResourceKey>('groups');
-  const [items, setItems] = useState<Record<ResourceKey, ApiRecord[]>>({ groups: [], rights: [] });
+  const [items, setItems] = useState<ApiRecord[]>([]);
   const [rights, setRights] = useState<ApiRight[]>([]);
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [search, setSearch] = useState('');
@@ -157,9 +177,7 @@ export function GroupsRightsView() {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<ApiRecord | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [form, setForm] = useState<FormState>(() => emptyForm(resources[0]));
-
-  const config = useMemo(() => resources.find((resource) => resource.key === activeKey) ?? resources[0], [activeKey]);
+  const [form, setForm] = useState<FormState>(() => emptyForm(config));
 
   const loadUsers = useCallback(async () => {
     try {
@@ -179,12 +197,12 @@ export function GroupsRightsView() {
     }
   }, []);
 
-  const loadItems = useCallback(async (resourceKey: ResourceKey, currentSearch: string) => {
+  const loadItems = useCallback(async (currentSearch: string) => {
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiRecord>(resourceKey, { search: currentSearch, per_page: 50 });
-      setItems((prev) => ({ ...prev, [resourceKey]: data }));
+      const data = await erpApiService.list<ApiRecord>('groups', { search: currentSearch, per_page: 50 });
+      setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('access.loadError'));
     } finally {
@@ -202,8 +220,8 @@ export function GroupsRightsView() {
     setFormOpen(false);
     setSearch('');
     setForm(emptyForm(config));
-    void loadItems(config.key, '');
-  }, [activeKey, config, loadItems]);
+    void loadItems('');
+  }, [loadItems]);
 
   const startCreate = () => {
     setEditing(null);
@@ -229,12 +247,12 @@ export function GroupsRightsView() {
     try {
       const payload = serializeForm(config, form);
       if (editing) {
-        await erpApiService.update(config.key, editing.id, payload);
+        await erpApiService.update('groups', editing.id, payload);
       } else {
-        await erpApiService.create(config.key, payload);
+        await erpApiService.create('groups', payload);
       }
       closeForm();
-      await loadItems(config.key, search);
+      await loadItems(search);
       await loadUsers();
       await loadRights();
     } catch (err) {
@@ -248,8 +266,8 @@ export function GroupsRightsView() {
     if (!window.confirm(t('access.deleteConfirm', { id: item.id }))) return;
     setError('');
     try {
-      await erpApiService.remove(config.key, item.id);
-      await loadItems(config.key, search);
+      await erpApiService.remove('groups', item.id);
+      await loadItems(search);
       await loadUsers();
       await loadRights();
     } catch (err) {
@@ -290,21 +308,43 @@ export function GroupsRightsView() {
                 );
               }
               if (field.name === 'right_ids') {
+                const selectedRightIds = new Set(selectedIds(value));
+                const groupedRights = groupRights(rights);
                 return (
-                  <label key={field.name} className="block">
+                  <div key={field.name} className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-700">{t(field.labelKey)}</span>
-                    <select
-                      multiple
-                      value={selectedIds(value)}
-                      onChange={(event) => {
-                        const rightIds = idsFromSelect(event.currentTarget.selectedOptions);
-                        setForm((prev) => ({ ...prev, [field.name]: rightIds }));
-                      }}
-                      className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                    >
-                      {rights.map((right) => <option key={right.id} value={right.id}>{right.label || right.name}</option>)}
-                    </select>
-                  </label>
+                    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+                      {groupedRights.map((group) => (
+                        <section key={group.key} className="space-y-2">
+                          <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{group.label}</h4>
+                          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                            {group.items.map((right) => {
+                              const label = right.label || right.name;
+                              const isChecked = selectedRightIds.has(String(right.id));
+
+                              return (
+                                <label key={right.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 px-3 py-2 text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50/50">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(event) => {
+                                      const rightIds = toggleSelectedId(value, right.id, event.target.checked);
+                                      setForm((prev) => ({ ...prev, [field.name]: rightIds }));
+                                    }}
+                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-400"
+                                  />
+                                  <span className="min-w-0">
+                                    <span className="block font-medium text-slate-900">{label}</span>
+                                    {right.name && right.label && right.name !== right.label ? <span className="block text-xs text-slate-500">{right.name}</span> : null}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  </div>
                 );
               }
               return (
@@ -333,10 +373,10 @@ export function GroupsRightsView() {
   return (
     <div className="space-y-6">
       <SectionCard
-        title={t('access.title')}
+        title={t(config.titleKey)}
         action={
           <div className="flex items-center gap-2">
-            <button onClick={() => loadItems(config.key, search)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={() => loadItems(search)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
               <RefreshCw className="h-4 w-4" /> {t('common.refresh')}
             </button>
             <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
@@ -345,17 +385,7 @@ export function GroupsRightsView() {
           </div>
         }
       >
-        <div className="flex flex-wrap gap-2">
-          {resources.map((resource) => (
-            <button
-              key={resource.key}
-              onClick={() => setActiveKey(resource.key)}
-              className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${activeKey === resource.key ? 'bg-violet-600 text-white shadow-lg shadow-violet-100' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-            >
-              {t(resource.labelKey)}
-            </button>
-          ))}
-        </div>
+        <p className="text-sm text-slate-500">{t('access.formSubtitle')}</p>
       </SectionCard>
 
       <SectionCard
@@ -366,12 +396,12 @@ export function GroupsRightsView() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') void loadItems(config.key, search);
+                if (event.key === 'Enter') void loadItems(search);
               }}
               placeholder={t(config.searchPlaceholderKey)}
               className="w-56 rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-violet-400"
             />
-            <button onClick={() => loadItems(config.key, search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => loadItems(search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         }
       >
@@ -386,7 +416,7 @@ export function GroupsRightsView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {items[config.key].map((item) => (
+                {items.map((item) => (
                   <tr key={item.id} className="align-top">
                     <td className="px-3 py-4 font-semibold text-slate-900">{item.id}</td>
                     {config.columns.map((column) => (
@@ -404,7 +434,7 @@ export function GroupsRightsView() {
                     </td>
                   </tr>
                 ))}
-                {!loading && items[config.key].length === 0 ? (
+                {!loading && items.length === 0 ? (
                   <tr>
                     <td colSpan={config.columns.length + 2} className="px-3 py-8 text-center text-slate-500">{t('access.empty')}</td>
                   </tr>
