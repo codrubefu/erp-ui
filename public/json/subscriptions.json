@@ -1,20 +1,24 @@
 ﻿[
   {
-    "id": "SUB-001",
+    "id": 1,
     "name": "Premium 12 luni",
-    "duration": "12 luni",
-    "price": "2400 RON",
-    "status": "Activ",
-    "renewals": 34,
-    "description": "Acces complet și beneficii premium."
+    "description": "Acces complet și beneficii premium.",
+    "price": "2400",
+    "currency": "RON",
+    "duration_days": 365,
+    "max_users": null,
+    "is_active": true,
+    "users_count": 34
   },
   {
-    "id": "SUB-002",
+    "id": 2,
     "name": "Standard 3 luni",
-    "duration": "3 luni",
-    "price": "650 RON",
-    "status": "Activ",
-    "renewals": 51,
-    "description": "Abonament standard cu acces programat."
+    "description": "Abonament standard cu acces programat.",
+    "price": "650",
+    "currency": "RON",
+    "duration_days": 90,
+    "max_users": null,
+    "is_active": true,
+    "users_count": 51
   }
 ]

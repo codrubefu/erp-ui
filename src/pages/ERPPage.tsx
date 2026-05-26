@@ -47,13 +47,14 @@ const emptyForms: {
     branch: 'Iași Centru',
   },
   subscription: {
-    id: '',
+    id: 0,
     name: '',
-    duration: '',
     price: '',
-    status: 'Activ',
-    renewals: 0,
-    description: '',
+    currency: 'EUR',
+    duration_days: null,
+    max_users: null,
+    is_active: true,
+    description: null,
   },
   announcement: {
     id: '',
@@ -199,9 +200,9 @@ export default function ERPAdminPanel() {
       return;
     }
     if (type === 'subscription') {
-      setSubscriptionForm(item ? { ...(item as Subscription) } : { ...emptyForms.subscription, id: `SUB-${String(subscriptionsData.length + 1).padStart(3, '0')}` });
+      setSubscriptionForm(item ? { ...(item as Subscription) } : { ...emptyForms.subscription, id: subscriptionsData.length + 1 });
       setCurrent('subscriptions');
-      navigate('/erp/subscriptions');
+      navigate(mode === 'create' ? '/erp/subscriptions/new' : '/erp/subscriptions');
       setPage({ section: 'subscriptionForm', mode });
       return;
     }
@@ -232,7 +233,7 @@ export default function ERPAdminPanel() {
     setPage({ section: 'list', mode: null });
   };
 
-  const upsertById = <T extends { id: string }>(list: T[], item: T) => {
+  const upsertById = <T extends { id: string | number }>(list: T[], item: T) => {
     const exists = list.some((entry) => entry.id === item.id);
     return exists ? list.map((entry) => (entry.id === item.id ? item : entry)) : [item, ...list];
   };
@@ -245,7 +246,7 @@ export default function ERPAdminPanel() {
   };
 
   const saveSubscription = () => {
-    const payload = { ...subscriptionForm, renewals: Number(subscriptionForm.renewals) || 0 };
+    const payload = { ...subscriptionForm };
     setSubscriptionsData((prev) => upsertById(prev, payload));
     goBackToList('subscriptions');
   };

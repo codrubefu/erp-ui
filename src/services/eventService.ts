@@ -34,6 +34,8 @@ export type EventUser = {
   first_name?: string;
   last_name?: string;
   email: string;
+  has_active_subscription?: boolean;
+  active_subscriptions?: EventSubscription[];
 };
 
 export type EventItem = {
@@ -171,11 +173,11 @@ export const eventService = {
   getEventOccurrences: (eventId: number, params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>(`/events/${eventId}/occurrences`, {}, params),
   getOccurrence: (id: number) => request<EventOccurrence>(`/event-occurrences/${id}`),
   cancelOccurrence: (_id: number) => Promise.reject(new Error('Swagger nu expune un endpoint pentru anularea aparitiei.')),
-  getOccurrenceParticipants: (occurrenceId: number) => request<EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`),
+  getOccurrenceParticipants: (occurrenceId: number) => request<Paginated<EventParticipant> | EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`, {}, { per_page: 100 }),
   addOccurrenceParticipant: (occurrenceId: number, payload: AddParticipantPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants`, { method: 'POST', body: JSON.stringify(payload) }),
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
   updateOccurrenceParticipantStatus: (occurrenceId: number, userId: number, payload: UpdateParticipantStatusPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
-  searchUsers: (search: string) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, per_page: 20 }),
+  searchUsers: (search: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, page, per_page: perPage }),
   getSubscriptions: () => request<EventSubscription[] | Paginated<EventSubscription>>('/subscriptions', {}, { per_page: 100, is_active: 1 }),
 };
 

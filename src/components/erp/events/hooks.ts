@@ -98,7 +98,8 @@ export function useEventParticipants(occurrenceId?: number) {
     setLoading(true);
     setError('');
     try {
-      setParticipants(await eventService.getOccurrenceParticipants(occurrenceId));
+      const payload = await eventService.getOccurrenceParticipants(occurrenceId);
+      setParticipants(Array.isArray(payload) ? payload : payload.data ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut incarca participantii.');
     } finally {

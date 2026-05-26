@@ -41,13 +41,32 @@ export type Member = {
 };
 
 export type Subscription = {
-  id: string;
+  id: number | string;
   name: string;
-  duration: string;
-  price: string;
-  status: SubscriptionStatus;
-  renewals: number;
-  description: string;
+  description: string | null;
+  price: string | number;
+  currency: string;
+  duration_days: number | null;
+  max_users: number | null;
+  is_active: boolean;
+  users_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+};
+
+export type UserSubscriptionAssignment = {
+  id: number;
+  start_date?: string;
+};
+
+export type UserSubscriptionHistory = {
+  id: number | null;
+  subscription_id: number;
+  name: string;
+  start_date: string | null;
+  expires_at: string | null;
+  is_active: boolean;
 };
 
 export type Announcement = {

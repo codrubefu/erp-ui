@@ -10,6 +10,8 @@ export type ApiUser = {
   locations?: ApiLocation[];
   subscriptions?: ApiUserSubscription[];
   active_subscriptions?: ApiUserSubscription[];
+  subscription_history?: ApiUserSubscriptionHistory[];
+  has_active_subscription?: boolean;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -44,7 +46,39 @@ export type ApiUserSubscription = {
   id: number;
   name: string;
   description?: string | null;
+  price?: string | number;
+  currency?: string;
+  duration_days?: number | null;
+  max_users?: number | null;
   is_active?: boolean;
+  start_date?: string | null;
+  expires_at?: string | null;
+  pivot?: ApiUserSubscriptionPivot;
+};
+
+export type ApiUserSubscriptionAssignment = {
+  id: number;
+  start_date?: string;
+};
+
+export type ApiUserSubscriptionPivot = {
+  id?: number | null;
+  user_id?: number;
+  subscription_id?: number;
+  start_date?: string | null;
+  expires_at?: string | null;
+  is_active?: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ApiUserSubscriptionHistory = {
+  id: number | null;
+  subscription_id: number;
+  name: string;
+  start_date: string | null;
+  expires_at: string | null;
+  is_active: boolean;
 };
 
 export type ApiSubscriptionUser = {
@@ -60,15 +94,16 @@ export type ApiSubscription = {
   id: number;
   name: string;
   description: string | null;
-  price: string;
+  price: string | number;
   currency: string;
-  billing_interval: 'monthly' | 'yearly';
   duration_days: number | null;
-  trial_days: number;
   max_users: number | null;
   is_active: boolean;
   users?: ApiSubscriptionUser[];
   users_count?: number;
+  start_date?: string | null;
+  expires_at?: string | null;
+  pivot?: ApiUserSubscriptionPivot;
   created_at?: string | null;
   updated_at?: string | null;
   deleted_at?: string | null;
