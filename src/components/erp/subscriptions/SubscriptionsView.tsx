@@ -1,5 +1,6 @@
 import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, SectionCard, StatusBadge, Textarea } from '../../primitives';
 import { erpApiService, type ApiSubscription, type ApiSubscriptionUser } from '../../../services/ErpApiService';
@@ -71,6 +72,7 @@ function userName(user: ApiSubscriptionUser) {
 }
 
 export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProps = {}) {
+  const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,7 +115,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       });
       setSubscriptions(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut incarca abonamentele.');
+      setError(err instanceof Error ? err.message : t('subscriptions.loadError'));
     } finally {
       setLoading(false);
     }
@@ -149,7 +151,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         setSelectedSubscription(subscription);
         setSubscriptionMembers(subscription.users ?? []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Nu am putut incarca abonamentul.');
+        setError(err instanceof Error ? err.message : t('subscriptions.loadOneError'));
       } finally {
         setSubscriptionUsersLoading(false);
       }
@@ -209,7 +211,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       closeForm();
       await loadSubscriptions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut salva abonamentul.');
+      setError(err instanceof Error ? err.message : t('subscriptions.saveError'));
     } finally {
       setSaving(false);
     }
@@ -217,13 +219,13 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
 
   const deleteSubscription = async (subscription: ApiSubscription) => {
     if (!hasAnyRight(['subscriptions.delete', 'subscriptions.manage'])) return;
-    if (!window.confirm(`Stergi abonamentul ${subscription.name}?`)) return;
+    if (!window.confirm(t('subscriptions.deleteConfirm', { name: subscription.name }))) return;
     setError('');
     try {
       await erpApiService.remove('subscriptions', subscription.id);
       await loadSubscriptions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut sterge abonamentul.');
+      setError(err instanceof Error ? err.message : t('subscriptions.deleteError'));
     }
   };
 
@@ -234,7 +236,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       await apiClient<ApiSubscription>(`/subscriptions/${subscription.id}/restore`, { method: 'POST' });
       await loadSubscriptions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut restaura abonamentul.');
+      setError(err instanceof Error ? err.message : t('subscriptions.restoreError'));
     }
   };
 
@@ -249,45 +251,45 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   };
 
   if (!hasAnyRight(['subscriptions.view', 'subscriptions.manage'])) {
-    return <SectionCard title="Abonamente"><p className="text-sm text-slate-600">Nu ai dreptul subscriptions.view.</p></SectionCard>;
+    return <SectionCard title={t('subscriptions.title')}><p className="text-sm text-slate-600">{t('subscriptions.missingViewRight')}</p></SectionCard>;
   }
 
   if (formOpen) {
     return (
       <PageShell
-        title={editing ? 'Editare abonament' : 'Adaugare abonament'}
-        subtitle="Formularul de abonament este afisat separat, fara lista din fundal."
-        backLabel="Inapoi la abonamente"
+        title={editing ? t('subscriptions.edit') : t('subscriptions.add')}
+        subtitle={t('subscriptions.formSubtitle')}
+        backLabel={t('subscriptions.backToList')}
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         <SectionCard
-          title={editing ? `Editare abonament #${editing.id}` : 'Adaugare abonament'}
+          title={editing ? t('subscriptions.editCardTitle', { id: editing.id }) : t('subscriptions.add')}
           action={
             <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
+              <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input label="Nume" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
-            <Input label="Pret" type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
-            <Input label="Moneda" maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
-            <Input label="Durata in zile" type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
-            <Input label="Numar maxim utilizatori" type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
+            <Input label={t('subscriptions.name')} value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
+            <Input label={t('subscriptions.price')} type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
+            <Input label={t('subscriptions.currency')} maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
+            <Input label={t('subscriptions.durationDays')} type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
+            <Input label={t('subscriptions.maxUsers')} type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
             <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
               <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
-              Abonament activ
+              {t('subscriptions.activeSubscription')}
             </label>
             <div className="md:col-span-2">
-              <Textarea label="Descriere" value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Enterprise subscription" />
+              <Textarea label={t('subscriptions.description')} value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Enterprise subscription" />
             </div>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
             <Can anyOf={editing ? ['subscriptions.update', 'subscriptions.manage'] : ['subscriptions.create', 'subscriptions.manage']}>
               <button onClick={() => void saveSubscription()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-                <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza abonament'}
+                <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('subscriptions.save')}
               </button>
             </Can>
           </div>
@@ -299,31 +301,31 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   if (membersSubscriptionId) {
     return (
       <PageShell
-        title={selectedSubscription ? `Membri pentru ${selectedSubscription.name}` : 'Membri abonament'}
-        subtitle="Lista membrilor atasati acestui abonament."
-        backLabel="Inapoi la abonamente"
+        title={selectedSubscription ? t('subscriptions.membersFor', { name: selectedSubscription.name }) : t('subscriptions.subscriptionMembers')}
+        subtitle={t('subscriptions.membersSubtitle')}
+        backLabel={t('subscriptions.backToList')}
         onBack={closeUsersPanel}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         <SectionCard
-          title="Membri abonament"
+          title={t('subscriptions.subscriptionMembers')}
           action={
             <button onClick={closeUsersPanel} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
+              <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
           <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            {subscriptionUsersLoading ? 'Se incarca membrii abonamentului...' : `Afisare ${usersForSelectedSubscription.length} membri atasati acestui abonament.`}
+            {subscriptionUsersLoading ? t('subscriptions.loadingMembers') : t('subscriptions.showingMembers', { count: usersForSelectedSubscription.length })}
           </div>
 
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="pb-3 font-semibold">Membru</th>
-                  <th className="pb-3 font-semibold">Contact</th>
-                  <th className="pb-3 font-semibold">Status</th>
+                  <th className="pb-3 font-semibold">{t('payments.member')}</th>
+                  <th className="pb-3 font-semibold">{t('users.contact')}</th>
+                  <th className="pb-3 font-semibold">{t('common.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,12 +339,12 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
                       <p>{user.email}</p>
                       <p className="text-xs text-slate-500">{user.phone || '-'}</p>
                     </td>
-                    <td className="py-4"><StatusBadge status={user.active ? 'Activ' : 'Inactiv'} /></td>
+                    <td className="py-4"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
                   </tr>
                 )) : (
                   <tr>
                     <td colSpan={3} className="py-10 text-center text-sm text-slate-500">
-                      {subscriptionUsersLoading ? 'Se incarca membrii...' : 'Nu exista membri atasati acestui abonament.'}
+                      {subscriptionUsersLoading ? t('subscriptions.loadingMembersShort') : t('subscriptions.noMembers')}
                     </td>
                   </tr>
                 )}
@@ -357,18 +359,18 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   return (
     <div className="space-y-6">
       <SectionCard
-        title="Management abonamente"
+        title={t('subscriptions.managementTitle')}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={resetFilters} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
-              <Filter className="mr-2 inline h-4 w-4" />Reseteaza filtre
+              <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
             <button onClick={() => void loadSubscriptions()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
-              <RefreshCw className="mr-2 inline h-4 w-4" />Refresh
+              <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
             <Can anyOf={['subscriptions.create', 'subscriptions.manage']}>
               <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
-                <Plus className="mr-2 inline h-4 w-4" />Adauga abonament
+                <Plus className="mr-2 inline h-4 w-4" />{t('subscriptions.add')}
               </button>
             </Can>
           </div>
@@ -376,49 +378,49 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       >
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_150px_150px_auto]">
           <Input
-            label="Cautare"
+            label={t('common.search')}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') void loadSubscriptions();
             }}
-            placeholder="Cauta dupa nume sau descriere"
+            placeholder={t('subscriptions.searchPlaceholder')}
           />
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Status</span>
+            <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.status')}</span>
             <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as typeof activeFilter)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
-              <option value="all">Toate</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="all">{t('common.all')}</option>
+              <option value="active">{t('subscriptions.active')}</option>
+              <option value="inactive">{t('subscriptions.inactive')}</option>
             </select>
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Pe pagina</span>
+            <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.perPage')}</span>
             <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           <div className="flex items-end">
-            <button onClick={() => void loadSubscriptions()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">Cauta</button>
+            <button onClick={() => void loadSubscriptions()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
         <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Afisare <span className="font-semibold text-slate-900">{subscriptions.length}</span> abonamente din API
+          {t('subscriptions.showingCount', { count: subscriptions.length })}
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-3 font-semibold">Abonament</th>
-                <th className="pb-3 font-semibold">Pret</th>
-                <th className="pb-3 font-semibold">Limite</th>
-                <th className="pb-3 font-semibold">Membri</th>
-                <th className="pb-3 font-semibold">Status</th>
-                <th className="pb-3 font-semibold text-right">Actiuni</th>
+                <th className="pb-3 font-semibold">{t('subscriptions.subscription')}</th>
+                <th className="pb-3 font-semibold">{t('subscriptions.price')}</th>
+                <th className="pb-3 font-semibold">{t('subscriptions.limits')}</th>
+                <th className="pb-3 font-semibold">{t('subscriptions.members')}</th>
+                <th className="pb-3 font-semibold">{t('common.status')}</th>
+                <th className="pb-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -426,37 +428,37 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
                 <tr key={subscription.id} className="border-b border-slate-100 align-top">
                   <td className="max-w-[320px] py-4">
                     <p className="font-semibold text-slate-900">{subscription.name}</p>
-                    <p className="text-xs text-slate-500">#{subscription.id} - Actualizat {formatDate(subscription.updated_at)}</p>
+                    <p className="text-xs text-slate-500">#{subscription.id} - {t('branches.updated')} {formatDate(subscription.updated_at)}</p>
                     <p className="mt-1 text-sm text-slate-600">{subscription.description || '-'}</p>
                   </td>
                   <td className="py-4 font-semibold text-slate-900">{subscription.price} {subscription.currency}</td>
                   <td className="py-4 text-slate-600">
-                    <p>Durata: {subscription.duration_days ? `${subscription.duration_days} zile` : 'Fara expirare automata'}</p>
-                    <p>Utilizatori: {subscription.max_users ?? '-'}</p>
+                    <p>{t('subscriptions.duration')}: {subscription.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</p>
+                    <p>{t('branches.users')}: {subscription.max_users ?? '-'}</p>
                   </td>
                   <td className="py-4 text-slate-600">{subscription.users_count ?? subscription.users?.length ?? '-'}</td>
-                  <td className="py-4"><StatusBadge status={subscription.is_active ? 'Activ' : 'Inactiv'} /></td>
+                  <td className="py-4"><StatusBadge status={subscription.is_active ? t('users.statusActive') : t('users.statusInactive')} /></td>
                   <td className="py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => openUsersPanel(subscription)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                        Membri
+                        {t('subscriptions.members')}
                       </button>
                       {subscription.deleted_at ? (
                         <Can anyOf={['subscriptions.restore', 'subscriptions.manage']}>
                           <button onClick={() => void restoreSubscription(subscription)} className="inline-flex items-center rounded-2xl border border-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">
-                            <RefreshCw className="mr-2 h-4 w-4" />Restore
+                            <RefreshCw className="mr-2 h-4 w-4" />{t('common.restore')}
                           </button>
                         </Can>
                       ) : (
                         <>
                           <Can anyOf={['subscriptions.update', 'subscriptions.manage']}>
                             <button onClick={() => startEdit(subscription)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                              <Edit3 className="mr-2 h-4 w-4" />Editeaza
+                              <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
                             </button>
                           </Can>
                           <Can anyOf={['subscriptions.delete', 'subscriptions.manage']}>
                             <button onClick={() => void deleteSubscription(subscription)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                              <Trash2 className="mr-2 h-4 w-4" />Sterge
+                              <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                             </button>
                           </Can>
                         </>
@@ -466,7 +468,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-sm text-slate-500">{loading ? 'Se incarca abonamentele...' : 'Nu exista abonamente pentru filtrul curent.'}</td>
+                  <td colSpan={7} className="py-10 text-center text-sm text-slate-500">{loading ? t('subscriptions.loadingList') : t('subscriptions.empty')}</td>
                 </tr>
               )}
             </tbody>

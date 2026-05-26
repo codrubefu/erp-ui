@@ -389,7 +389,7 @@ export function MembersView({
           <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200">
             {[
               ['details', 'Date utilizator'],
-              ['subscriptions', 'Abonamente'],
+              ['subscriptions', t('users.subscriptions')],
             ].map(([tab, label]) => (
               <button
                 key={tab}
@@ -446,33 +446,33 @@ export function MembersView({
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-700">Adauga abonament</span>
+                  <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.addSubscription')}</span>
                   <select value={subscriptionToAdd} onChange={(event) => setSubscriptionToAdd(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
-                    <option value="">Selecteaza abonamentul</option>
+                    <option value="">{t('users.selectSubscription')}</option>
                     {subscriptions.filter((subscription) => !selectedSubscriptionIds.includes(String(subscription.id))).map((subscription) => (
                       <option key={subscription.id} value={subscription.id}>{subscription.name}</option>
                     ))}
                   </select>
                 </label>
-                <Input label="Data start" type="date" value={subscriptionStartDate} onChange={(event) => setSubscriptionStartDate(event.target.value)} />
+                <Input label={t('users.startDate')} type="date" value={subscriptionStartDate} onChange={(event) => setSubscriptionStartDate(event.target.value)} />
                 <div className="flex items-end">
                   <button onClick={addSubscriptionAssignment} disabled={!subscriptionToAdd} className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
-                    <Plus className="mr-2 inline h-4 w-4" />Adauga
+                    <Plus className="mr-2 inline h-4 w-4" />{t('common.add')}
                   </button>
                 </div>
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-slate-900">Abonamente curente</h3>
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.currentSubscriptions')}</h3>
                 <div className="overflow-x-auto rounded-2xl border border-slate-200">
                   <table className="min-w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">Abonament</th>
-                        <th className="px-4 py-3 font-semibold">Adaugat</th>
-                        <th className="px-4 py-3 font-semibold">Expira</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
-                        <th className="px-4 py-3 font-semibold text-right">Actiuni</th>
+                        <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('users.added')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('users.expires')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
+                        <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -485,23 +485,23 @@ export function MembersView({
                           <tr key={assignment.id} className="border-t border-slate-100 align-top">
                             <td className="px-4 py-3">
                               <p className="font-medium text-slate-900">{subscription?.name ?? `#${assignment.id}`}</p>
-                              <p className="text-xs text-slate-500">{subscription?.duration_days ? `${subscription.duration_days} zile` : 'Fara expirare automata'}</p>
+                              <p className="text-xs text-slate-500">{subscription?.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</p>
                             </td>
                             <td className="px-4 py-3">
-                              <Input label="Data start" type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} />
+                              <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} />
                             </td>
-                            <td className="px-4 py-3 text-slate-600">{expiresAt ?? 'Fara expirare automata'}</td>
-                            <td className="px-4 py-3"><StatusBadge status={subscriptionIsActive(editing, assignment.id, userSubscription ?? subscription) ? 'Activ' : 'Expirat'} /></td>
+                            <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('subscriptions.noAutoExpiry')}</td>
+                            <td className="px-4 py-3"><StatusBadge status={subscriptionIsActive(editing, assignment.id, userSubscription ?? subscription) ? t('users.statusActive') : t('users.statusExpired')} /></td>
                             <td className="px-4 py-3 text-right">
                               <button onClick={() => removeSubscriptionAssignment(assignment.id)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                                <Trash2 className="mr-2 h-4 w-4" />Sterge
+                                <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                               </button>
                             </td>
                           </tr>
                         );
                       }) : (
                         <tr>
-                          <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">Nu exista abonamente atasate.</td>
+                          <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noAttachedSubscriptions')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -510,15 +510,15 @@ export function MembersView({
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-slate-900">Istoric abonamente</h3>
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.subscriptionHistory')}</h3>
                 <div className="overflow-x-auto rounded-2xl border border-slate-200">
                   <table className="min-w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">Abonament</th>
-                        <th className="px-4 py-3 font-semibold">Adaugat</th>
-                        <th className="px-4 py-3 font-semibold">Expira</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
+                        <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('users.added')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('users.expires')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -526,12 +526,12 @@ export function MembersView({
                         <tr key={`${item.subscription_id}-${item.id ?? item.start_date}`} className="border-t border-slate-100">
                           <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
                           <td className="px-4 py-3 text-slate-600">{formatDate(item.start_date)}</td>
-                          <td className="px-4 py-3 text-slate-600">{item.expires_at ? formatDate(item.expires_at) : 'Fara expirare automata'}</td>
-                          <td className="px-4 py-3"><StatusBadge status={item.is_active ? 'Activ' : 'Expirat'} /></td>
+                          <td className="px-4 py-3 text-slate-600">{item.expires_at ? formatDate(item.expires_at) : t('subscriptions.noAutoExpiry')}</td>
+                          <td className="px-4 py-3"><StatusBadge status={item.is_active ? t('users.statusActive') : t('users.statusExpired')} /></td>
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">Nu exista istoric pentru acest utilizator.</td>
+                          <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noSubscriptionHistory')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -623,7 +623,7 @@ export function MembersView({
                   {showGroupsInList ? <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.groups)}</td> : null}
                   <td className="max-w-[260px] py-4 text-slate-600">
                     <p>{userSubscriptionLabels(user)}</p>
-                    <div className="mt-2"><StatusBadge status={hasActiveSubscription(user) ? 'Activ' : 'Fara abonament activ'} /></div>
+                    <div className="mt-2"><StatusBadge status={hasActiveSubscription(user) ? t('users.statusActive') : t('users.noActiveSubscription')} /></div>
                   </td>
                   <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.locations)}</td>
                   <td className="py-4"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>

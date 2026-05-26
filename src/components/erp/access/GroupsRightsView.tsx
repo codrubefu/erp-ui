@@ -1,5 +1,6 @@
 import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input, SectionCard } from '../../primitives';
 import { erpApiService, type ApiGroup, type ApiRight, type ApiUser } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
@@ -10,7 +11,7 @@ type FieldKind = 'text' | 'textarea' | 'ids';
 
 type FieldConfig = {
   name: string;
-  label: string;
+  labelKey: string;
   kind?: FieldKind;
   required?: boolean;
   placeholder?: string;
@@ -18,11 +19,11 @@ type FieldConfig = {
 
 type ResourceConfig = {
   key: ResourceKey;
-  label: string;
-  title: string;
-  searchPlaceholder: string;
+  labelKey: string;
+  titleKey: string;
+  searchPlaceholderKey: string;
   fields: FieldConfig[];
-  columns: Array<{ key: string; label: string; render?: (item: ApiRecord, users: ApiUser[]) => string }>;
+  columns: Array<{ key: string; labelKey: string; render?: (item: ApiRecord, users: ApiUser[]) => string }>;
 };
 
 type FormState = Record<string, string | boolean>;
@@ -108,43 +109,44 @@ function readValue(item: ApiRecord, key: string) {
 const resources: ResourceConfig[] = [
   {
     key: 'groups',
-    label: 'Grupuri de utilizatori',
-    title: 'Grupuri de utilizatori',
-    searchPlaceholder: 'Cauta grupuri',
+    labelKey: 'access.groups',
+    titleKey: 'access.groups',
+    searchPlaceholderKey: 'access.searchGroups',
     fields: [
-      { name: 'name', label: 'Cod', required: true },
-      { name: 'label', label: 'Denumire', required: true },
-      { name: 'description', label: 'Descriere', kind: 'textarea' },
-      { name: 'right_ids', label: 'Drepturi', kind: 'ids' },
+      { name: 'name', labelKey: 'access.code', required: true },
+      { name: 'label', labelKey: 'access.label', required: true },
+      { name: 'description', labelKey: 'access.description', kind: 'textarea' },
+      { name: 'right_ids', labelKey: 'access.rights', kind: 'ids' },
     ],
     columns: [
-      { key: 'name', label: 'Cod' },
-      { key: 'label', label: 'Denumire' },
-      { key: 'description', label: 'Descriere' },
-      { key: 'rights', label: 'Drepturi', render: (item) => ('rights' in item ? relationLabels(item.rights) : '-') },
-      { key: 'users', label: 'Useri', render: groupUsers },
+      { key: 'name', labelKey: 'access.code' },
+      { key: 'label', labelKey: 'access.label' },
+      { key: 'description', labelKey: 'access.description' },
+      { key: 'rights', labelKey: 'access.rights', render: (item) => ('rights' in item ? relationLabels(item.rights) : '-') },
+      { key: 'users', labelKey: 'access.users', render: groupUsers },
     ],
   },
   {
     key: 'rights',
-    label: 'Drepturi',
-    title: 'Drepturi acces',
-    searchPlaceholder: 'Cauta drepturi',
+    labelKey: 'access.rights',
+    titleKey: 'access.accessRights',
+    searchPlaceholderKey: 'access.searchRights',
     fields: [
-      { name: 'name', label: 'Cod', required: true },
-      { name: 'label', label: 'Denumire', required: true },
-      { name: 'description', label: 'Descriere', kind: 'textarea' },
+      { name: 'name', labelKey: 'access.code', required: true },
+      { name: 'label', labelKey: 'access.label', required: true },
+      { name: 'description', labelKey: 'access.description', kind: 'textarea' },
     ],
     columns: [
-      { key: 'name', label: 'Cod' },
-      { key: 'label', label: 'Denumire' },
-      { key: 'description', label: 'Descriere' },
-      { key: 'groups_count', label: 'Grupuri' },
+      { key: 'name', labelKey: 'access.code' },
+      { key: 'label', labelKey: 'access.label' },
+      { key: 'description', labelKey: 'access.description' },
+      { key: 'groups_count', labelKey: 'access.groupsColumn' },
     ],
   },
 ];
 
 export function GroupsRightsView() {
+  const { t } = useTranslation();
   const [activeKey, setActiveKey] = useState<ResourceKey>('groups');
   const [items, setItems] = useState<Record<ResourceKey, ApiRecord[]>>({ groups: [], rights: [] });
   const [rights, setRights] = useState<ApiRight[]>([]);
@@ -184,7 +186,7 @@ export function GroupsRightsView() {
       const data = await erpApiService.list<ApiRecord>(resourceKey, { search: currentSearch, per_page: 50 });
       setItems((prev) => ({ ...prev, [resourceKey]: data }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut incarca datele.');
+      setError(err instanceof Error ? err.message : t('access.loadError'));
     } finally {
       setLoading(false);
     }
@@ -236,14 +238,14 @@ export function GroupsRightsView() {
       await loadUsers();
       await loadRights();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Salvarea a esuat.');
+      setError(err instanceof Error ? err.message : t('access.saveError'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (item: ApiRecord) => {
-    if (!window.confirm(`Stergi inregistrarea #${item.id}?`)) return;
+    if (!window.confirm(t('access.deleteConfirm', { id: item.id }))) return;
     setError('');
     try {
       await erpApiService.remove(config.key, item.id);
@@ -251,24 +253,24 @@ export function GroupsRightsView() {
       await loadUsers();
       await loadRights();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Stergerea a esuat.');
+      setError(err instanceof Error ? err.message : t('access.deleteError'));
     }
   };
 
   if (formOpen) {
     return (
       <PageShell
-        title={editing ? `Editare ${config.label.toLowerCase()}` : `Adauga ${config.label.toLowerCase()}`}
-        subtitle="Formularul pentru grupuri si drepturi este afisat separat de lista activa."
-        backLabel={`Inapoi la ${config.title.toLowerCase()}`}
+        title={editing ? t('access.editResource', { resource: t(config.labelKey).toLowerCase() }) : t('access.addResource', { resource: t(config.labelKey).toLowerCase() })}
+        subtitle={t('access.formSubtitle')}
+        backLabel={t('access.backToResource', { resource: t(config.titleKey).toLowerCase() })}
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         <SectionCard
-          title={editing ? `Editare #${editing.id}` : `Adauga ${config.label.toLowerCase()}`}
+          title={editing ? t('access.editCardTitle', { id: editing.id }) : t('access.addResource', { resource: t(config.labelKey).toLowerCase() })}
           action={
             <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <X className="h-4 w-4" />Inchide
+              <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
@@ -278,7 +280,7 @@ export function GroupsRightsView() {
               if (field.kind === 'textarea') {
                 return (
                   <label key={field.name} className="block">
-                    <span className="mb-2 block text-sm font-medium text-slate-700">{field.label}</span>
+                    <span className="mb-2 block text-sm font-medium text-slate-700">{t(field.labelKey)}</span>
                     <textarea
                       value={String(value ?? '')}
                       onChange={(event) => setForm((prev) => ({ ...prev, [field.name]: event.target.value }))}
@@ -290,7 +292,7 @@ export function GroupsRightsView() {
               if (field.name === 'right_ids') {
                 return (
                   <label key={field.name} className="block">
-                    <span className="mb-2 block text-sm font-medium text-slate-700">{field.label}</span>
+                    <span className="mb-2 block text-sm font-medium text-slate-700">{t(field.labelKey)}</span>
                     <select
                       multiple
                       value={selectedIds(value)}
@@ -308,7 +310,7 @@ export function GroupsRightsView() {
               return (
                 <Input
                   key={field.name}
-                  label={field.label}
+                  label={t(field.labelKey)}
                   required={field.required}
                   value={String(value ?? '')}
                   placeholder={field.placeholder}
@@ -317,9 +319,9 @@ export function GroupsRightsView() {
               );
             })}
             <div className="flex flex-wrap justify-end gap-2">
-              <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
+              <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
               <button onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-100 disabled:cursor-not-allowed disabled:opacity-60">
-                <Save className="h-4 w-4" /> {saving ? 'Se salveaza...' : 'Salveaza'}
+                <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.save')}
               </button>
             </div>
           </div>
@@ -331,14 +333,14 @@ export function GroupsRightsView() {
   return (
     <div className="space-y-6">
       <SectionCard
-        title="Grupuri si Drepturi"
+        title={t('access.title')}
         action={
           <div className="flex items-center gap-2">
             <button onClick={() => loadItems(config.key, search)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-              <RefreshCw className="h-4 w-4" /> Refresh
+              <RefreshCw className="h-4 w-4" /> {t('common.refresh')}
             </button>
             <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
-              <Plus className="h-4 w-4" /> Nou
+              <Plus className="h-4 w-4" /> {t('access.new')}
             </button>
           </div>
         }
@@ -350,14 +352,14 @@ export function GroupsRightsView() {
               onClick={() => setActiveKey(resource.key)}
               className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${activeKey === resource.key ? 'bg-violet-600 text-white shadow-lg shadow-violet-100' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
             >
-              {resource.label}
+              {t(resource.labelKey)}
             </button>
           ))}
         </div>
       </SectionCard>
 
       <SectionCard
-        title={config.title}
+        title={t(config.titleKey)}
         action={
           <div className="flex items-center gap-2">
             <input
@@ -366,10 +368,10 @@ export function GroupsRightsView() {
               onKeyDown={(event) => {
                 if (event.key === 'Enter') void loadItems(config.key, search);
               }}
-              placeholder={config.searchPlaceholder}
+              placeholder={t(config.searchPlaceholderKey)}
               className="w-56 rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-violet-400"
             />
-            <button onClick={() => loadItems(config.key, search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Cauta</button>
+            <button onClick={() => loadItems(config.key, search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         }
       >
@@ -379,8 +381,8 @@ export function GroupsRightsView() {
               <thead>
                 <tr className="text-xs uppercase text-slate-500">
                   <th className="px-3 py-3">ID</th>
-                  {config.columns.map((column) => <th key={column.key} className="px-3 py-3">{column.label}</th>)}
-                  <th className="px-3 py-3 text-right">Actiuni</th>
+                  {config.columns.map((column) => <th key={column.key} className="px-3 py-3">{t(column.labelKey)}</th>)}
+                  <th className="px-3 py-3 text-right">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -392,10 +394,10 @@ export function GroupsRightsView() {
                     ))}
                     <td className="px-3 py-4">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => startEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700" title="Editeaza">
+                        <button onClick={() => startEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700" title={t('common.edit')}>
                           <Edit3 className="h-4 w-4" />
                         </button>
-                        <button onClick={() => remove(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 text-red-600" title="Sterge">
+                        <button onClick={() => remove(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 text-red-600" title={t('common.delete')}>
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -404,13 +406,13 @@ export function GroupsRightsView() {
                 ))}
                 {!loading && items[config.key].length === 0 ? (
                   <tr>
-                    <td colSpan={config.columns.length + 2} className="px-3 py-8 text-center text-slate-500">Nu exista inregistrari pentru filtrul curent.</td>
+                    <td colSpan={config.columns.length + 2} className="px-3 py-8 text-center text-slate-500">{t('access.empty')}</td>
                   </tr>
                 ) : null}
               </tbody>
             </table>
           </div>
-          {loading ? <p className="mt-4 text-sm text-slate-500">Se incarca...</p> : null}
+          {loading ? <p className="mt-4 text-sm text-slate-500">{t('common.loading')}</p> : null}
       </SectionCard>
     </div>
   );

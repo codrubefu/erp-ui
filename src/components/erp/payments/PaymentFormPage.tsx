@@ -16,8 +16,12 @@ export function PaymentFormPage({ mode, data, onChange, onBack, onSave }: Paymen
           <Input label={t('payments.invoice')} value={data.invoice} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('invoice', e.target.value)} placeholder="INV-2026-105" />
           <Input label={t('payments.member')} value={data.member} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('member', e.target.value)} placeholder={t('payments.memberPlaceholder')} />
           <Input label={t('payments.amount')} value={data.amount} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('amount', e.target.value)} placeholder="650 RON" />
-          <Select label={t('payments.paymentMethod')} value={data.method} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('method', e.target.value)}>{['Card', 'Numerar', 'Transfer'].map((item) => <option key={item}>{item}</option>)}</Select>
-          <Select label={t('common.status')} value={data.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('status', e.target.value)}>{['Platit', 'In asteptare', 'Esuat'].map((item) => <option key={item}>{item}</option>)}</Select>
+          <Select label={t('payments.paymentMethod')} value={data.method} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('method', e.target.value)}>
+            {['Card', 'Numerar', 'Transfer'].map((item) => <option key={item} value={item}>{t(`payments.methods.${item}`)}</option>)}
+          </Select>
+          <Select label={t('common.status')} value={data.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('status', e.target.value)}>
+            {['Plătit', 'În așteptare', 'Eșuat'].map((item) => <option key={item} value={item}>{t(`payments.statuses.${item}`)}</option>)}
+          </Select>
           <div className="md:col-span-2"><Input label={t('payments.transactionDate')} value={data.transactionDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('transactionDate', e.target.value)} placeholder="2026-04-03" /></div>
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
