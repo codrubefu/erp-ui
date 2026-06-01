@@ -13,9 +13,40 @@ export type ApiUser = {
   active_subscriptions?: ApiUserSubscription[];
   subscription_history?: ApiUserSubscriptionHistory[];
   has_active_subscription?: boolean;
+  custom_fields?: Record<string, unknown> | ApiCustomFieldValue[];
+  custom_field_values?: Record<string, unknown> | ApiCustomFieldValue[];
   created_at?: string | null;
   updated_at?: string | null;
 };
+
+export type ApiCustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'email' | 'phone' | 'select' | 'multi_select' | 'checkbox' | 'boolean' | 'file';
+
+export type ApiCustomFieldOption = {
+  label: string;
+  value: string;
+};
+
+export type ApiCustomField = {
+  id: number;
+  entity_type: string;
+  name: string;
+  slug: string;
+  type: ApiCustomFieldType;
+  options?: { choices?: ApiCustomFieldOption[] } | null;
+  validation_rules?: string[] | null;
+  is_required?: boolean;
+  sort_order?: number;
+};
+
+export type ApiCustomFieldValue = {
+  custom_field_id?: number;
+  field_id?: number;
+  custom_field?: ApiCustomField;
+  slug?: string;
+  value?: unknown;
+};
+
+export type ApiCustomFieldValues = Record<string, unknown> | ApiCustomFieldValue[];
 
 export type ApiGroup = {
   id: number;
@@ -197,7 +228,7 @@ export class ErpApiService {
     window.localStorage.removeItem(TOKEN_KEY);
   }
 
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  private async requestRaw<T>(path: string, options: RequestInit = {}): Promise<T> {
     const token = this.getToken();
     const headers = new Headers(options.headers);
     headers.set('Accept', 'application/json');
@@ -223,7 +254,11 @@ export class ErpApiService {
       throw new Error(extractError(payload, `Cererea a esuat (${response.status}).`));
     }
 
-    return unwrap<T>(payload as T | ApiEnvelope<T>);
+    return payload as T;
+  }
+
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+    return unwrap<T>(await this.requestRaw<T | ApiEnvelope<T>>(path, options));
   }
 
   async login(email: string, password: string, organizationId: string | number): Promise<LoginResult> {
@@ -271,12 +306,26 @@ export class ErpApiService {
     return this.request<T[]>(`/${resource}${query.size ? `?${query.toString()}` : ''}`);
   }
 
+  async listPaginated<T>(resource: string, params: Record<string, string | number | undefined> = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') query.set(key, String(value));
+    });
+    const payload = await this.requestRaw<ApiPaginated<T> | T[]>(`/${resource}${query.size ? `?${query.toString()}` : ''}`);
+    return Array.isArray(payload)
+      ? { data: payload, current_page: 1, last_page: 1, per_page: payload.length, total: payload.length }
+      : payload;
+  }
+
   async searchUsersByCode(search: string, page = 1, perPage = 15) {
     const query = new URLSearchParams();
     query.set('search', search);
     query.set('per_page', String(perPage));
     query.set('page', String(page));
-    return this.request<ApiUser[] | ApiPaginated<ApiUser>>(`/users/search/user-code?${query.toString()}`);
+    const payload = await this.requestRaw<ApiUser[] | ApiPaginated<ApiUser>>(`/users/search/user-code?${query.toString()}`);
+    return Array.isArray(payload)
+      ? { data: payload, current_page: page, last_page: 1, per_page: perPage, total: payload.length }
+      : payload;
   }
 
   async get<T>(resource: string, id: number) {
@@ -295,6 +344,17 @@ export class ErpApiService {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  async saveEntityCustomFieldValues<T>(entityType: string, entityId: number, values: Record<string, unknown>) {
+    return this.request<T>(`/${entityType}/${entityId}/custom-field-values`, {
+      method: 'POST',
+      body: JSON.stringify({ values }),
+    });
+  }
+
+  async getEntityCustomFieldValues(entityType: string, entityId: number) {
+    return this.request<ApiCustomFieldValues>(`/${entityType}/${entityId}/custom-field-values`);
   }
 
   async remove(resource: string, id: number) {

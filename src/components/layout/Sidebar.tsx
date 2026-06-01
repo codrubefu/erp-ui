@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   ShieldCheck,
+  SlidersHorizontal,
   UserCheck,
   Users,
 } from 'lucide-react';
@@ -18,7 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '../LanguageSelector';
 
-type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'members' | 'subscriptions' | 'events' | 'articles' | 'announcements' | 'sms' | 'payments' | 'reports';
+type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'custom-fields' | 'members' | 'subscriptions' | 'events' | 'articles' | 'announcements' | 'sms' | 'payments' | 'reports';
 
 type SidebarProps = {
   current: SectionId;
@@ -53,6 +54,7 @@ const navGroups: readonly NavGroup[] = [
       { id: 'branches', labelKey: 'menu.branches', icon: Building2, rights: ['locations.view', 'locations.manage'] },
       { id: 'admins', labelKey: 'menu.admins', icon: UserCheck, rights: ['users.view', 'users.manage'] },
       { id: 'access', labelKey: 'menu.access', icon: ShieldCheck, rights: ['groups.view', 'groups.manage'] },
+      { id: 'custom-fields', labelKey: 'menu.customFields', icon: SlidersHorizontal ,rights: ['custom-fields.view', 'custom-fields.manage'] },
     ],
   },
   {

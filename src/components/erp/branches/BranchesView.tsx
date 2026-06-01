@@ -52,6 +52,7 @@ export function BranchesView() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState<ApiLocation | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<LocationForm>(emptyForm);
@@ -78,12 +79,14 @@ export function BranchesView() {
   const startCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setSuccess('');
     setFormOpen(true);
   };
 
   const startEdit = (location: ApiLocation) => {
     setEditing(location);
     setForm(formFromLocation(location));
+    setSuccess('');
     setFormOpen(true);
   };
 
@@ -91,18 +94,23 @@ export function BranchesView() {
     setFormOpen(false);
     setEditing(null);
     setForm(emptyForm);
+    setSuccess('');
   };
 
   const saveLocation = async () => {
     setSaving(true);
     setError('');
+    setSuccess('');
     try {
+      let savedLocation: ApiLocation;
       if (editing) {
-        await erpApiService.update<ApiLocation>('locations', editing.id, buildPayload(form));
+        savedLocation = await erpApiService.update<ApiLocation>('locations', editing.id, buildPayload(form));
       } else {
-        await erpApiService.create<ApiLocation>('locations', buildPayload(form));
+        savedLocation = await erpApiService.create<ApiLocation>('locations', buildPayload(form));
       }
-      closeForm();
+      setEditing(savedLocation);
+      setForm(formFromLocation(savedLocation));
+      setSuccess(t('common.saved'));
       await loadLocations();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('branches.saveError'));
@@ -131,6 +139,7 @@ export function BranchesView() {
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
         <SectionCard
           title={editing ? t('branches.editCardTitle', { id: editing.id }) : t('branches.add')}
           action={

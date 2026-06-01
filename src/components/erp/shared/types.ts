@@ -86,6 +86,7 @@ export type AnnouncementFormPageProps = {
   onChange: (field: keyof Announcement, value: string) => void;
   onBack: () => void;
   onSave: () => void;
+  successMessage?: string;
 };
 
 export type PaymentFormPageProps = {
@@ -94,6 +95,7 @@ export type PaymentFormPageProps = {
   onChange: (field: keyof Payment, value: string) => void;
   onBack: () => void;
   onSave: () => void;
+  successMessage?: string;
 };
 
 export type QuickCreateMenuProps = {
@@ -123,4 +125,5 @@ export type ContentProps = {
   saveSubscription: () => void;
   saveAnnouncement: () => void;
   savePayment: () => void;
+  formSuccess?: string;
 };

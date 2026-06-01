@@ -9,6 +9,7 @@ export type SectionId =
   | 'branches'
   | 'admins'
   | 'access'
+  | 'custom-fields'
   | 'members'
   | 'subscriptions'
   | 'events'

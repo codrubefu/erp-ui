@@ -6,6 +6,7 @@ import {
   AnnouncementsView,
   ArticlesModuleRoutes,
   BranchesView,
+  CustomFieldsView,
   DashboardView,
   EventsModuleRoutes,
   GroupsRightsView,
@@ -49,6 +50,7 @@ type ERPContentRoutesProps = {
   saveSubscription: () => void;
   saveAnnouncement: () => void;
   savePayment: () => void;
+  formSuccess?: string;
 };
 
 export default function ERPContentRoutes({
@@ -65,6 +67,7 @@ export default function ERPContentRoutes({
   goBackToList,
   saveAnnouncement,
   savePayment,
+  formSuccess,
 }: ERPContentRoutesProps) {
   return (
     <Routes>
@@ -81,6 +84,7 @@ export default function ERPContentRoutes({
       <Route path="branches" element={<BranchesView />} />
       <Route path="admins" element={<AdminsView />} />
       <Route path="access" element={<GroupsRightsView />} />
+      <Route path="custom-fields" element={<CustomFieldsView />} />
 
       <Route path="members" element={<MembersView />} />
       <Route path="members/new" element={<MembersView />} />
@@ -94,14 +98,14 @@ export default function ERPContentRoutes({
       <Route path="articles/*" element={<ArticlesModuleRoutes />} />
 
       <Route path="announcements" element={<AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item) => navigateToForm('announcement', 'edit', item)} />} />
-      <Route path="announcements/new" element={<AnnouncementFormPage mode="create" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} />} />
-      <Route path="announcements/edit" element={<AnnouncementFormPage mode="edit" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} />} />
+      <Route path="announcements/new" element={<AnnouncementFormPage mode="create" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} successMessage={formSuccess} />} />
+      <Route path="announcements/edit" element={<AnnouncementFormPage mode="edit" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} successMessage={formSuccess} />} />
 
       <Route path="sms" element={<SmsView />} />
 
       <Route path="payments" element={<PaymentsView items={paymentsData} onCreate={() => navigateToForm('payment', 'create')} onEdit={(item) => navigateToForm('payment', 'edit', item)} />} />
-      <Route path="payments/new" element={<PaymentFormPage mode="create" data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} />} />
-      <Route path="payments/edit" element={<PaymentFormPage mode="edit" data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} />} />
+      <Route path="payments/new" element={<PaymentFormPage mode="create" data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} successMessage={formSuccess} />} />
+      <Route path="payments/edit" element={<PaymentFormPage mode="edit" data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} successMessage={formSuccess} />} />
 
       <Route path="reports" element={<ReportsView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} announcementsData={announcementsData} />} />
 

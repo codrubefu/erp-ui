@@ -6,6 +6,7 @@ import { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 import { AnnouncementsView } from './announcements/AnnouncementsView';
 import { ArticlesModuleRoutes } from './articles/ArticlesModule';
 import { BranchesView } from './branches/BranchesView';
+import { CustomFieldsView } from './custom-fields/CustomFieldsView';
 import { DashboardView } from './dashboard/DashboardView';
 import { EventsModuleRoutes } from './events/EventsModule';
 import { MembersView } from './members/MembersView';
@@ -17,7 +18,7 @@ import type { ContentProps } from './shared/types';
 import { SmsView } from './sms/SmsView';
 import { SubscriptionsView } from './subscriptions/SubscriptionsView';
 
-export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment }: ContentProps) {
+export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment, formSuccess }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
       return <MembersView />;
@@ -26,10 +27,10 @@ export default function Content({ current, page, membersData, subscriptionsData,
       return <SubscriptionsView openOnMount={page.mode === 'create'} />;
     }
     if (page.section === 'announcementForm') {
-      return <AnnouncementFormPage mode={page.mode ?? 'create'} data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} />;
+      return <AnnouncementFormPage mode={page.mode ?? 'create'} data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} successMessage={formSuccess} />;
     }
     if (page.section === 'paymentForm') {
-      return <PaymentFormPage mode={page.mode ?? 'create'} data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} />;
+      return <PaymentFormPage mode={page.mode ?? 'create'} data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} successMessage={formSuccess} />;
     }
 
     switch (current) {
@@ -41,6 +42,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <AdminsView />;
       case 'access':
         return <GroupsRightsView />;
+      case 'custom-fields':
+        return <CustomFieldsView />;
       case 'subscriptions':
         return <SubscriptionsView />;
       case 'events':
@@ -63,7 +66,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
           </div>
         );
     }
-  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment]);
+  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment, formSuccess]);
 
   return <main className="space-y-6 p-4 md:p-8">{view}</main>;
 }

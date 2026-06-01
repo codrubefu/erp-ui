@@ -1,11 +1,11 @@
-import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard, StatusBadge } from '../../primitives';
-import { erpApiService, type ApiGroup, type ApiLocation, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
+import { Input, SectionCard, StatusBadge, Textarea } from '../../primitives';
+import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
-type UserFormTab = 'details' | 'subscriptions';
+type UserFormTab = 'details' | 'information' | 'subscriptions';
 
 type UserForm = {
   user_code: string;
@@ -13,11 +13,11 @@ type UserForm = {
   last_name: string;
   email: string;
   phone: string;
-  password: string;
   active: boolean;
   group_ids: string;
   location_ids: string;
   subscriptions: ApiUserSubscriptionAssignment[];
+  custom_fields: Record<string, unknown>;
 };
 
 type MembersViewProps = {
@@ -37,11 +37,11 @@ const emptyForm: UserForm = {
   last_name: '',
   email: '',
   phone: '',
-  password: '',
   active: true,
   group_ids: '',
   location_ids: '',
   subscriptions: [],
+  custom_fields: {},
 };
 
 function toIdList(value: string) {
@@ -167,16 +167,39 @@ function buildPayload(form: UserForm) {
     })),
   };
 
-  const password = form.password.trim();
-  if (password) {
-    payload.password = password;
-  }
-
   return payload;
 }
 
-function usersFromSearchPayload(payload: ApiUser[] | { data?: ApiUser[] }) {
-  return Array.isArray(payload) ? payload : payload.data ?? [];
+function buildCreatePayload(form: UserForm, includeCustomFields: boolean) {
+  return {
+    ...buildPayload(form),
+    ...(includeCustomFields ? { custom_fields: form.custom_fields } : {}),
+  };
+}
+
+function customFieldValuesFromUser(user: ApiUser) {
+  const source = user.custom_fields ?? user.custom_field_values;
+  return customFieldValuesFromPayload(source);
+}
+
+function customFieldValuesFromPayload(source?: ApiCustomFieldValues | null) {
+  if (!source) return {};
+  if (!Array.isArray(source)) return source;
+
+  return source.reduce<Record<string, unknown>>((values, item: ApiCustomFieldValue) => {
+    const key = item.slug ?? item.custom_field?.slug ?? item.custom_field_id ?? item.field_id ?? item.custom_field?.id;
+    if (key !== undefined) values[String(key)] = item.value ?? '';
+    return values;
+  }, {});
+}
+
+function paginationFrom<T>(payload: ApiPaginated<T>, fallbackPage: number, fallbackPerPage: number) {
+  return {
+    current_page: payload.meta?.current_page ?? payload.current_page ?? fallbackPage,
+    last_page: payload.meta?.last_page ?? payload.last_page ?? 1,
+    per_page: payload.meta?.per_page ?? payload.per_page ?? fallbackPerPage,
+    total: payload.meta?.total ?? payload.total ?? payload.data.length,
+  };
 }
 
 function formFromUser(user: ApiUser): UserForm {
@@ -186,12 +209,32 @@ function formFromUser(user: ApiUser): UserForm {
     last_name: user.last_name ?? '',
     email: user.email ?? '',
     phone: user.phone ?? '',
-    password: '',
     active: Boolean(user.active),
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
     subscriptions: subscriptionAssignmentsFromUser(user),
+    custom_fields: customFieldValuesFromUser(user),
   };
+}
+
+async function loadUserCustomFieldValues(user: ApiUser) {
+  try {
+    return customFieldValuesFromPayload(await erpApiService.getEntityCustomFieldValues('users', user.id));
+  } catch {
+    return customFieldValuesFromUser(user);
+  }
+}
+
+function sortedCustomFields(fields: ApiCustomField[]) {
+  return [...fields].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name));
+}
+
+function customFieldValueKey(field: ApiCustomField) {
+  return field.slug || String(field.id);
+}
+
+function arrayValue(value: unknown) {
+  return Array.isArray(value) ? value.map(String) : value ? String(value).split(',').map((item) => item.trim()).filter(Boolean) : [];
 }
 
 export function MembersView({
@@ -209,11 +252,15 @@ export function MembersView({
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [subscriptions, setSubscriptions] = useState<ApiSubscription[]>([]);
+  const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [perPage, setPerPage] = useState(15);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState<ApiUser | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<UserForm>(emptyForm);
@@ -231,6 +278,7 @@ export function MembersView({
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
   const selectedSubscriptionIds = useMemo(() => form.subscriptions.map((subscription) => String(subscription.id)), [form.subscriptions]);
+  const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
 
   const loadLookups = useCallback(async () => {
     try {
@@ -247,16 +295,26 @@ export function MembersView({
       setLocations([]);
       setSubscriptions([]);
     }
+
+    try {
+      setCustomFields(await erpApiService.list<ApiCustomField>('custom-fields', { entity_type: 'users' }));
+    } catch {
+      setCustomFields([]);
+    }
   }, []);
 
-  const fetchUsers = useCallback(async (search: string, limit: number) => {
+  const fetchUsers = useCallback(async (search: string, limit: number, nextPage: number) => {
     setLoading(true);
     setError('');
     try {
-      const data = search.trim()
-        ? usersFromSearchPayload(await erpApiService.searchUsersByCode(search.trim(), 1, limit))
-        : await erpApiService.list<ApiUser>(resource, { per_page: limit });
-      setUsers(data);
+      const payload = await erpApiService.listPaginated<ApiUser>(resource, {
+        search: search.trim(),
+        page: nextPage,
+        per_page: limit,
+      });
+      setUsers(payload.data);
+      setPagination(paginationFrom(payload, nextPage, limit));
+      setPage(paginationFrom(payload, nextPage, limit).current_page);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedCountLabel }));
     } finally {
@@ -264,22 +322,24 @@ export function MembersView({
     }
   }, [resolvedCountLabel, resource, t]);
 
-  const loadUsers = useCallback(() => fetchUsers(searchTerm, perPage), [fetchUsers, searchTerm, perPage]);
+  const loadUsers = useCallback((nextPage = page) => fetchUsers(searchTerm, perPage, nextPage), [fetchUsers, searchTerm, perPage, page]);
 
   useEffect(() => {
     void loadLookups();
-    void fetchUsers('', 15);
+    void fetchUsers('', 15, 1);
   }, [fetchUsers, loadLookups]);
 
   const resetFilters = () => {
     setSearchTerm('');
     setPerPage(15);
-    void fetchUsers('', 15);
+    setPage(1);
+    void fetchUsers('', 15, 1);
   };
 
   const startCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setSuccess('');
     setActiveFormTab('details');
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
@@ -293,8 +353,10 @@ export function MembersView({
     } catch {
       selectedUser = user;
     }
+    const customFieldValues = await loadUserCustomFieldValues(selectedUser);
     setEditing(selectedUser);
-    setForm(formFromUser(selectedUser));
+    setForm({ ...formFromUser(selectedUser), custom_fields: customFieldValues });
+    setSuccess('');
     setActiveFormTab('details');
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
@@ -305,6 +367,7 @@ export function MembersView({
     setFormOpen(false);
     setEditing(null);
     setForm(emptyForm);
+    setSuccess('');
     setActiveFormTab('details');
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
@@ -340,16 +403,84 @@ export function MembersView({
     }));
   };
 
+  const updateCustomField = (field: ApiCustomField, value: unknown) => {
+    const key = customFieldValueKey(field);
+    setForm((prev) => ({
+      ...prev,
+      custom_fields: { ...prev.custom_fields, [key]: value },
+    }));
+  };
+
+  const renderCustomField = (field: ApiCustomField) => {
+    const key = customFieldValueKey(field);
+    const value = form.custom_fields[key] ?? '';
+    const label = `${field.name}${field.is_required ? ' *' : ''}`;
+    const choices = field.options?.choices ?? [];
+
+    if (field.type === 'textarea') {
+      return <Textarea key={key} label={label} value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} rows={4} />;
+    }
+
+    if (field.type === 'select') {
+      return (
+        <label key={key} className="block">
+          <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
+          <select value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+            <option value="">{t('common.select')}</option>
+            {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+          </select>
+        </label>
+      );
+    }
+
+    if (field.type === 'multi_select') {
+      return (
+        <label key={key} className="block">
+          <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
+          <select multiple value={arrayValue(value)} onChange={(event) => updateCustomField(field, Array.from(event.currentTarget.selectedOptions).map((option) => option.value))} className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+            {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+          </select>
+        </label>
+      );
+    }
+
+    if (field.type === 'checkbox' || field.type === 'boolean') {
+      return (
+        <label key={key} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+          <input type="checkbox" checked={Boolean(value)} onChange={(event) => updateCustomField(field, event.target.checked)} className="h-4 w-4 accent-violet-600" />
+          {label}
+        </label>
+      );
+    }
+
+    if (field.type === 'file') {
+      return <Input key={key} label={label} type="text" value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} placeholder={t('users.customFilePlaceholder')} />;
+    }
+
+    const inputType = field.type === 'datetime' ? 'datetime-local' : field.type === 'phone' ? 'tel' : field.type;
+    return <Input key={key} label={label} type={inputType} value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} />;
+  };
+
   const saveUser = async () => {
     setSaving(true);
     setError('');
+    setSuccess('');
     try {
+      let savedUser: ApiUser;
+      const shouldSaveCustomFields = activeFormTab === 'information';
       if (editing) {
-        await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(form));
+        savedUser = await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(form));
+        if (shouldSaveCustomFields) {
+          await erpApiService.saveEntityCustomFieldValues('users', editing.id, form.custom_fields);
+        }
+        savedUser = await erpApiService.get<ApiUser>('users', editing.id);
       } else {
-        await erpApiService.create<ApiUser>(resource, buildPayload(form));
+        savedUser = await erpApiService.create<ApiUser>(resource, buildCreatePayload(form, shouldSaveCustomFields));
       }
-      closeForm();
+      const customFieldValues = await loadUserCustomFieldValues(savedUser);
+      setEditing(savedUser);
+      setForm({ ...formFromUser(savedUser), custom_fields: customFieldValues });
+      setSuccess(t('common.saved'));
       await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('users.saveError', { label: resolvedSingularLabel }));
@@ -378,6 +509,7 @@ export function MembersView({
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
         <SectionCard
           title={editing ? t('users.editCardTitle', { label: resolvedEntityLabel, id: editing.id }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
@@ -389,6 +521,7 @@ export function MembersView({
           <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200">
             {[
               ['details', 'Date utilizator'],
+              ['information', t('users.information')],
               ['subscriptions', t('users.subscriptions')],
             ].map(([tab, label]) => (
               <button
@@ -408,7 +541,6 @@ export function MembersView({
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
               <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
-              <Input label={editing ? t('users.newPassword') : t('users.password')} type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder={editing ? t('users.changePasswordHint') : 'password'} />
               <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
@@ -441,6 +573,14 @@ export function MembersView({
                   {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
                 </select>
               </label>
+            </div>
+          ) : activeFormTab === 'information' ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {userCustomFields.length ? userCustomFields.map(renderCustomField) : (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+                  {t('users.noCustomFields')}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
@@ -575,25 +715,40 @@ export function MembersView({
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') void loadUsers();
+              if (event.key === 'Enter') {
+                setPage(1);
+                void fetchUsers(searchTerm, perPage, 1);
+              }
             }}
             placeholder={t('users.searchPlaceholder')}
           />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.perPage')}</span>
-            <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
+            <select
+              value={perPage}
+              onChange={(event) => {
+                const nextPerPage = Number(event.target.value);
+                setPerPage(nextPerPage);
+                setPage(1);
+                void fetchUsers(searchTerm, nextPerPage, 1);
+              }}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+            >
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           <div className="flex items-end">
-            <button onClick={() => void loadUsers()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => {
+              setPage(1);
+              void fetchUsers(searchTerm, perPage, 1);
+            }} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
         <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          {t('users.showingCount', { count: users.length, label: resolvedCountLabel })}
+          {t('users.showingCount', { count: pagination.total || users.length, label: resolvedCountLabel })}
         </div>
 
         <div className="overflow-x-auto">
@@ -645,6 +800,26 @@ export function MembersView({
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+          <span>{t('users.pageOf', { page: pagination.current_page, lastPage: pagination.last_page })}</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => void loadUsers(page - 1)}
+              disabled={loading || page <= 1}
+              className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />{t('users.previousPage')}
+            </button>
+            <button
+              onClick={() => void loadUsers(page + 1)}
+              disabled={loading || page >= pagination.last_page}
+              className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {t('users.nextPage')}<ChevronRight className="ml-1 h-4 w-4" />
+            </button>
+          </div>
         </div>
       </SectionCard>
 

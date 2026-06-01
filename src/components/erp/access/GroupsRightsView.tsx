@@ -175,6 +175,7 @@ export function GroupsRightsView() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState<ApiRecord | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(() => emptyForm(config));
@@ -226,32 +227,39 @@ export function GroupsRightsView() {
   const startCreate = () => {
     setEditing(null);
     setForm(emptyForm(config));
+    setSuccess('');
     setFormOpen(true);
   };
 
   const startEdit = (item: ApiRecord) => {
     setEditing(item);
     setForm(itemToForm(config, item));
+    setSuccess('');
     setFormOpen(true);
   };
 
   const closeForm = () => {
     setEditing(null);
     setForm(emptyForm(config));
+    setSuccess('');
     setFormOpen(false);
   };
 
   const save = async () => {
     setSaving(true);
     setError('');
+    setSuccess('');
     try {
       const payload = serializeForm(config, form);
+      let savedItem: ApiRecord;
       if (editing) {
-        await erpApiService.update('groups', editing.id, payload);
+        savedItem = await erpApiService.update<ApiRecord>('groups', editing.id, payload);
       } else {
-        await erpApiService.create('groups', payload);
+        savedItem = await erpApiService.create<ApiRecord>('groups', payload);
       }
-      closeForm();
+      setEditing(savedItem);
+      setForm(itemToForm(config, savedItem));
+      setSuccess(t('common.saved'));
       await loadItems(search);
       await loadUsers();
       await loadRights();
@@ -284,6 +292,7 @@ export function GroupsRightsView() {
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
         <SectionCard
           title={editing ? t('access.editCardTitle', { id: editing.id }) : t('access.addResource', { resource: t(config.labelKey).toLowerCase() })}
           action={

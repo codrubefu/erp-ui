@@ -233,10 +233,9 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
     setServerErrors(undefined);
     const payload = { ...form, description: form.description || null, location: form.location || null, max_participants: form.max_participants ? Number(form.max_participants) : null, monthly_day: form.monthly_day ? Number(form.monthly_day) : null, required_subscription_id: form.requires_active_subscription ? Number(form.required_subscription_id) : null };
     try {
-      if (mode === 'edit') await eventService.updateEvent(id, payload);
-      else await eventService.createEvent(payload);
+      const savedEvent = mode === 'edit' ? await eventService.updateEvent(id, payload) : await eventService.createEvent(payload);
+      setForm({ ...savedEvent, recurrence_days: savedEvent.recurrence_days ?? [], description: savedEvent.description ?? '', location: savedEvent.location ?? '', end_date: savedEvent.end_date ?? null });
       setToast({ type: 'success', message: t('events.saved') });
-      setTimeout(() => navigate('/erp/events'), 500);
     } catch (err) {
       const apiError = err as ApiValidationError;
       setServerErrors(apiError.errors);

@@ -5,12 +5,13 @@ import { Input, SectionCard, Select, StatusBadge } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 import type { PaymentFormPageProps } from '../shared/types';
 
-export function PaymentFormPage({ mode, data, onChange, onBack, onSave }: PaymentFormPageProps) {
+export function PaymentFormPage({ mode, data, onChange, onBack, onSave, successMessage }: PaymentFormPageProps) {
   const { t } = useTranslation();
 
   return (
     <PageShell title={mode === 'edit' ? t('payments.edit') : t('payments.addInvoice')} subtitle={t('payments.formSubtitle')} backLabel={t('payments.backToList')} onBack={onBack}>
       <SectionCard title={t('payments.transactionDetails')} action={<StatusBadge status={data.status} />}>
+        {successMessage ? <p className="mb-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{successMessage}</p> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t('payments.internalId')} value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="PAY-005" />
           <Input label={t('payments.invoice')} value={data.invoice} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('invoice', e.target.value)} placeholder="INV-2026-105" />

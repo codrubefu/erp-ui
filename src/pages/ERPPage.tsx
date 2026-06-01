@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Content from '../components/erp/Content';
 import { Header, LoginView, Sidebar } from '../components/AppLayout';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
@@ -18,7 +19,7 @@ import type {
   Subscription,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'members', 'subscriptions', 'events', 'articles', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'custom-fields', 'members', 'subscriptions', 'events', 'articles', 'announcements', 'sms', 'payments', 'reports'];
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -107,6 +108,7 @@ function getUserDisplayName(user: AuthenticatedUser | null, fallback: string) {
 }
 
 export default function ERPAdminPanel() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useAuth();
@@ -139,6 +141,7 @@ export default function ERPAdminPanel() {
   const [subscriptionForm, setSubscriptionForm] = useState(emptyForms.subscription);
   const [announcementForm, setAnnouncementForm] = useState(emptyForms.announcement);
   const [paymentForm, setPaymentForm] = useState(emptyForms.payment);
+  const [formSuccess, setFormSuccess] = useState('');
 
   useEffect(() => saveStoredValue(STORAGE_KEYS.auth, isAuthenticated), [isAuthenticated]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.user, currentUser), [currentUser]);
@@ -215,6 +218,7 @@ export default function ERPAdminPanel() {
   }, []);
 
   const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Subscription | Announcement | Payment | null = null) => {
+    setFormSuccess('');
     if (type === 'member') {
       setCurrent('members');
       navigate('/erp/members');
@@ -250,6 +254,7 @@ export default function ERPAdminPanel() {
   };
 
   const goBackToList = (targetSection: SectionId) => {
+    setFormSuccess('');
     setCurrent(targetSection);
     navigate(`/erp/${targetSection}`);
     setPage({ section: 'list', mode: null });
@@ -264,23 +269,23 @@ export default function ERPAdminPanel() {
     const defaultBranch = branchesData[0] ?? 'Iași Centru';
     const payload = { ...memberForm, branch: memberForm.branch || defaultBranch, lastContact: formatDate() };
     setMembersData((prev) => upsertById(prev, payload));
-    goBackToList('members');
+    setFormSuccess(t('common.saved'));
   };
 
   const saveSubscription = () => {
     const payload = { ...subscriptionForm };
     setSubscriptionsData((prev) => upsertById(prev, payload));
-    goBackToList('subscriptions');
+    setFormSuccess(t('common.saved'));
   };
 
   const saveAnnouncement = () => {
     setAnnouncementsData((prev) => upsertById(prev, { ...announcementForm }));
-    goBackToList('announcements');
+    setFormSuccess(t('common.saved'));
   };
 
   const savePayment = () => {
     setPaymentsData((prev) => upsertById(prev, { ...paymentForm }));
-    goBackToList('payments');
+    setFormSuccess(t('common.saved'));
   };
 
   const handleSidebarChange = (id: SectionId) => {
@@ -378,6 +383,7 @@ export default function ERPAdminPanel() {
             saveSubscription={saveSubscription}
             saveAnnouncement={saveAnnouncement}
             savePayment={savePayment}
+            formSuccess={formSuccess}
           />
         </div>
       </div>

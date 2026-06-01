@@ -86,6 +86,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState<ApiSubscription | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<SubscriptionForm>(emptyForm);
@@ -175,6 +176,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     if (!hasAnyRight(['subscriptions.create', 'subscriptions.manage'])) return;
     setEditing(null);
     setForm(emptyForm);
+    setSuccess('');
     setFormOpen(true);
     if (location.pathname !== '/erp/subscriptions/new') {
       navigate('/erp/subscriptions/new');
@@ -185,6 +187,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     if (!hasAnyRight(['subscriptions.update', 'subscriptions.manage'])) return;
     setEditing(subscription);
     setForm(formFromSubscription(subscription));
+    setSuccess('');
     setFormOpen(true);
   };
 
@@ -192,6 +195,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     setFormOpen(false);
     setEditing(null);
     setForm(emptyForm);
+    setSuccess('');
     if (location.pathname !== '/erp/subscriptions') {
       navigate('/erp/subscriptions');
     }
@@ -202,13 +206,17 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     if (!editing && !hasAnyRight(['subscriptions.create', 'subscriptions.manage'])) return;
     setSaving(true);
     setError('');
+    setSuccess('');
     try {
+      let savedSubscription: ApiSubscription;
       if (editing) {
-        await erpApiService.update<ApiSubscription>('subscriptions', editing.id, buildPayload(form));
+        savedSubscription = await erpApiService.update<ApiSubscription>('subscriptions', editing.id, buildPayload(form));
       } else {
-        await erpApiService.create<ApiSubscription>('subscriptions', buildPayload(form));
+        savedSubscription = await erpApiService.create<ApiSubscription>('subscriptions', buildPayload(form));
       }
-      closeForm();
+      setEditing(savedSubscription);
+      setForm(formFromSubscription(savedSubscription));
+      setSuccess(t('common.saved'));
       await loadSubscriptions();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('subscriptions.saveError'));
@@ -263,6 +271,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
         <SectionCard
           title={editing ? t('subscriptions.editCardTitle', { id: editing.id }) : t('subscriptions.add')}
           action={
