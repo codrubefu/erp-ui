@@ -1,5 +1,6 @@
 export { StatCard } from './cards/StatCard';
 export { SectionCard } from './cards/SectionCard';
+export { SuccessMessage } from './feedback/SuccessMessage';
 export { StatusBadge } from './feedback/StatusBadge';
 export { Input } from './forms/Input';
 export { Select } from './forms/Select';

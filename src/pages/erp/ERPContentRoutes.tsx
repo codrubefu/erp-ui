@@ -10,13 +10,13 @@ import {
   DashboardView,
   EventsModuleRoutes,
   GroupsRightsView,
-  MembersView,
   PaymentFormPage,
   PaymentsView,
   QuickCreateMenu,
   ReportsView,
   SmsView,
   SubscriptionsView,
+  UsersView,
 } from '../../components/erp';
 import type {
   Announcement,
@@ -86,9 +86,9 @@ export default function ERPContentRoutes({
       <Route path="access" element={<GroupsRightsView />} />
       <Route path="custom-fields" element={<CustomFieldsView />} />
 
-      <Route path="members" element={<MembersView />} />
-      <Route path="members/new" element={<MembersView />} />
-      <Route path="members/edit" element={<MembersView />} />
+      <Route path="members" element={<UsersView />} />
+      <Route path="members/new" element={<UsersView />} />
+      <Route path="members/edit" element={<UsersView />} />
 
       <Route path="subscriptions" element={<SubscriptionsView />} />
       <Route path="subscriptions/new" element={<SubscriptionsView openOnMount />} />

@@ -2,7 +2,7 @@ import { Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input, SectionCard, StatusBadge, Textarea } from '../../primitives';
+import { Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiSubscription, type ApiSubscriptionUser } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { Can } from '../../Can';
@@ -271,7 +271,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
+        {success ? <SuccessMessage>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('subscriptions.editCardTitle', { id: editing.id }) : t('subscriptions.add')}
           action={

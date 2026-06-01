@@ -1,7 +1,7 @@
 import { Building2, Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard } from '../../primitives';
+import { Input, SectionCard, SuccessMessage } from '../../primitives';
 import { erpApiService, type ApiLocation } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
@@ -139,7 +139,7 @@ export function BranchesView() {
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
+        {success ? <SuccessMessage>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('branches.editCardTitle', { id: editing.id }) : t('branches.add')}
           action={

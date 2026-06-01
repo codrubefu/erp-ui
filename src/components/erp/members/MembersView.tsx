@@ -1,11 +1,11 @@
 import { ChevronLeft, ChevronRight, Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard, StatusBadge, Textarea } from '../../primitives';
+import { Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
-type UserFormTab = 'details' | 'information' | 'subscriptions';
+type UserFormTab = 'details' | 'information' | 'groups' | 'locations' | 'subscriptions';
 
 type UserForm = {
   user_code: string;
@@ -20,8 +20,8 @@ type UserForm = {
   custom_fields: Record<string, unknown>;
 };
 
-type MembersViewProps = {
-  resource?: string;
+export type UserManagementViewProps = {
+  resource: string;
   title?: string;
   addLabel?: string;
   countLabel?: string;
@@ -29,6 +29,7 @@ type MembersViewProps = {
   entityLabel?: string;
   newEntityLabel?: string;
   showGroupsInList?: boolean;
+  useRelationTabs?: boolean;
 };
 
 const emptyForm: UserForm = {
@@ -77,6 +78,16 @@ function idsFromSelect(options: HTMLCollectionOf<HTMLOptionElement>) {
     .filter((option) => option.selected)
     .map((option) => option.value)
     .join(', ');
+}
+
+function toggleId(value: string, id: number, checked: boolean) {
+  const ids = new Set(toIdList(value));
+  if (checked) {
+    ids.add(id);
+  } else {
+    ids.delete(id);
+  }
+  return Array.from(ids).join(', ');
 }
 
 function userName(user: ApiUser) {
@@ -237,8 +248,8 @@ function arrayValue(value: unknown) {
   return Array.isArray(value) ? value.map(String) : value ? String(value).split(',').map((item) => item.trim()).filter(Boolean) : [];
 }
 
-export function MembersView({
-  resource = 'clients',
+export function UserManagementView({
+  resource,
   title,
   addLabel,
   countLabel,
@@ -246,7 +257,8 @@ export function MembersView({
   entityLabel,
   newEntityLabel,
   showGroupsInList = false,
-}: MembersViewProps = {}) {
+  useRelationTabs = false,
+}: UserManagementViewProps) {
   const { t } = useTranslation();
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
@@ -279,6 +291,19 @@ export function MembersView({
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
   const selectedSubscriptionIds = useMemo(() => form.subscriptions.map((subscription) => String(subscription.id)), [form.subscriptions]);
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
+  const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
+    const tabs: Array<[UserFormTab, string]> = [
+      ['details', 'Date utilizator'],
+      ['information', t('users.information')],
+    ];
+
+    if (useRelationTabs) {
+      tabs.push(['groups', t('users.groups')], ['locations', t('articles.locations')]);
+    }
+
+    tabs.push(['subscriptions', t('users.subscriptions')]);
+    return tabs;
+  }, [t, useRelationTabs]);
 
   const loadLookups = useCallback(async () => {
     try {
@@ -461,6 +486,46 @@ export function MembersView({
     return <Input key={key} label={label} type={inputType} value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} />;
   };
 
+  const renderGroupCheckboxes = () => (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      {groups.length ? groups.map((group) => (
+        <label key={group.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            checked={selectedGroupIds.includes(String(group.id))}
+            onChange={(event) => setForm((prev) => ({ ...prev, group_ids: toggleId(prev.group_ids, group.id, event.target.checked) }))}
+            className="h-4 w-4 accent-violet-600"
+          />
+          {group.label || group.name}
+        </label>
+      )) : (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+          {t('access.empty')}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderLocationCheckboxes = () => (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      {locations.length ? locations.map((location) => (
+        <label key={location.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            checked={selectedLocationIds.includes(String(location.id))}
+            onChange={(event) => setForm((prev) => ({ ...prev, location_ids: toggleId(prev.location_ids, location.id, event.target.checked) }))}
+            className="h-4 w-4 accent-violet-600"
+          />
+          {location.name}
+        </label>
+      )) : (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+          {t('branches.empty')}
+        </div>
+      )}
+    </div>
+  );
+
   const saveUser = async () => {
     setSaving(true);
     setError('');
@@ -509,7 +574,7 @@ export function MembersView({
         onBack={closeForm}
       >
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
+        {success ? <SuccessMessage>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('users.editCardTitle', { label: resolvedEntityLabel, id: editing.id }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
@@ -519,11 +584,7 @@ export function MembersView({
           }
         >
           <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200">
-            {[
-              ['details', 'Date utilizator'],
-              ['information', t('users.information')],
-              ['subscriptions', t('users.subscriptions')],
-            ].map(([tab, label]) => (
+            {formTabs.map(([tab, label]) => (
               <button
                 key={tab}
                 onClick={() => setActiveFormTab(tab as UserFormTab)}
@@ -545,34 +606,38 @@ export function MembersView({
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
               </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.groups')}</span>
-                <select
-                  multiple
-                  value={selectedGroupIds}
-                  onChange={(event) => {
-                    const groupIds = idsFromSelect(event.currentTarget.selectedOptions);
-                    setForm((prev) => ({ ...prev, group_ids: groupIds }));
-                  }}
-                  className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                >
-                  {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.locations')}</span>
-                <select
-                  multiple
-                  value={selectedLocationIds}
-                  onChange={(event) => {
-                    const locationIds = idsFromSelect(event.currentTarget.selectedOptions);
-                    setForm((prev) => ({ ...prev, location_ids: locationIds }));
-                  }}
-                  className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                >
-                  {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
-                </select>
-              </label>
+              {!useRelationTabs ? (
+                <>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.groups')}</span>
+                    <select
+                      multiple
+                      value={selectedGroupIds}
+                      onChange={(event) => {
+                        const groupIds = idsFromSelect(event.currentTarget.selectedOptions);
+                        setForm((prev) => ({ ...prev, group_ids: groupIds }));
+                      }}
+                      className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                    >
+                      {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.locations')}</span>
+                    <select
+                      multiple
+                      value={selectedLocationIds}
+                      onChange={(event) => {
+                        const locationIds = idsFromSelect(event.currentTarget.selectedOptions);
+                        setForm((prev) => ({ ...prev, location_ids: locationIds }));
+                      }}
+                      className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                    >
+                      {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
+                    </select>
+                  </label>
+                </>
+              ) : null}
             </div>
           ) : activeFormTab === 'information' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -582,6 +647,10 @@ export function MembersView({
                 </div>
               )}
             </div>
+          ) : activeFormTab === 'groups' ? (
+            renderGroupCheckboxes()
+          ) : activeFormTab === 'locations' ? (
+            renderLocationCheckboxes()
           ) : (
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
@@ -825,4 +894,10 @@ export function MembersView({
 
     </div>
   );
+}
+
+export type MembersViewProps = Omit<UserManagementViewProps, 'resource'>;
+
+export function MembersView(props: MembersViewProps = {}) {
+  return <UserManagementView resource="clients" {...props} />;
 }

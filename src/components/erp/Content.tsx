@@ -9,7 +9,6 @@ import { BranchesView } from './branches/BranchesView';
 import { CustomFieldsView } from './custom-fields/CustomFieldsView';
 import { DashboardView } from './dashboard/DashboardView';
 import { EventsModuleRoutes } from './events/EventsModule';
-import { MembersView } from './members/MembersView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
 import { ReportsView } from './reports/ReportsView';
@@ -17,11 +16,12 @@ import { QuickCreateMenu } from './shared/QuickCreateMenu';
 import type { ContentProps } from './shared/types';
 import { SmsView } from './sms/SmsView';
 import { SubscriptionsView } from './subscriptions/SubscriptionsView';
+import { UsersView } from './users/UsersView';
 
 export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment, formSuccess }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
-      return <MembersView />;
+      return <UsersView />;
     }
     if (page.section === 'subscriptionForm') {
       return <SubscriptionsView openOnMount={page.mode === 'create'} />;
@@ -35,7 +35,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
 
     switch (current) {
       case 'members':
-        return <MembersView />;
+        return <UsersView />;
       case 'branches':
         return <BranchesView />;
       case 'admins':

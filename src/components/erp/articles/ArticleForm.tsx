@@ -3,7 +3,7 @@ import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { SectionCard } from '../../primitives';
+import { SectionCard, SuccessMessage } from '../../primitives';
 import { articlesService, type Article, type ArticlePayload, type ArticleRelation } from '../../../services/articlesService';
 
 const emptyForm: ArticlePayload = { title: '', description: '', groups: [], locations: [] };
@@ -89,7 +89,7 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
     <form onSubmit={submit} className="space-y-6">
       <SectionCard title={title} action={<Link to="/erp/articles" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.back')}</Link>}>
         {serverError ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{serverError}</p> : null}
-        {successMessage ? <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{successMessage}</p> : null}
+        {successMessage ? <SuccessMessage className="rounded-xl border-none font-semibold">{successMessage}</SuccessMessage> : null}
         {optionsError ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{optionsError}</p> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <label className="block">

@@ -8,6 +8,7 @@ export { DashboardView } from './dashboard/DashboardView';
 export { EventsModuleRoutes } from './events/EventsModule';
 export { MemberFormPage } from './members/MemberFormPage';
 export { MembersView } from './members/MembersView';
+export { UsersView } from './users/UsersView';
 export { PaymentFormPage } from './payments/PaymentFormPage';
 export { PaymentsView } from './payments/PaymentsView';
 export { ReportsView } from './reports/ReportsView';

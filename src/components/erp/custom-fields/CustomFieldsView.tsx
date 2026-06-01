@@ -2,7 +2,7 @@ import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { erpApiService } from '../../../services/ErpApiService';
-import { Input, SectionCard, Select, Textarea } from '../../primitives';
+import { Input, SectionCard, Select, SuccessMessage, Textarea } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 
 type CustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'email' | 'phone' | 'select' | 'multi_select' | 'checkbox' | 'boolean' | 'file';
@@ -203,7 +203,7 @@ export function CustomFieldsView() {
     return (
       <PageShell title={editing ? t('customFields.edit') : t('customFields.add')} subtitle={t('customFields.formSubtitle')} backLabel={t('customFields.backToList')} onBack={closeForm}>
         {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-        {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
+        {success ? <SuccessMessage>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('customFields.editCardTitle', { id: editing.id }) : t('customFields.add')}
           action={<button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><X className="h-4 w-4" />{t('common.close')}</button>}

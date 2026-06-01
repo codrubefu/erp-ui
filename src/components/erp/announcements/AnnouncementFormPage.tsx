@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard, Select, StatusBadge, Textarea } from '../../primitives';
+import { Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 import type { AnnouncementFormPageProps } from '../shared/types';
 
@@ -11,7 +11,7 @@ export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave, suc
   return (
     <PageShell title={mode === 'edit' ? t('announcements.edit') : t('announcements.add')} subtitle={t('announcements.formSubtitle')} backLabel={t('announcements.backToList')} onBack={onBack}>
       <SectionCard title={t('announcements.details')} action={<StatusBadge status={data.status} />}>
-        {successMessage ? <p className="mb-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{successMessage}</p> : null}
+        {successMessage ? <SuccessMessage>{successMessage}</SuccessMessage> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t('announcements.id')} value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="ANN-004" />
           <Select label={t('common.status')} value={data.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('status', e.target.value)}>{['Draft', 'Programat', 'Publicat'].map((item) => <option key={item}>{item}</option>)}</Select>
