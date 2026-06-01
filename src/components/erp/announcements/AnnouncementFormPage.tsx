@@ -11,7 +11,7 @@ export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave, suc
   return (
     <PageShell title={mode === 'edit' ? t('announcements.edit') : t('announcements.add')} subtitle={t('announcements.formSubtitle')} backLabel={t('announcements.backToList')} onBack={onBack}>
       <SectionCard title={t('announcements.details')} action={<StatusBadge status={data.status} />}>
-        {successMessage ? <SuccessMessage>{successMessage}</SuccessMessage> : null}
+        {successMessage ? <SuccessMessage fixed>{successMessage}</SuccessMessage> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t('announcements.id')} value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="ANN-004" />
           <Select label={t('common.status')} value={data.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('status', e.target.value)}>{['Draft', 'Programat', 'Publicat'].map((item) => <option key={item}>{item}</option>)}</Select>

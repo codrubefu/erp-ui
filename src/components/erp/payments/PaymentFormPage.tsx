@@ -11,7 +11,7 @@ export function PaymentFormPage({ mode, data, onChange, onBack, onSave, successM
   return (
     <PageShell title={mode === 'edit' ? t('payments.edit') : t('payments.addInvoice')} subtitle={t('payments.formSubtitle')} backLabel={t('payments.backToList')} onBack={onBack}>
       <SectionCard title={t('payments.transactionDetails')} action={<StatusBadge status={data.status} />}>
-        {successMessage ? <SuccessMessage>{successMessage}</SuccessMessage> : null}
+        {successMessage ? <SuccessMessage fixed>{successMessage}</SuccessMessage> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t('payments.internalId')} value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="PAY-005" />
           <Input label={t('payments.invoice')} value={data.invoice} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('invoice', e.target.value)} placeholder="INV-2026-105" />
