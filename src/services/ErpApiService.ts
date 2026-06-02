@@ -1,3 +1,5 @@
+import { API_BASE_URL, TOKEN_KEY, apiHeaders, clearApiToken, endpoint, extractErrorMessage, parseJsonResponse, unwrapApiPayload, type ApiEnvelope } from '../api/apiCore';
+
 export type ApiUser = {
   id: number;
   user_code?: string | null;
@@ -171,16 +173,6 @@ export type AuthenticatedUser = ApiUser | {
   last_name?: string;
 };
 
-type ApiEnvelope<T> = {
-  data?: T;
-  user?: T;
-  token?: string;
-  access_token?: string;
-  bearer_token?: string;
-  message?: string;
-  errors?: Record<string, string[]>;
-};
-
 export type ApiPaginated<T> = {
   data: T[];
   current_page?: number;
@@ -200,31 +192,7 @@ export type LoginResult = {
   user: AuthenticatedUser | null;
 };
 
-export const API_BASE_URL = import.meta.env.VITE_ERP_API_URL ?? 'http://localhost:8099/api';
-export const TOKEN_KEY = 'master-erp-api-token';
-
-function joinUrl(path: string) {
-  return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-}
-
-function extractError(payload: unknown, fallback: string) {
-  if (payload && typeof payload === 'object') {
-    const body = payload as ApiEnvelope<unknown>;
-    if (body.message) return body.message;
-    if (body.errors) {
-      const first = Object.values(body.errors)[0]?.[0];
-      if (first) return first;
-    }
-  }
-  return fallback;
-}
-
-function unwrap<T>(payload: T | ApiEnvelope<T>): T {
-  if (payload && typeof payload === 'object' && 'data' in payload) {
-    return (payload as ApiEnvelope<T>).data as T;
-  }
-  return payload as T;
-}
+export { API_BASE_URL, TOKEN_KEY } from '../api/apiCore';
 
 function unwrapUser(payload: AuthenticatedUser | ApiEnvelope<AuthenticatedUser>): AuthenticatedUser {
   if (payload && typeof payload === 'object' && 'user' in payload && payload.user) {
@@ -246,44 +214,33 @@ export class ErpApiService {
   }
 
   clearToken() {
-    window.localStorage.removeItem(TOKEN_KEY);
+    clearApiToken();
   }
 
   private async requestRaw<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const token = this.getToken();
-    const headers = new Headers(options.headers);
-    headers.set('Accept', 'application/json');
+    const headers = apiHeaders(options);
 
-    if (options.body && !headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
-    }
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    const response = await fetch(joinUrl(path), {
+    const response = await fetch(endpoint(path), {
       ...options,
       headers,
     });
 
-    const text = await response.text();
-    const isJson = response.headers.get('Content-Type')?.includes('application/json');
-    const payload = text && isJson ? JSON.parse(text) : null;
+    const payload = await parseJsonResponse(response);
 
     if (!response.ok) {
       if (response.status === 401) this.clearToken();
-      throw new Error(extractError(payload, `Cererea a esuat (${response.status}).`));
+      throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
     }
 
     return payload as T;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    return unwrap<T>(await this.requestRaw<T | ApiEnvelope<T>>(path, options));
+    return unwrapApiPayload<T>(await this.requestRaw<T | ApiEnvelope<T>>(path, options));
   }
 
   async login(email: string, password: string, organizationId: string | number): Promise<LoginResult> {
-    const payload = await this.request<ApiEnvelope<AuthenticatedUser> & Record<string, unknown>>('/login', {
+    const payload = await this.requestRaw<ApiEnvelope<AuthenticatedUser> & Record<string, unknown>>('/login', {
       method: 'POST',
       body: JSON.stringify({ email, password, organization_id: organizationId }),
     });

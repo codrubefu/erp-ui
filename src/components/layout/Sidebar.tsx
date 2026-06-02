@@ -64,9 +64,9 @@ const navGroups: readonly NavGroup[] = [
       { id: 'subscriptions', labelKey: 'menu.subscriptions', icon: BadgeEuro, rights: ['subscriptions.view', 'subscriptions.manage'] },
       { id: 'events', labelKey: 'menu.events', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
       { id: 'articles', labelKey: 'menu.articles', icon: Bell, rights: ['articles.view', 'articles.manage'] },
-      { id: 'sms', labelKey: 'menu.sms', icon: MessageSquare },
-      { id: 'payments', labelKey: 'menu.payments', icon: CreditCard },
-      { id: 'reports', labelKey: 'menu.reports', icon: FileBarChart2 },
+      { id: 'sms', labelKey: 'menu.sms', icon: MessageSquare, rights: ['sms.view', 'sms.manage'] },
+      { id: 'payments', labelKey: 'menu.payments', icon: CreditCard, rights: ['payments.view', 'payments.manage'] },
+      { id: 'reports', labelKey: 'menu.reports', icon: FileBarChart2, rights: ['reports.view', 'reports.manage'] },
     ],
   },
 ];

@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { eventService, type ApiValidationError, type EventItem, type EventParticipant, type EventPayload, type EventPaymentType, type EventStatus, type EventSubscription, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
-import { erpApiService, type ApiPayment } from '../../../services/ErpApiService';
+import type { ApiPayment } from '../../../services/ErpApiService';
+import { paymentService } from '../../../services/paymentService';
 import { SectionCard } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
 import { useAuth } from '../../../context/AuthContext';
+import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
+import { ParticipantPaymentModal } from './ParticipantPaymentModal';
 
 const weekdays: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const weekdayLabelKeys: Record<Weekday, string> = { monday: 'events.weekdays.monday', tuesday: 'events.weekdays.tuesday', wednesday: 'events.weekdays.wednesday', thursday: 'events.weekdays.thursday', friday: 'events.weekdays.friday', saturday: 'events.weekdays.saturday', sunday: 'events.weekdays.sunday' };
@@ -352,36 +355,6 @@ function participantPaymentModelId(participant: EventParticipant) {
   return participant.id ?? null;
 }
 
-function currentDateTimeLocal() {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 16);
-}
-
-function dateTimeLocalToApi(value: string) {
-  return value ? value.replace('T', ' ') : value;
-}
-
-function formatPaymentAmount(amount: string | number) {
-  const numeric = Number(amount);
-  if (Number.isNaN(numeric)) return String(amount);
-  return new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'RON' }).format(numeric);
-}
-
-function formatPaymentDate(value?: string | null) {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium', timeStyle: value.includes('T') ? 'short' : undefined }).format(date);
-}
-
-function paymentMethodLabel(payment: ApiPayment) {
-  if (payment.payment_type_id === 1) return 'Cash';
-  if (payment.payment_type_id === 2) return 'Card';
-  if (payment.payment_type_id === 3) return 'Bank transfer';
-  return payment.payment_type ?? '-';
-}
-
 function participantName(participant: EventParticipant) {
   return participant.user?.name || `${participant.user?.first_name ?? participant.first_name ?? ''} ${participant.user?.last_name ?? participant.last_name ?? ''}`.trim() || '-';
 }
@@ -529,96 +502,8 @@ function ScanParticipantPanel({ occurrenceId, availableSlots, existingParticipan
   );
 }
 
-function ParticipantPaymentModal({ participant, occurrence, onClose, onSaved }: { participant: EventParticipant; occurrence: { event?: EventItem } | null; onClose: () => void; onSaved: () => void }) {
-  const modelId = participantPaymentModelId(participant);
-  const event = occurrence?.event;
-  const [firstName, setFirstName] = useState(participant.user?.first_name ?? participant.first_name ?? '');
-  const [lastName, setLastName] = useState(participant.user?.last_name ?? participant.last_name ?? '');
-  const [amount, setAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '');
-  const [currency, setCurrency] = useState(event?.payment_type ?? 'RON');
-  const [paymentTypeId, setPaymentTypeId] = useState('');
-  const [paidAt, setPaidAt] = useState(currentDateTimeLocal());
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const savePayment = async () => {
-    const numericAmount = Number(amount);
-    const numericPaymentTypeId = Number(paymentTypeId);
-    setError('');
-
-    if (!modelId) {
-      setError('Participantul nu are ID-ul relatiei event_occurrence_user in payload.');
-      return;
-    }
-    if (!firstName.trim() || !lastName.trim() || !paidAt) {
-      setError('First name, last name si data platii sunt obligatorii.');
-      return;
-    }
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      setError('Suma platii trebuie sa fie mai mare decat zero.');
-      return;
-    }
-    if (![1, 2, 3].includes(numericPaymentTypeId)) {
-      setError('Selecteaza metoda de plata.');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      await erpApiService.create<ApiPayment>('payments', {
-        model_type: 'event_occurrence_user',
-        model_id: modelId,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        amount: numericAmount,
-        payment_type_id: numericPaymentTypeId,
-        paid_at: dateTimeLocalToApi(paidAt),
-      });
-      onSaved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut salva plata.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4">
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Adauga plata participant</h3>
-            <p className="text-sm text-slate-500">Linked to event_occurrence_user #{modelId ?? '-'}</p>
-          </div>
-          <button onClick={onClose} className="rounded-xl border border-slate-200 p-2 text-slate-600"><X className="h-4 w-4" /></button>
-        </div>
-        {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextField label="first_name" value={firstName} onChange={(event) => setFirstName(event.target.value)} />
-          <TextField label="last_name" value={lastName} onChange={(event) => setLastName(event.target.value)} />
-          <TextField label="amount" type="number" min={0} step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} />
-          <TextField label="currency" value={currency} onChange={(event) => setCurrency(event.target.value)} />
-          <SelectField label="payment method" value={paymentTypeId} onChange={(event) => setPaymentTypeId(event.target.value)}>
-            <option value="">Selecteaza</option>
-            <option value="1">Cash</option>
-            <option value="2">Card</option>
-            <option value="3">Bank transfer</option>
-          </SelectField>
-          <TextField label="paid_at" type="datetime-local" value={paidAt} onChange={(event) => setPaidAt(event.target.value)} />
-        </div>
-        <p className="mt-3 text-xs text-slate-500">Moneda este informativa aici; backend-ul Payments primeste suma, metoda de plata si modelul event_occurrence_user.</p>
-        <div className="mt-6 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Anuleaza</button>
-          <button onClick={() => void savePayment()} disabled={saving} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
-            <Save className="mr-2 inline h-4 w-4" />{saving ? 'Se salveaza...' : 'Salveaza plata'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function EventParticipantsPage() {
+  const { t } = useTranslation();
   const { occurrenceId } = useParams();
   const id = Number(occurrenceId);
   const { participants, loading, error, reload } = useEventParticipants(id);
@@ -678,15 +563,10 @@ function EventParticipantsPage() {
     setPaymentsLoading(true);
     setPaymentsError('');
     try {
-      const paymentGroups = await Promise.all(modelIds.map((modelId) => erpApiService.list<ApiPayment>('payments', { model_type: 'event_occurrence_user', model_id: modelId })));
-      const unique = new Map<number, ApiPayment>();
-      paymentGroups.flat().forEach((payment) => {
-        if (payment.model_type === 'event_occurrence_user' && payment.model_id && modelIds.includes(payment.model_id)) unique.set(payment.id, payment);
-      });
-      setOccurrencePayments([...unique.values()].sort((a, b) => String(b.paid_at ?? '').localeCompare(String(a.paid_at ?? ''))));
+      setOccurrencePayments(await paymentService.listForModels('event_occurrence_user', modelIds));
     } catch (err) {
       setOccurrencePayments([]);
-      setPaymentsError(err instanceof Error ? err.message : 'Nu am putut incarca platile occurrence-ului.');
+      setPaymentsError(err instanceof Error ? err.message : t('events.paymentsLoadError'));
     } finally {
       setPaymentsLoading(false);
     }
@@ -718,7 +598,7 @@ function EventParticipantsPage() {
 
       <div className="mb-3 flex justify-end">
         <button onClick={() => void loadOccurrencePayments()} disabled={paymentsLoading} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-60">
-          <RefreshCw className="mr-2 inline h-4 w-4" />Refresh payments
+          <RefreshCw className="mr-2 inline h-4 w-4" />{t('events.refreshPayments')}
         </button>
       </div>
 
@@ -749,10 +629,10 @@ function EventParticipantsPage() {
                     <div className="mt-3 space-y-2">
                       {participantPayments.length ? participantPayments.map((payment) => (
                         <div key={payment.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                          <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {formatPaymentAmount(payment.amount)}</p>
-                          <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {formatPaymentDate(payment.paid_at)}</p>
+                          <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {formatCurrency(payment.amount)}</p>
+                          <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {formatApiDate(payment.paid_at)}</p>
                         </div>
-                      )) : <p className="text-xs text-slate-400">{paymentsLoading ? 'Se incarca platile...' : 'Fara plati.'}</p>}
+                      )) : <p className="text-xs text-slate-400">{paymentsLoading ? t('events.loadingPayments') : t('events.noPayments')}</p>}
                     </div>
                   </td>
                   <td className="py-4">{participant.user?.email ?? participant.email ?? '-'}</td>

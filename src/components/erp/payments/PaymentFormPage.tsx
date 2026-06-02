@@ -3,8 +3,10 @@ import { Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input, SectionCard, Select } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
-import { erpApiService, type ApiPayment } from '../../../services/ErpApiService';
+import type { ApiPayment } from '../../../services/ErpApiService';
+import { paymentService } from '../../../services/paymentService';
 import type { PaymentFormPageProps } from '../shared/types';
+import { useAuth } from '../../../context/AuthContext';
 
 type PaymentModelType = ApiPayment['model_type'];
 
@@ -21,6 +23,7 @@ const initialForm = {
 export function PaymentFormPage(props: PaymentFormPageProps) {
   void props;
   const navigate = useNavigate();
+  const { hasAnyRight } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState('');
@@ -50,10 +53,10 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
     setSaving(true);
     setServerError('');
     try {
-      await erpApiService.create<ApiPayment>('payments', {
+      await paymentService.create({
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        payment_type_id: Number(form.payment_type_id),
+        payment_type_id: Number(form.payment_type_id) as 1 | 2 | 3,
         model_type: form.model_type,
         model_id: Number(form.model_id),
         amount: Number(form.amount),
@@ -68,6 +71,10 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
   };
 
   const modelIdLabel = form.model_type === 'event_occurrence_user' ? 'model_id participant event occurrence' : 'model_id subscription_user';
+
+  if (!hasAnyRight(['payments.create', 'payments.manage'])) {
+    return <PageShell title="Adauga payment" subtitle="" backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}><SectionCard title="Payments"><p className="text-sm text-slate-600">Nu ai dreptul payments.create.</p></SectionCard></PageShell>;
+  }
 
   return (
     <PageShell title="Adauga payment" subtitle="Creeaza o plata asociata explicit unui subscription_user sau event_occurrence_user." backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}>

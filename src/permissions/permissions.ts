@@ -9,6 +9,9 @@ const impliedRights: Record<string, string[]> = {
   'locations.manage': ['locations.view'],
   'events.manage': ['events.view'],
   'event_participants.manage': ['event_participants.view'],
+  'payments.manage': ['payments.view', 'payments.create', 'payments.update'],
+  'sms.manage': ['sms.view'],
+  'reports.manage': ['reports.view'],
 };
 
 export function expandRights(rights: Iterable<RightName>) {

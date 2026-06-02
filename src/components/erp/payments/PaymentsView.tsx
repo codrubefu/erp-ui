@@ -2,34 +2,23 @@ import { ChevronLeft, ChevronRight, LinkIcon, Plus, RefreshCw } from 'lucide-rea
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Input, SectionCard, Select } from '../../primitives';
-import { erpApiService, type ApiPayment } from '../../../services/ErpApiService';
+import type { ApiPayment } from '../../../services/ErpApiService';
 import type { PaymentsViewProps } from '../shared/types';
+import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
+import { paymentService } from '../../../services/paymentService';
+import { useAuth } from '../../../context/AuthContext';
 
 type PaymentModelType = ApiPayment['model_type'];
 
 const defaultMeta = { current_page: 1, last_page: 1, per_page: 15, total: 0 };
-const paymentTypeLabels: Record<number, string> = { 1: 'cash', 2: 'card', 3: 'bank_transfer' };
 
-function normalizeMeta<T>(payload: Awaited<ReturnType<typeof erpApiService.listPaginated<T>>>) {
+function normalizeMeta<T>(payload: { data: T[]; meta?: typeof defaultMeta; current_page?: number; last_page?: number; per_page?: number; total?: number }) {
   return {
     current_page: payload.meta?.current_page ?? payload.current_page ?? defaultMeta.current_page,
     last_page: payload.meta?.last_page ?? payload.last_page ?? defaultMeta.last_page,
     per_page: payload.meta?.per_page ?? payload.per_page ?? defaultMeta.per_page,
     total: payload.meta?.total ?? payload.total ?? payload.data.length,
   };
-}
-
-function formatAmount(amount: string | number) {
-  const numeric = Number(amount);
-  if (Number.isNaN(numeric)) return String(amount);
-  return new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'RON' }).format(numeric);
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium', timeStyle: value.includes('T') ? 'short' : undefined }).format(date);
 }
 
 function adminLabel(payment: ApiPayment) {
@@ -49,7 +38,7 @@ function AttachModelModal({ payment, onClose, onSaved }: { payment: ApiPayment; 
     setSaving(true);
     setError('');
     try {
-      await erpApiService.attachPaymentModel<ApiPayment>(payment.id, { model_type: modelType, model_id: Number(modelId) });
+      await paymentService.attachModel(payment.id, { model_type: modelType, model_id: Number(modelId) });
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut atasa modelul.');
@@ -82,6 +71,9 @@ function AttachModelModal({ payment, onClose, onSaved }: { payment: ApiPayment; 
 
 export function PaymentsView(props: PaymentsViewProps) {
   void props;
+  const { hasAnyRight } = useAuth();
+  const canViewPayments = hasAnyRight(['payments.view', 'payments.manage']);
+  const canManagePayments = hasAnyRight(['payments.create', 'payments.update', 'payments.manage']);
   const [payments, setPayments] = useState<ApiPayment[]>([]);
   const [meta, setMeta] = useState(defaultMeta);
   const [page, setPage] = useState(1);
@@ -95,7 +87,7 @@ export function PaymentsView(props: PaymentsViewProps) {
     setLoading(true);
     setError('');
     try {
-      const payload = await erpApiService.listPaginated<ApiPayment>('payments', { page: nextPage, per_page: nextPerPage });
+      const payload = await paymentService.listPaginated(nextPage, nextPerPage);
       setPayments(payload.data);
       const nextMeta = normalizeMeta(payload);
       setMeta(nextMeta);
@@ -110,14 +102,19 @@ export function PaymentsView(props: PaymentsViewProps) {
   }, [page, perPage]);
 
   useEffect(() => {
+    if (!canViewPayments) return;
     void loadPayments(1, perPage);
-  }, [loadPayments, perPage]);
+  }, [canViewPayments, loadPayments, perPage]);
+
+  if (!canViewPayments) {
+    return <SectionCard title="Payments"><p className="text-sm text-slate-600">Nu ai dreptul payments.view.</p></SectionCard>;
+  }
 
   return (
     <div className="space-y-6">
       {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
       {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
-      <SectionCard title="Payments" action={<div className="flex gap-2"><Link to="/erp/payments/new" className="inline-flex items-center rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 h-4 w-4" />Adauga payment</Link><button onClick={() => void loadPayments(page, perPage)} disabled={loading} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"><RefreshCw className="mr-2 inline h-4 w-4" />Refresh</button></div>}>
+      <SectionCard title="Payments" action={<div className="flex gap-2">{canManagePayments ? <Link to="/erp/payments/new" className="inline-flex items-center rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 h-4 w-4" />Adauga payment</Link> : null}<button onClick={() => void loadPayments(page, perPage)} disabled={loading} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"><RefreshCw className="mr-2 inline h-4 w-4" />Refresh</button></div>}>
         <div className="mb-4 flex items-end gap-3">
           <Select label="per_page" value={perPage} onChange={(event) => { const value = Number(event.target.value); setPerPage(value); setPage(1); void loadPayments(1, value); }}>
             {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
@@ -127,7 +124,7 @@ export function PaymentsView(props: PaymentsViewProps) {
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead><tr className="border-b border-slate-200 text-slate-500"><th className="pb-3">first_name</th><th className="pb-3">last_name</th><th className="pb-3">payment_type</th><th className="pb-3">model_type</th><th className="pb-3">model_id</th><th className="pb-3">amount</th><th className="pb-3">paid_at</th><th className="pb-3">admin</th><th className="pb-3 text-right">Actiuni</th></tr></thead>
-            <tbody>{payments.length ? payments.map((payment) => <tr key={payment.id} className="border-b border-slate-100 align-top"><td className="py-4">{payment.first_name}</td><td className="py-4">{payment.last_name}</td><td className="py-4">{payment.payment_type ?? paymentTypeLabels[payment.payment_type_id] ?? '-'}</td><td className="py-4">{payment.model_type}</td><td className="py-4">{payment.model_id ?? '-'}</td><td className="py-4 font-semibold text-slate-900">{formatAmount(payment.amount)}</td><td className="py-4">{formatDate(payment.paid_at)}</td><td className="py-4">{adminLabel(payment)}</td><td className="py-4 text-right"><button onClick={() => setAttachPayment(payment)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700"><LinkIcon className="mr-2 h-4 w-4" />Attach model</button></td></tr>) : <tr><td colSpan={9} className="py-10 text-center text-slate-500">{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</td></tr>}</tbody>
+            <tbody>{payments.length ? payments.map((payment) => <tr key={payment.id} className="border-b border-slate-100 align-top"><td className="py-4">{payment.first_name}</td><td className="py-4">{payment.last_name}</td><td className="py-4">{paymentMethodLabel(payment)}</td><td className="py-4">{payment.model_type}</td><td className="py-4">{payment.model_id ?? '-'}</td><td className="py-4 font-semibold text-slate-900">{formatCurrency(payment.amount)}</td><td className="py-4">{formatApiDate(payment.paid_at)}</td><td className="py-4">{adminLabel(payment)}</td><td className="py-4 text-right">{canManagePayments ? <button onClick={() => setAttachPayment(payment)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700"><LinkIcon className="mr-2 h-4 w-4" />Attach model</button> : null}</td></tr>) : <tr><td colSpan={9} className="py-10 text-center text-slate-500">{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</td></tr>}</tbody>
           </table>
         </div>
         <div className="mt-4 flex justify-end gap-2">

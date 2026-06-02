@@ -20,6 +20,8 @@ import type {
 } from '../types/erp';
 
 const SECTION_IDS: SectionId[] = ['dashboard', 'branches', 'admins', 'access', 'custom-fields', 'members', 'subscriptions', 'events', 'articles', 'announcements', 'sms', 'payments', 'reports'];
+const USE_LOCAL_ERP_CACHE = import.meta.env.VITE_USE_LOCAL_ERP_CACHE === 'true';
+const USE_LOCAL_ERP_SEED = import.meta.env.VITE_USE_LOCAL_ERP_SEED === 'true';
 
 const STORAGE_KEYS = {
   auth: 'master-erp-auth',
@@ -78,6 +80,7 @@ const emptyForms: {
 };
 
 function loadStoredValue<T>(key: string, fallback: T): T {
+  if (!USE_LOCAL_ERP_CACHE) return fallback;
   if (typeof window === 'undefined') return fallback;
   try {
     const raw = window.localStorage.getItem(key);
@@ -88,6 +91,7 @@ function loadStoredValue<T>(key: string, fallback: T): T {
 }
 
 function saveStoredValue<T>(key: string, value: T) {
+  if (!USE_LOCAL_ERP_CACHE) return;
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(key, JSON.stringify(value));
 }
@@ -175,6 +179,7 @@ export default function ERPAdminPanel() {
     let disposed = false;
 
     const loadSeedData = async () => {
+      if (!USE_LOCAL_ERP_SEED) return;
       try {
         const seed = await erpJsonDataService.loadSeedData();
         if (disposed) return;

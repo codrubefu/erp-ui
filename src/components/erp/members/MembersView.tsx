@@ -391,6 +391,7 @@ export function UserManagementView({
   const [activeFormTab, setActiveFormTab] = useState<UserFormTab>('details');
   const [subscriptionToAdd, setSubscriptionToAdd] = useState('');
   const [subscriptionStartDate, setSubscriptionStartDate] = useState(todayDate());
+  const [subscriptionSaving, setSubscriptionSaving] = useState(false);
   const [paymentSubscriptionId, setPaymentSubscriptionId] = useState<number | null>(null);
   const [paymentForm, setPaymentForm] = useState<SubscriptionPaymentForm>(emptyPaymentForm);
   const [subscriptionPayments, setSubscriptionPayments] = useState<ApiPayment[]>([]);
@@ -570,27 +571,46 @@ export function UserManagementView({
     setPaymentSuccess('');
   };
 
+  const persistSubscriptionAssignments = async (nextSubscriptions: ApiUserSubscriptionAssignment[]) => {
+    if (!editing) return;
+    setSubscriptionSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      const nextForm = { ...form, subscriptions: nextSubscriptions };
+      await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(nextForm));
+      const savedUser = await erpApiService.get<ApiUser>('users', editing.id);
+      const customFieldValues = await loadUserCustomFieldValues(savedUser);
+      const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
+      setEditing(savedUser);
+      setForm(savedForm);
+      await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
+      setSuccess(t('common.saved'));
+      await loadUsers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('users.saveError', { label: resolvedSingularLabel }));
+    } finally {
+      setSubscriptionSaving(false);
+    }
+  };
+
   const updateSubscriptionStartDate = (subscriptionId: number, startDate: string) => {
-    setForm((prev) => ({
-      ...prev,
-      subscriptions: prev.subscriptions.map((subscription) => (
-        subscription.id === subscriptionId ? { ...subscription, start_date: startDate } : subscription
-      )),
-    }));
+    const nextSubscriptions = form.subscriptions.map((subscription) => (
+      subscription.id === subscriptionId ? { ...subscription, start_date: startDate } : subscription
+    ));
+    setForm((prev) => ({ ...prev, subscriptions: nextSubscriptions }));
+    void persistSubscriptionAssignments(nextSubscriptions);
   };
 
   const addSubscriptionAssignment = () => {
     const subscriptionId = Number(subscriptionToAdd);
     if (!subscriptionId) return;
-    setForm((prev) => {
-      if (prev.subscriptions.some((subscription) => subscription.id === subscriptionId)) return prev;
-      return {
-        ...prev,
-        subscriptions: [...prev.subscriptions, { id: subscriptionId, start_date: subscriptionStartDate || todayDate() }],
-      };
-    });
+    if (form.subscriptions.some((subscription) => subscription.id === subscriptionId)) return;
+    const nextSubscriptions = [...form.subscriptions, { id: subscriptionId, start_date: subscriptionStartDate || todayDate() }];
+    setForm((prev) => ({ ...prev, subscriptions: nextSubscriptions }));
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
+    void persistSubscriptionAssignments(nextSubscriptions);
   };
 
   const selectSubscriptionForPayment = (subscriptionId: number) => {
@@ -687,16 +707,15 @@ export function UserManagementView({
   };
 
   const removeSubscriptionAssignment = (subscriptionId: number) => {
-    setForm((prev) => ({
-      ...prev,
-      subscriptions: prev.subscriptions.filter((subscription) => subscription.id !== subscriptionId),
-    }));
+    const nextSubscriptions = form.subscriptions.filter((subscription) => subscription.id !== subscriptionId);
+    setForm((prev) => ({ ...prev, subscriptions: nextSubscriptions }));
     if (paymentSubscriptionId === subscriptionId) {
       setPaymentSubscriptionId(null);
       setPaymentForm(emptyPaymentForm);
       setPaymentError('');
       setPaymentSuccess('');
     }
+    void persistSubscriptionAssignments(nextSubscriptions);
   };
 
   const updateCustomField = (field: ApiCustomField, value: unknown) => {
@@ -938,8 +957,8 @@ export function UserManagementView({
                 </label>
                 <Input label={t('users.startDate')} type="date" value={subscriptionStartDate} onChange={(event) => setSubscriptionStartDate(event.target.value)} />
                 <div className="flex items-end">
-                  <button onClick={addSubscriptionAssignment} disabled={!subscriptionToAdd} className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
-                    <Plus className="mr-2 inline h-4 w-4" />{t('common.add')}
+                  <button onClick={addSubscriptionAssignment} disabled={!subscriptionToAdd || subscriptionSaving} className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
+                    <Plus className="mr-2 inline h-4 w-4" />{subscriptionSaving ? t('common.saving') : t('common.add')}
                   </button>
                 </div>
               </div>
@@ -1042,7 +1061,7 @@ export function UserManagementView({
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} />
+                              <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} disabled={subscriptionSaving} />
                             </td>
                             <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('subscriptions.noAutoExpiry')}</td>
                             <td className="px-4 py-3"><StatusBadge status={subscriptionIsActive(editing, assignment.id, userSubscription ?? subscription) ? t('users.statusActive') : t('users.statusExpired')} /></td>
@@ -1051,7 +1070,7 @@ export function UserManagementView({
                                 <button onClick={() => selectSubscriptionForPayment(assignment.id)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                                   <Plus className="mr-2 h-4 w-4" />Adauga plata noua
                                 </button>
-                                <button onClick={() => removeSubscriptionAssignment(assignment.id)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                                <button onClick={() => removeSubscriptionAssignment(assignment.id)} disabled={subscriptionSaving} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60">
                                   <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                                 </button>
                               </div>
@@ -1101,9 +1120,9 @@ export function UserManagementView({
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-            <button onClick={() => void saveUser()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            {activeFormTab !== 'subscriptions' ? <button onClick={() => void saveUser()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="mr-2 inline h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
-            </button>
+            </button> : null}
           </div>
         </SectionCard>
       </PageShell>
