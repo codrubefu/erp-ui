@@ -47,8 +47,9 @@ function AttachModelModal({ payment, onClose, onSaved }: { payment: ApiPayment; 
   };
 
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4">
+      <div className="mx-auto grid min-h-full place-items-center">
+        <div className="w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-slate-900">Attach model pentru payment #{payment.id}</h3>
         {error ? <Alert tone="error" className="mt-3">{error}</Alert> : null}
         <div className="mt-4 space-y-4">
@@ -62,6 +63,7 @@ function AttachModelModal({ payment, onClose, onSaved }: { payment: ApiPayment; 
         <div className="mt-6 flex justify-end gap-2">
           <Button onClick={onClose}>Anuleaza</Button>
           <Button variant="primary" onClick={() => void save()} disabled={!modelId || saving}>Attach model</Button>
+        </div>
         </div>
       </div>
     </div>

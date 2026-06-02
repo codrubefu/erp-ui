@@ -1000,12 +1000,13 @@ export function UserManagementView({
               {selectedPaymentSubscription ? (
                 <PaymentPopup
                   title={paymentForm.id ? `Edit payment #${paymentForm.id}` : 'Adauga plata'}
-                  subtitle={`Linked to subscription #${paymentForm.subscription_id || selectedPaymentSubscription.id}`}
+                  subtitle={selectedPaymentSubscription.name
+                    ? `Plata pentru ${selectedPaymentSubscription.name}`
+                    : `Plata pentru subscription #${paymentForm.subscription_id || selectedPaymentSubscription.id}`}
                   values={paymentPopupValuesFromSubscriptionForm(paymentForm)}
                   error={paymentError}
                   success={paymentSuccess}
                   saving={paymentSaving}
-                  showReferenceFields
                   onChange={updatePaymentPopupForm}
                   onClose={() => {
                     setPaymentSubscriptionId(null);
