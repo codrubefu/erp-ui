@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Input, SectionCard, Select } from '../../primitives';
+import { Alert, Button, Input, SectionCard, Select } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
@@ -73,14 +73,14 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
   const modelIdLabel = form.model_type === 'event_occurrence_user' ? 'model_id participant event occurrence' : 'model_id subscription_user';
 
   if (!hasAnyRight(['payments.create', 'payments.manage'])) {
-    return <PageShell title="Adauga payment" subtitle="" backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}><SectionCard title="Payments"><p className="text-sm text-slate-600">Nu ai dreptul payments.create.</p></SectionCard></PageShell>;
+    return <PageShell title="Adauga payment" subtitle="" backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}><SectionCard title="Payments"><Alert>Nu ai dreptul payments.create.</Alert></SectionCard></PageShell>;
   }
 
   return (
     <PageShell title="Adauga payment" subtitle="Creeaza o plata asociata explicit unui subscription_user sau event_occurrence_user." backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}>
       <form onSubmit={save}>
         <SectionCard title="Payment details">
-          {serverError ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{serverError}</p> : null}
+          {serverError ? <Alert tone="error" className="mb-4">{serverError}</Alert> : null}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div><Input label="first_name" value={form.first_name} onChange={(event) => updateField('first_name', event.target.value)} />{errors.first_name ? <p className="mt-1 text-xs font-medium text-red-600">{errors.first_name}</p> : null}</div>
             <div><Input label="last_name" value={form.last_name} onChange={(event) => updateField('last_name', event.target.value)} />{errors.last_name ? <p className="mt-1 text-xs font-medium text-red-600">{errors.last_name}</p> : null}</div>
@@ -91,8 +91,8 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
             <div><Input label="paid_at" type="datetime-local" value={form.paid_at} onChange={(event) => updateField('paid_at', event.target.value)} />{errors.paid_at ? <p className="mt-1 text-xs font-medium text-red-600">{errors.paid_at}</p> : null}</div>
           </div>
           <div className="mt-6 flex justify-end gap-2">
-            <button type="button" onClick={() => navigate('/erp/payments')} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
-            <button disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="mr-2 inline h-4 w-4" />Salveaza payment</button>
+            <Button type="button" onClick={() => navigate('/erp/payments')}>Anuleaza</Button>
+            <Button variant="primary" disabled={saving}><Save className="h-4 w-4" />Salveaza payment</Button>
           </div>
         </SectionCard>
       </form>

@@ -1,9 +1,10 @@
 import { ChevronLeft, ChevronRight, Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
+import { Button, Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
+import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 
 type UserFormTab = 'details' | 'information' | 'groups' | 'locations' | 'subscriptions';
 
@@ -185,6 +186,21 @@ function paymentFormFromPayment(payment: ApiPayment, form: UserForm, subscriptio
     currency: subscription?.currency ?? payment.subscription?.currency ?? '',
     payment_type_id: String(payment.payment_type_id ?? ''),
     paid_at: apiDateTimeToLocal(payment.paid_at),
+  };
+}
+
+function paymentPopupValuesFromSubscriptionForm(form: SubscriptionPaymentForm): PaymentPopupValues {
+  return {
+    first_name: form.first_name,
+    last_name: form.last_name,
+    amount: form.amount,
+    currency: form.currency,
+    payment_type_id: form.payment_type_id,
+    paid_at: form.paid_at,
+    reference_id: form.subscription_id,
+    reference_label: 'Subscription ID',
+    reference_name: form.subscription_name,
+    reference_description: form.subscription_description,
   };
 }
 
@@ -637,6 +653,24 @@ export function UserManagementView({
     setPaymentForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const updatePaymentPopupForm = <K extends keyof PaymentPopupValues>(field: K, value: PaymentPopupValues[K]) => {
+    const mappedFields: Partial<Record<keyof PaymentPopupValues, keyof SubscriptionPaymentForm>> = {
+      first_name: 'first_name',
+      last_name: 'last_name',
+      amount: 'amount',
+      currency: 'currency',
+      payment_type_id: 'payment_type_id',
+      paid_at: 'paid_at',
+      reference_id: 'subscription_id',
+      reference_name: 'subscription_name',
+      reference_description: 'subscription_description',
+    };
+    const targetField = mappedFields[field];
+    if (!targetField) return;
+    updatePaymentForm(targetField, String(value ?? ''));
+    if (field === 'reference_id') updatePaymentForm('subscription_reference', String(value ?? ''));
+  };
+
   const savePayment = async () => {
     const subscriptionId = Number(paymentForm.subscription_id || paymentSubscriptionId);
     const paymentTypeId = Number(paymentForm.payment_type_id);
@@ -957,59 +991,29 @@ export function UserManagementView({
                 </label>
                 <Input label={t('users.startDate')} type="date" value={subscriptionStartDate} onChange={(event) => setSubscriptionStartDate(event.target.value)} />
                 <div className="flex items-end">
-                  <button onClick={addSubscriptionAssignment} disabled={!subscriptionToAdd || subscriptionSaving} className="w-full rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
-                    <Plus className="mr-2 inline h-4 w-4" />{subscriptionSaving ? t('common.saving') : t('common.add')}
-                  </button>
+                  <Button onClick={addSubscriptionAssignment} disabled={!subscriptionToAdd || subscriptionSaving} variant="primary" className="w-full py-3 md:w-auto">
+                    <Plus className="h-4 w-4" />{subscriptionSaving ? t('common.saving') : t('common.add')}
+                  </Button>
                 </div>
               </div>
 
               {selectedPaymentSubscription ? (
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900">{paymentForm.id ? `Edit payment #${paymentForm.id}` : 'Adauga plata'}</h3>
-                      <p className="text-xs text-slate-500">Linked to subscription #{paymentForm.subscription_id || selectedPaymentSubscription.id}</p>
-                    </div>
-                    {paymentSuccess ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{paymentSuccess}</span> : null}
-                  </div>
-                  {paymentError ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{paymentError}</p> : null}
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Input label={t('users.firstName')} value={paymentForm.first_name} onChange={(event) => updatePaymentForm('first_name', event.target.value)} />
-                    <Input label={t('users.lastName')} value={paymentForm.last_name} onChange={(event) => updatePaymentForm('last_name', event.target.value)} />
-                    <Input label="Subscription ID" value={paymentForm.subscription_id} onChange={(event) => updatePaymentForm('subscription_id', event.target.value)} />
-                    <Input label="Subscription reference" value={paymentForm.subscription_reference} onChange={(event) => updatePaymentForm('subscription_reference', event.target.value)} />
-                    <Input label={t('subscriptions.subscription')} value={paymentForm.subscription_name} onChange={(event) => updatePaymentForm('subscription_name', event.target.value)} />
-                    <Input label={t('subscriptions.price')} type="number" min="0" step="0.01" value={paymentForm.amount} onChange={(event) => updatePaymentForm('amount', event.target.value)} />
-                    <Input label={t('subscriptions.currency')} value={paymentForm.currency} onChange={(event) => updatePaymentForm('currency', event.target.value)} />
-                    <Select label={t('payments.paymentMethod')} value={paymentForm.payment_type_id} onChange={(event) => updatePaymentForm('payment_type_id', event.target.value)}>
-                      <option value="">{t('common.select')}</option>
-                      <option value="1">Cash</option>
-                      <option value="2">Card</option>
-                      <option value="3">Bank transfer</option>
-                    </Select>
-                    <div className="md:col-span-2">
-                      <Input label={t('payments.transactionDate')} type="datetime-local" value={paymentForm.paid_at} onChange={(event) => updatePaymentForm('paid_at', event.target.value)} />
-                    </div>
-                    <div className="md:col-span-2">
-                      <Textarea label={t('subscriptions.description')} value={paymentForm.subscription_description} onChange={(event) => updatePaymentForm('subscription_description', event.target.value)} />
-                    </div>
-                  </div>
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      onClick={() => {
-                        setPaymentSubscriptionId(null);
-                        setPaymentForm(emptyPaymentForm);
-                        setPaymentError('');
-                      }}
-                      className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
-                    >
-                      {t('common.cancel')}
-                    </button>
-                    <button onClick={() => void savePayment()} disabled={paymentSaving} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-                      <Save className="mr-2 inline h-4 w-4" />{paymentSaving ? t('common.saving') : t('payments.save')}
-                    </button>
-                  </div>
-                </div>
+                <PaymentPopup
+                  title={paymentForm.id ? `Edit payment #${paymentForm.id}` : 'Adauga plata'}
+                  subtitle={`Linked to subscription #${paymentForm.subscription_id || selectedPaymentSubscription.id}`}
+                  values={paymentPopupValuesFromSubscriptionForm(paymentForm)}
+                  error={paymentError}
+                  success={paymentSuccess}
+                  saving={paymentSaving}
+                  showReferenceFields
+                  onChange={updatePaymentPopupForm}
+                  onClose={() => {
+                    setPaymentSubscriptionId(null);
+                    setPaymentForm(emptyPaymentForm);
+                    setPaymentError('');
+                  }}
+                  onSave={() => void savePayment()}
+                />
               ) : null}
 
               <div>
@@ -1050,9 +1054,9 @@ export function UserManagementView({
                                         <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {payment.amount}</p>
                                         <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {payment.paid_at ?? '-'}</p>
                                       </div>
-                                      <button onClick={() => editPayment(payment, subscription)} className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
-                                        <Edit3 className="mr-1.5 h-3.5 w-3.5" />{t('common.edit')}
-                                      </button>
+                                      <Button onClick={() => editPayment(payment, subscription)} size="sm" className="px-2.5 py-1.5 text-xs">
+                                        <Edit3 className="h-3.5 w-3.5" />{t('common.edit')}
+                                      </Button>
                                     </div>
                                   </div>
                                 )) : (
@@ -1067,12 +1071,12 @@ export function UserManagementView({
                             <td className="px-4 py-3"><StatusBadge status={subscriptionIsActive(editing, assignment.id, userSubscription ?? subscription) ? t('users.statusActive') : t('users.statusExpired')} /></td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex flex-wrap justify-end gap-2">
-                                <button onClick={() => selectSubscriptionForPayment(assignment.id)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                                  <Plus className="mr-2 h-4 w-4" />Adauga plata noua
-                                </button>
-                                <button onClick={() => removeSubscriptionAssignment(assignment.id)} disabled={subscriptionSaving} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60">
-                                  <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
-                                </button>
+                                <Button onClick={() => selectSubscriptionForPayment(assignment.id)}>
+                                  <Plus className="h-4 w-4" />Adauga plata noua
+                                </Button>
+                                <Button onClick={() => removeSubscriptionAssignment(assignment.id)} disabled={subscriptionSaving} variant="danger">
+                                  <Trash2 className="h-4 w-4" />{t('common.delete')}
+                                </Button>
                               </div>
                             </td>
                           </tr>
@@ -1119,10 +1123,10 @@ export function UserManagementView({
             </div>
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-            {activeFormTab !== 'subscriptions' ? <button onClick={() => void saveUser()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-              <Save className="mr-2 inline h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
-            </button> : null}
+            <Button onClick={closeForm}>{t('common.cancel')}</Button>
+            {activeFormTab !== 'subscriptions' ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
+              <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
+            </Button> : null}
           </div>
         </SectionCard>
       </PageShell>

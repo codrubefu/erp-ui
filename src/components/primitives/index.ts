@@ -1,7 +1,10 @@
 export { StatCard } from './cards/StatCard';
 export { SectionCard } from './cards/SectionCard';
+export { Button, ButtonLink } from './actions/Button';
+export { Alert } from './feedback/Alert';
 export { SuccessMessage } from './feedback/SuccessMessage';
 export { StatusBadge } from './feedback/StatusBadge';
+export { DataTable, EmptyTableRow, TableCell, TableHeadCell, TableShell } from './tables/DataTable';
 export { Input } from './forms/Input';
 export { Select } from './forms/Select';
 export { Textarea } from './forms/Textarea';

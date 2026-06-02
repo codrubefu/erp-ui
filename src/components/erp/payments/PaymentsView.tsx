@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight, LinkIcon, Plus, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Input, SectionCard, Select } from '../../primitives';
+import { Alert, Button, ButtonLink, DataTable, EmptyTableRow, Input, SectionCard, Select, TableCell, TableHeadCell, TableShell } from '../../primitives';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import type { PaymentsViewProps } from '../shared/types';
 import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
@@ -51,7 +50,7 @@ function AttachModelModal({ payment, onClose, onSaved }: { payment: ApiPayment; 
     <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4">
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-slate-900">Attach model pentru payment #{payment.id}</h3>
-        {error ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <Alert tone="error" className="mt-3">{error}</Alert> : null}
         <div className="mt-4 space-y-4">
           <Select label="model_type" value={modelType} onChange={(event) => setModelType(event.target.value as PaymentModelType)}>
             <option value="subscription_user">subscription_user</option>
@@ -61,8 +60,8 @@ function AttachModelModal({ payment, onClose, onSaved }: { payment: ApiPayment; 
           <p className="text-sm text-slate-500">{modelType === 'event_occurrence_user' ? 'ID-ul trebuie sa fie relatia participantului la event occurrence.' : 'ID-ul trebuie sa fie relatia subscription_user.'}</p>
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">Anuleaza</button>
-          <button onClick={() => void save()} disabled={!modelId || saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Attach model</button>
+          <Button onClick={onClose}>Anuleaza</Button>
+          <Button variant="primary" onClick={() => void save()} disabled={!modelId || saving}>Attach model</Button>
         </div>
       </div>
     </div>
@@ -107,29 +106,29 @@ export function PaymentsView(props: PaymentsViewProps) {
   }, [canViewPayments, loadPayments, perPage]);
 
   if (!canViewPayments) {
-    return <SectionCard title="Payments"><p className="text-sm text-slate-600">Nu ai dreptul payments.view.</p></SectionCard>;
+    return <SectionCard title="Payments"><Alert>Nu ai dreptul payments.view.</Alert></SectionCard>;
   }
 
   return (
     <div className="space-y-6">
-      {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-      {success ? <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
-      <SectionCard title="Payments" action={<div className="flex gap-2">{canManagePayments ? <Link to="/erp/payments/new" className="inline-flex items-center rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 h-4 w-4" />Adauga payment</Link> : null}<button onClick={() => void loadPayments(page, perPage)} disabled={loading} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"><RefreshCw className="mr-2 inline h-4 w-4" />Refresh</button></div>}>
+      {error ? <Alert tone="error">{error}</Alert> : null}
+      {success ? <Alert tone="success">{success}</Alert> : null}
+      <SectionCard title="Payments" action={<div className="flex gap-2">{canManagePayments ? <ButtonLink to="/erp/payments/new" variant="primary"><Plus className="h-4 w-4" />Adauga payment</ButtonLink> : null}<Button onClick={() => void loadPayments(page, perPage)} disabled={loading}><RefreshCw className="h-4 w-4" />Refresh</Button></div>}>
         <div className="mb-4 flex items-end gap-3">
           <Select label="per_page" value={perPage} onChange={(event) => { const value = Number(event.target.value); setPerPage(value); setPage(1); void loadPayments(1, value); }}>
             {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
           </Select>
           <span className="pb-3 text-sm text-slate-600">{loading ? 'Se incarca...' : `Afisare ${payments.length} din ${meta.total} plati.`}</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead><tr className="border-b border-slate-200 text-slate-500"><th className="pb-3">first_name</th><th className="pb-3">last_name</th><th className="pb-3">payment_type</th><th className="pb-3">model_type</th><th className="pb-3">model_id</th><th className="pb-3">amount</th><th className="pb-3">paid_at</th><th className="pb-3">admin</th><th className="pb-3 text-right">Actiuni</th></tr></thead>
-            <tbody>{payments.length ? payments.map((payment) => <tr key={payment.id} className="border-b border-slate-100 align-top"><td className="py-4">{payment.first_name}</td><td className="py-4">{payment.last_name}</td><td className="py-4">{paymentMethodLabel(payment)}</td><td className="py-4">{payment.model_type}</td><td className="py-4">{payment.model_id ?? '-'}</td><td className="py-4 font-semibold text-slate-900">{formatCurrency(payment.amount)}</td><td className="py-4">{formatApiDate(payment.paid_at)}</td><td className="py-4">{adminLabel(payment)}</td><td className="py-4 text-right">{canManagePayments ? <button onClick={() => setAttachPayment(payment)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700"><LinkIcon className="mr-2 h-4 w-4" />Attach model</button> : null}</td></tr>) : <tr><td colSpan={9} className="py-10 text-center text-slate-500">{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</td></tr>}</tbody>
-          </table>
-        </div>
+        <TableShell>
+          <DataTable>
+            <thead><tr className="border-b border-slate-200"><TableHeadCell>first_name</TableHeadCell><TableHeadCell>last_name</TableHeadCell><TableHeadCell>payment_type</TableHeadCell><TableHeadCell>model_type</TableHeadCell><TableHeadCell>model_id</TableHeadCell><TableHeadCell>amount</TableHeadCell><TableHeadCell>paid_at</TableHeadCell><TableHeadCell>admin</TableHeadCell><TableHeadCell align="right">Actiuni</TableHeadCell></tr></thead>
+            <tbody>{payments.length ? payments.map((payment) => <tr key={payment.id} className="border-b border-slate-100 align-top"><TableCell>{payment.first_name}</TableCell><TableCell>{payment.last_name}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell>{payment.model_type}</TableCell><TableCell>{payment.model_id ?? '-'}</TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right">{canManagePayments ? <Button onClick={() => setAttachPayment(payment)}><LinkIcon className="h-4 w-4" />Attach model</Button> : null}</TableCell></tr>) : <EmptyTableRow colSpan={9}>{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</EmptyTableRow>}</tbody>
+          </DataTable>
+        </TableShell>
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={() => { const next = Math.max(1, page - 1); setPage(next); void loadPayments(next, perPage); }} disabled={loading || page <= 1} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"><ChevronLeft className="mr-2 h-4 w-4" />Anterior</button>
-          <button onClick={() => { const next = Math.min(meta.last_page, page + 1); setPage(next); void loadPayments(next, perPage); }} disabled={loading || page >= meta.last_page} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-60">Urmator<ChevronRight className="ml-2 h-4 w-4" /></button>
+          <Button onClick={() => { const next = Math.max(1, page - 1); setPage(next); void loadPayments(next, perPage); }} disabled={loading || page <= 1}><ChevronLeft className="h-4 w-4" />Anterior</Button>
+          <Button onClick={() => { const next = Math.min(meta.last_page, page + 1); setPage(next); void loadPayments(next, perPage); }} disabled={loading || page >= meta.last_page}>Urmator<ChevronRight className="h-4 w-4" /></Button>
         </div>
       </SectionCard>
       {attachPayment ? <AttachModelModal payment={attachPayment} onClose={() => setAttachPayment(null)} onSaved={() => { setAttachPayment(null); setSuccess('Model atasat.'); void loadPayments(page, perPage); }} /> : null}
