@@ -5,6 +5,7 @@ export type RecurrenceType = 'once' | 'weekly' | 'monthly';
 export type Weekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 export type OccurrenceStatus = 'scheduled' | 'cancelled' | 'completed';
 export type ParticipantStatus = 'registered' | 'attended' | 'cancelled' | 'no_show';
+export type EventPaymentType = 'cash' | 'card' | 'bank_transfer';
 
 export type PaginationMeta = {
   current_page: number;
@@ -54,8 +55,13 @@ export type EventItem = {
   requires_active_subscription: boolean;
   required_subscription_id: number | null;
   required_subscription?: EventSubscription | null;
+  requires_payment: boolean;
+  payment_amount: string | number | null;
+  payment_type: EventPaymentType | null;
   max_participants: number | null;
   status: EventStatus;
+  occurrences_count?: number;
+  occurrences?: EventOccurrence[];
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -93,6 +99,7 @@ export type EventFilters = {
   status?: string;
   recurrence_type?: string;
   requires_active_subscription?: string;
+  requires_payment?: string;
   sort?: 'created_at' | 'start_date' | 'title';
   direction?: 'asc' | 'desc';
 };

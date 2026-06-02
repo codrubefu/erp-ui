@@ -151,12 +151,14 @@ export type ApiPayment = {
   last_name: string;
   payment_type_id: 1 | 2 | 3;
   payment_type?: 'cash' | 'card' | 'bank_transfer';
-  model_type: 'subscription' | 'subscription_user';
+  model_type: 'subscription_user' | 'event_occurrence_user';
   model_id?: number | null;
   subscription_id: number | null;
   subscription?: ApiSubscription | ApiUserSubscription | null;
   amount: string;
   paid_at: string | null;
+  admin_id?: number | null;
+  admin?: AuthenticatedUser | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -360,6 +362,13 @@ export class ErpApiService {
 
   async update<T>(resource: string, id: number, data: Record<string, unknown>) {
     return this.request<T>(`/${resource}/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async attachPaymentModel<T>(paymentId: number, data: { model_type: ApiPayment['model_type']; model_id: number }) {
+    return this.request<T>(`/payments/${paymentId}/attach-model`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
