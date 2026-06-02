@@ -1,8 +1,8 @@
 import { ChevronLeft, ChevronRight, Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
-import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
+import { Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
+import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
 type UserFormTab = 'details' | 'information' | 'groups' | 'locations' | 'subscriptions';
@@ -18,6 +18,20 @@ type UserForm = {
   location_ids: string;
   subscriptions: ApiUserSubscriptionAssignment[];
   custom_fields: Record<string, unknown>;
+};
+
+type SubscriptionPaymentForm = {
+  id: number | null;
+  first_name: string;
+  last_name: string;
+  subscription_id: string;
+  subscription_reference: string;
+  subscription_name: string;
+  subscription_description: string;
+  amount: string;
+  currency: string;
+  payment_type_id: string;
+  paid_at: string;
 };
 
 export type UserManagementViewProps = {
@@ -43,6 +57,20 @@ const emptyForm: UserForm = {
   location_ids: '',
   subscriptions: [],
   custom_fields: {},
+};
+
+const emptyPaymentForm: SubscriptionPaymentForm = {
+  id: null,
+  first_name: '',
+  last_name: '',
+  subscription_id: '',
+  subscription_reference: '',
+  subscription_name: '',
+  subscription_description: '',
+  amount: '',
+  currency: '',
+  payment_type_id: '',
+  paid_at: '',
 };
 
 function toIdList(value: string) {
@@ -98,6 +126,75 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function currentDateTimeLocal() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
+}
+
+function dateTimeLocalToApi(value: string) {
+  if (!value) return '';
+  return value.length === 16 ? `${value.replace('T', ' ')}:00` : value.replace('T', ' ');
+}
+
+function apiDateTimeToLocal(value?: string | null) {
+  if (!value) return '';
+  return value.replace(' ', 'T').slice(0, 16);
+}
+
+function amountFromSubscription(subscription?: ApiSubscription | ApiUserSubscription | null) {
+  if (subscription?.price === undefined || subscription.price === null) return '';
+  return String(subscription.price);
+}
+
+function paymentFormFromSelection(form: UserForm, subscription?: ApiSubscription | ApiUserSubscription | null): SubscriptionPaymentForm {
+  if (!subscription) {
+    return {
+      ...emptyPaymentForm,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      paid_at: currentDateTimeLocal(),
+    };
+  }
+
+  return {
+    id: null,
+    first_name: form.first_name,
+    last_name: form.last_name,
+    subscription_id: String(subscription.id),
+    subscription_reference: String(subscription.id),
+    subscription_name: subscription.name ?? '',
+    subscription_description: subscription.description ?? '',
+    amount: amountFromSubscription(subscription),
+    currency: subscription.currency ?? '',
+    payment_type_id: '',
+    paid_at: currentDateTimeLocal(),
+  };
+}
+
+function paymentFormFromPayment(payment: ApiPayment, form: UserForm, subscription?: ApiSubscription | ApiUserSubscription | null): SubscriptionPaymentForm {
+  return {
+    id: payment.id,
+    first_name: payment.first_name ?? form.first_name,
+    last_name: payment.last_name ?? form.last_name,
+    subscription_id: String(payment.subscription_id ?? subscription?.id ?? ''),
+    subscription_reference: String(payment.subscription_id ?? subscription?.id ?? ''),
+    subscription_name: subscription?.name ?? payment.subscription?.name ?? '',
+    subscription_description: subscription?.description ?? payment.subscription?.description ?? '',
+    amount: String(payment.amount ?? ''),
+    currency: subscription?.currency ?? payment.subscription?.currency ?? '',
+    payment_type_id: String(payment.payment_type_id ?? ''),
+    paid_at: apiDateTimeToLocal(payment.paid_at),
+  };
+}
+
+function paymentMethodLabel(payment: ApiPayment) {
+  if (payment.payment_type_id === 1) return 'Cash';
+  if (payment.payment_type_id === 2) return 'Card';
+  if (payment.payment_type_id === 3) return 'Bank transfer';
+  return payment.payment_type ?? '-';
+}
+
 function subscriptionAssignmentsFromUser(user: ApiUser): ApiUserSubscriptionAssignment[] {
   const source = user.active_subscriptions?.length
     ? user.active_subscriptions
@@ -108,8 +205,23 @@ function subscriptionAssignmentsFromUser(user: ApiUser): ApiUserSubscriptionAssi
     return {
       id: subscription.id,
       start_date: historyItem?.start_date ?? subscription.start_date ?? subscription.pivot?.start_date ?? todayDate(),
+      subscription_user_id: subscription.pivot?.id ?? historyItem?.id ?? null,
     };
   }) ?? [];
+}
+
+function subscriptionUserIdForAssignment(
+  assignment: ApiUserSubscriptionAssignment | undefined,
+  user: ApiUser | null,
+  subscription?: ApiSubscription | ApiUserSubscription | null,
+) {
+  if (assignment?.subscription_user_id) return assignment.subscription_user_id;
+  if (subscription?.pivot?.id) return subscription.pivot.id;
+  const subscriptionId = assignment?.id ?? subscription?.id;
+  if (!subscriptionId || !user) return null;
+  const userSubscription = mergeById(user.subscriptions, user.active_subscriptions).find((item) => item.id === subscriptionId);
+  const historyItem = user.subscription_history?.find((item) => item.subscription_id === subscriptionId && item.id);
+  return userSubscription?.pivot?.id ?? historyItem?.id ?? null;
 }
 
 function hasActiveSubscription(user: ApiUser) {
@@ -279,6 +391,12 @@ export function UserManagementView({
   const [activeFormTab, setActiveFormTab] = useState<UserFormTab>('details');
   const [subscriptionToAdd, setSubscriptionToAdd] = useState('');
   const [subscriptionStartDate, setSubscriptionStartDate] = useState(todayDate());
+  const [paymentSubscriptionId, setPaymentSubscriptionId] = useState<number | null>(null);
+  const [paymentForm, setPaymentForm] = useState<SubscriptionPaymentForm>(emptyPaymentForm);
+  const [subscriptionPayments, setSubscriptionPayments] = useState<ApiPayment[]>([]);
+  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState('');
 
   const resolvedTitle = title ?? t('members.title');
   const resolvedAddLabel = addLabel ?? t('members.add');
@@ -290,6 +408,13 @@ export function UserManagementView({
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
   const selectedSubscriptionIds = useMemo(() => form.subscriptions.map((subscription) => String(subscription.id)), [form.subscriptions]);
+  const selectedPaymentSubscription = useMemo(() => {
+    const subscriptionId = Number(paymentSubscriptionId);
+    if (!subscriptionId) return null;
+    return subscriptions.find((subscription) => subscription.id === subscriptionId)
+      ?? mergeById(editing?.subscriptions, editing?.active_subscriptions).find((subscription) => subscription.id === subscriptionId)
+      ?? null;
+  }, [editing, paymentSubscriptionId, subscriptions]);
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
   const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
     const tabs: Array<[UserFormTab, string]> = [
@@ -349,10 +474,41 @@ export function UserManagementView({
 
   const loadUsers = useCallback((nextPage = page) => fetchUsers(searchTerm, perPage, nextPage), [fetchUsers, searchTerm, perPage, page]);
 
+  const loadSubscriptionPayments = useCallback(async (user: ApiUser | null, assignments: ApiUserSubscriptionAssignment[]) => {
+    if (!user || !assignments.length) {
+      setSubscriptionPayments([]);
+      return;
+    }
+
+    try {
+      const paymentGroups = await Promise.all(assignments.map((assignment) => erpApiService.list<ApiPayment>('payments', {
+        model_type: 'subscription_user',
+        model_id: assignment.subscription_user_id ?? undefined,
+        subscription_id: assignment.id,
+        per_page: 100,
+      })));
+      const merged = mergeById(...paymentGroups).filter((payment) => (
+        payment.user_id === undefined
+        || payment.user_id === null
+        || payment.user_id === user.id
+      ));
+      setSubscriptionPayments(merged);
+    } catch {
+      setSubscriptionPayments([]);
+    }
+  }, []);
+
   useEffect(() => {
     void loadLookups();
     void fetchUsers('', 15, 1);
   }, [fetchUsers, loadLookups]);
+
+  useEffect(() => {
+    if (!paymentSubscriptionId || paymentForm.id) return;
+    setPaymentError('');
+    setPaymentSuccess('');
+    setPaymentForm(paymentFormFromSelection(form, selectedPaymentSubscription));
+  }, [form.first_name, form.last_name, paymentForm.id, paymentSubscriptionId, selectedPaymentSubscription]);
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -368,6 +524,11 @@ export function UserManagementView({
     setActiveFormTab('details');
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
+    setPaymentSubscriptionId(null);
+    setPaymentForm(emptyPaymentForm);
+    setSubscriptionPayments([]);
+    setPaymentError('');
+    setPaymentSuccess('');
     setFormOpen(true);
   };
 
@@ -385,7 +546,13 @@ export function UserManagementView({
     setActiveFormTab('details');
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
+    setPaymentSubscriptionId(null);
+    setPaymentForm(emptyPaymentForm);
+    setSubscriptionPayments([]);
+    setPaymentError('');
+    setPaymentSuccess('');
     setFormOpen(true);
+    void loadSubscriptionPayments(selectedUser, subscriptionAssignmentsFromUser(selectedUser));
   };
 
   const closeForm = () => {
@@ -396,6 +563,11 @@ export function UserManagementView({
     setActiveFormTab('details');
     setSubscriptionToAdd('');
     setSubscriptionStartDate(todayDate());
+    setPaymentSubscriptionId(null);
+    setPaymentForm(emptyPaymentForm);
+    setSubscriptionPayments([]);
+    setPaymentError('');
+    setPaymentSuccess('');
   };
 
   const updateSubscriptionStartDate = (subscriptionId: number, startDate: string) => {
@@ -421,11 +593,110 @@ export function UserManagementView({
     setSubscriptionStartDate(todayDate());
   };
 
+  const selectSubscriptionForPayment = (subscriptionId: number) => {
+    if (!form.subscriptions.some((subscription) => subscription.id === subscriptionId)) return;
+    const subscription = subscriptions.find((item) => item.id === subscriptionId)
+      ?? mergeById(editing?.subscriptions, editing?.active_subscriptions).find((item) => item.id === subscriptionId)
+      ?? null;
+    setPaymentSubscriptionId(subscriptionId);
+    setPaymentForm(paymentFormFromSelection(form, subscription));
+    setPaymentError('');
+    setPaymentSuccess('');
+  };
+
+  const editPayment = (payment: ApiPayment, subscription?: ApiSubscription | ApiUserSubscription | null) => {
+    const subscriptionId = Number(payment.subscription_id ?? subscription?.id);
+    if (!subscriptionId) return;
+    setPaymentSubscriptionId(subscriptionId);
+    setPaymentForm(paymentFormFromPayment(payment, form, subscription));
+    setPaymentError('');
+    setPaymentSuccess('');
+  };
+
+  const updatePaymentForm = (field: keyof SubscriptionPaymentForm, value: string) => {
+    setPaymentForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const savePayment = async () => {
+    const subscriptionId = Number(paymentForm.subscription_id || paymentSubscriptionId);
+    const paymentTypeId = Number(paymentForm.payment_type_id);
+    const amount = Number(paymentForm.amount);
+    const assignment = form.subscriptions.find((item) => item.id === subscriptionId);
+    const modelId = subscriptionUserIdForAssignment(assignment, editing, selectedPaymentSubscription);
+
+    setPaymentError('');
+    setPaymentSuccess('');
+
+    if (!subscriptionId) {
+      setPaymentError('Select a subscription before creating a payment.');
+      return;
+    }
+    if (!modelId) {
+      setPaymentError('Salveaza mai intai subscriptia userului, apoi adauga plata.');
+      return;
+    }
+    if (![1, 2, 3].includes(paymentTypeId)) {
+      setPaymentError('Select a valid payment type.');
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setPaymentError('Payment amount must be greater than zero.');
+      return;
+    }
+    if (!paymentForm.first_name.trim() || !paymentForm.last_name.trim() || !paymentForm.paid_at) {
+      setPaymentError('First name, last name, and payment date/time are required.');
+      return;
+    }
+
+    setPaymentSaving(true);
+    try {
+      const payload = {
+        ...(editing ? { user_id: editing.id } : {}),
+        model_type: 'subscription_user',
+        model_id: modelId,
+        subscription_id: subscriptionId,
+        first_name: paymentForm.first_name.trim(),
+        last_name: paymentForm.last_name.trim(),
+        amount,
+        payment_type_id: paymentTypeId,
+        paid_at: dateTimeLocalToApi(paymentForm.paid_at),
+      };
+      let savedPayment: ApiPayment;
+      if (paymentForm.id) {
+        savedPayment = await erpApiService.update<ApiPayment>('payments', paymentForm.id, payload);
+      } else {
+        savedPayment = await erpApiService.create<ApiPayment>('payments', payload);
+      }
+      if (editing) {
+        await loadSubscriptionPayments(editing, form.subscriptions);
+      } else {
+        setSubscriptionPayments((prev) => {
+          const withoutSaved = prev.filter((payment) => payment.id !== savedPayment.id);
+          return [...withoutSaved, savedPayment];
+        });
+      }
+      setPaymentSubscriptionId(null);
+      setPaymentForm(emptyPaymentForm);
+      setPaymentSuccess('');
+      setSuccess(paymentForm.id ? 'Payment updated.' : 'Payment saved.');
+    } catch (err) {
+      setPaymentError(err instanceof Error ? err.message : 'Could not save payment.');
+    } finally {
+      setPaymentSaving(false);
+    }
+  };
+
   const removeSubscriptionAssignment = (subscriptionId: number) => {
     setForm((prev) => ({
       ...prev,
       subscriptions: prev.subscriptions.filter((subscription) => subscription.id !== subscriptionId),
     }));
+    if (paymentSubscriptionId === subscriptionId) {
+      setPaymentSubscriptionId(null);
+      setPaymentForm(emptyPaymentForm);
+      setPaymentError('');
+      setPaymentSuccess('');
+    }
   };
 
   const updateCustomField = (field: ApiCustomField, value: unknown) => {
@@ -543,8 +814,10 @@ export function UserManagementView({
         savedUser = await erpApiService.create<ApiUser>(resource, buildCreatePayload(form, shouldSaveCustomFields));
       }
       const customFieldValues = await loadUserCustomFieldValues(savedUser);
+      const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
       setEditing(savedUser);
-      setForm({ ...formFromUser(savedUser), custom_fields: customFieldValues });
+      setForm(savedForm);
+      await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
       setSuccess(t('common.saved'));
       await loadUsers();
     } catch (err) {
@@ -671,6 +944,55 @@ export function UserManagementView({
                 </div>
               </div>
 
+              {selectedPaymentSubscription ? (
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">{paymentForm.id ? `Edit payment #${paymentForm.id}` : 'Adauga plata'}</h3>
+                      <p className="text-xs text-slate-500">Linked to subscription #{paymentForm.subscription_id || selectedPaymentSubscription.id}</p>
+                    </div>
+                    {paymentSuccess ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{paymentSuccess}</span> : null}
+                  </div>
+                  {paymentError ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{paymentError}</p> : null}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Input label={t('users.firstName')} value={paymentForm.first_name} onChange={(event) => updatePaymentForm('first_name', event.target.value)} />
+                    <Input label={t('users.lastName')} value={paymentForm.last_name} onChange={(event) => updatePaymentForm('last_name', event.target.value)} />
+                    <Input label="Subscription ID" value={paymentForm.subscription_id} onChange={(event) => updatePaymentForm('subscription_id', event.target.value)} />
+                    <Input label="Subscription reference" value={paymentForm.subscription_reference} onChange={(event) => updatePaymentForm('subscription_reference', event.target.value)} />
+                    <Input label={t('subscriptions.subscription')} value={paymentForm.subscription_name} onChange={(event) => updatePaymentForm('subscription_name', event.target.value)} />
+                    <Input label={t('subscriptions.price')} type="number" min="0" step="0.01" value={paymentForm.amount} onChange={(event) => updatePaymentForm('amount', event.target.value)} />
+                    <Input label={t('subscriptions.currency')} value={paymentForm.currency} onChange={(event) => updatePaymentForm('currency', event.target.value)} />
+                    <Select label={t('payments.paymentMethod')} value={paymentForm.payment_type_id} onChange={(event) => updatePaymentForm('payment_type_id', event.target.value)}>
+                      <option value="">{t('common.select')}</option>
+                      <option value="1">Cash</option>
+                      <option value="2">Card</option>
+                      <option value="3">Bank transfer</option>
+                    </Select>
+                    <div className="md:col-span-2">
+                      <Input label={t('payments.transactionDate')} type="datetime-local" value={paymentForm.paid_at} onChange={(event) => updatePaymentForm('paid_at', event.target.value)} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Textarea label={t('subscriptions.description')} value={paymentForm.subscription_description} onChange={(event) => updatePaymentForm('subscription_description', event.target.value)} />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setPaymentSubscriptionId(null);
+                        setPaymentForm(emptyPaymentForm);
+                        setPaymentError('');
+                      }}
+                      className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                    <button onClick={() => void savePayment()} disabled={paymentSaving} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+                      <Save className="mr-2 inline h-4 w-4" />{paymentSaving ? t('common.saving') : t('payments.save')}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.currentSubscriptions')}</h3>
                 <div className="overflow-x-auto rounded-2xl border border-slate-200">
@@ -690,11 +1012,34 @@ export function UserManagementView({
                         const subscription = subscriptions.find((item) => item.id === assignment.id) ?? userSubscription;
                         const persistedExpiresAt = subscriptionExpiresAt(userSubscription);
                         const expiresAt = persistedExpiresAt ?? addDays(assignment.start_date, subscription?.duration_days);
+                        const subscriptionUserId = subscriptionUserIdForAssignment(assignment, editing, subscription);
+                        const paymentsForSubscription = subscriptionPayments.filter((payment) => (
+                          subscriptionUserId
+                            ? payment.model_id === subscriptionUserId || (payment.model_id === undefined && payment.subscription_id === assignment.id)
+                            : payment.subscription_id === assignment.id
+                        ));
                         return (
                           <tr key={assignment.id} className="border-t border-slate-100 align-top">
                             <td className="px-4 py-3">
                               <p className="font-medium text-slate-900">{subscription?.name ?? `#${assignment.id}`}</p>
                               <p className="text-xs text-slate-500">{subscription?.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</p>
+                              <div className="mt-3 space-y-2">
+                                {paymentsForSubscription.length ? paymentsForSubscription.map((payment) => (
+                                  <div key={payment.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div>
+                                        <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {payment.amount}</p>
+                                        <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {payment.paid_at ?? '-'}</p>
+                                      </div>
+                                      <button onClick={() => editPayment(payment, subscription)} className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                        <Edit3 className="mr-1.5 h-3.5 w-3.5" />{t('common.edit')}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )) : (
+                                  <p className="text-xs text-slate-500">Nu exista plati atasate.</p>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} />
@@ -702,9 +1047,14 @@ export function UserManagementView({
                             <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('subscriptions.noAutoExpiry')}</td>
                             <td className="px-4 py-3"><StatusBadge status={subscriptionIsActive(editing, assignment.id, userSubscription ?? subscription) ? t('users.statusActive') : t('users.statusExpired')} /></td>
                             <td className="px-4 py-3 text-right">
-                              <button onClick={() => removeSubscriptionAssignment(assignment.id)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                                <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
-                              </button>
+                              <div className="flex flex-wrap justify-end gap-2">
+                                <button onClick={() => selectSubscriptionForPayment(assignment.id)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                  <Plus className="mr-2 h-4 w-4" />Adauga plata noua
+                                </button>
+                                <button onClick={() => removeSubscriptionAssignment(assignment.id)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                                  <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );

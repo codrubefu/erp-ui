@@ -91,6 +91,7 @@ export type ApiUserSubscription = {
 export type ApiUserSubscriptionAssignment = {
   id: number;
   start_date?: string;
+  subscription_user_id?: number | null;
 };
 
 export type ApiUserSubscriptionPivot = {
@@ -140,6 +141,24 @@ export type ApiSubscription = {
   created_at?: string | null;
   updated_at?: string | null;
   deleted_at?: string | null;
+};
+
+export type ApiPayment = {
+  id: number;
+  user_id?: number | null;
+  user?: ApiUser | ApiSubscriptionUser | null;
+  first_name: string;
+  last_name: string;
+  payment_type_id: 1 | 2 | 3;
+  payment_type?: 'cash' | 'card' | 'bank_transfer';
+  model_type: 'subscription' | 'subscription_user';
+  model_id?: number | null;
+  subscription_id: number | null;
+  subscription?: ApiSubscription | ApiUserSubscription | null;
+  amount: string;
+  paid_at: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 export type AuthenticatedUser = ApiUser | {
