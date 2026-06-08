@@ -1,4 +1,4 @@
-import { API_BASE_URL, TOKEN_KEY, erpApiService } from './ErpApiService';
+import { TOKEN_KEY, erpApiService, getApiBaseUrl } from './ErpApiService';
 
 export type EventStatus = 'active' | 'inactive' | 'cancelled';
 export type RecurrenceType = 'once' | 'weekly' | 'monthly';
@@ -145,7 +145,7 @@ function buildUrl(path: string, params?: Record<string, string | number | boolea
   Object.entries(params ?? {}).forEach(([key, value]) => {
     if (value !== undefined && value !== '') query.set(key, String(value));
   });
-  return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}${query.size ? `?${query.toString()}` : ''}`;
+  return `${getApiBaseUrl().replace(/\/$/, '')}/${path.replace(/^\//, '')}${query.size ? `?${query.toString()}` : ''}`;
 }
 
 async function request<T>(path: string, options: RequestInit = {}, params?: Record<string, string | number | boolean | undefined>) {

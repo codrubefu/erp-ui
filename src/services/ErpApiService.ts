@@ -1,4 +1,4 @@
-import { API_BASE_URL, TOKEN_KEY, apiHeaders, clearApiToken, endpoint, extractErrorMessage, parseJsonResponse, unwrapApiPayload, type ApiEnvelope } from '../api/apiCore';
+import { TOKEN_KEY, apiHeaders, clearApiToken, endpoint, extractErrorMessage, parseJsonResponse, unwrapApiPayload, type ApiEnvelope } from '../api/apiCore';
 
 export type ApiUser = {
   id: number;
@@ -192,7 +192,7 @@ export type LoginResult = {
   user: AuthenticatedUser | null;
 };
 
-export { API_BASE_URL, TOKEN_KEY } from '../api/apiCore';
+export { API_BASE_URL, TOKEN_KEY, getApiBaseUrl } from '../api/apiCore';
 
 function unwrapUser(payload: AuthenticatedUser | ApiEnvelope<AuthenticatedUser>): AuthenticatedUser {
   if (payload && typeof payload === 'object' && 'user' in payload && payload.user) {

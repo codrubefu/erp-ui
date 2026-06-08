@@ -1,0 +1,4 @@
+{
+  "apiBaseUrl": "/api",
+  "devProxyTarget": "http://localhost:8099"
+}

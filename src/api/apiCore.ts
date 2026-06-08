@@ -1,4 +1,6 @@
-export const API_BASE_URL = import.meta.env.VITE_ERP_API_URL ?? 'http://localhost:8099/api';
+import { getRuntimeConfig } from '../config/runtimeConfig';
+
+export const API_BASE_URL = '/api';
 export const TOKEN_KEY = 'master-erp-api-token';
 
 export class ApiClientError extends Error {
@@ -25,7 +27,12 @@ export type ApiEnvelope<T> = {
 };
 
 export function endpoint(path: string) {
-  return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  const apiBaseUrl = getApiBaseUrl();
+  return `${apiBaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+}
+
+export function getApiBaseUrl() {
+  return getRuntimeConfig().apiBaseUrl || API_BASE_URL;
 }
 
 export function clearApiToken() {

@@ -5,13 +5,16 @@ import './index.css';
 import './i18n';
 import AppRoutes from './routes/AppRoutes';
 import { AuthProvider } from './context/AuthContext';
+import { loadRuntimeConfig } from './config/runtimeConfig';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>,
-);
+loadRuntimeConfig().finally(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </StrictMode>,
+  );
+});
