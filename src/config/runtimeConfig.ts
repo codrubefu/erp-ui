@@ -12,8 +12,14 @@ let runtimeConfig: RuntimeConfig = defaultConfig;
 function normalizeConfig(payload: unknown): RuntimeConfig {
   if (!payload || typeof payload !== 'object') return defaultConfig;
   const config = payload as Partial<RuntimeConfig>;
+  const apiBaseUrl = import.meta.env.DEV
+    ? defaultConfig.apiBaseUrl
+    : typeof config.apiBaseUrl === 'string' && config.apiBaseUrl.trim()
+      ? config.apiBaseUrl.trim()
+      : defaultConfig.apiBaseUrl;
+
   return {
-    apiBaseUrl: typeof config.apiBaseUrl === 'string' && config.apiBaseUrl.trim() ? config.apiBaseUrl.trim() : defaultConfig.apiBaseUrl,
+    apiBaseUrl,
     devProxyTarget: typeof config.devProxyTarget === 'string' && config.devProxyTarget.trim() ? config.devProxyTarget.trim() : undefined,
   };
 }

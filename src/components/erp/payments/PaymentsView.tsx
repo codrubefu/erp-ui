@@ -81,20 +81,20 @@ export function PaymentsView(props: PaymentsViewProps) {
     <div className="space-y-6">
       {error ? <Alert tone="error">{error}</Alert> : null}
       {success ? <Alert tone="success">{success}</Alert> : null}
-      <SectionCard title="Payments" action={<div className="flex gap-2">{canManagePayments ? <ButtonLink to="/erp/payments/new" variant="primary"><Plus className="h-4 w-4" />Adauga payment</ButtonLink> : null}<Button onClick={() => void loadPayments(page, perPage)} disabled={loading}><RefreshCw className="h-4 w-4" />Refresh</Button></div>}>
-        <div className="mb-4 flex items-end gap-3">
+      <SectionCard title="Payments" action={<>{canManagePayments ? <ButtonLink to="/erp/payments/new" variant="primary"><Plus className="h-4 w-4" />Adauga payment</ButtonLink> : null}<Button onClick={() => void loadPayments(page, perPage)} disabled={loading}><RefreshCw className="h-4 w-4" />Refresh</Button></>}>
+        <div className="mb-4 grid grid-cols-1 items-end gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[160px_1fr]">
           <Select label="per_page" value={perPage} onChange={(event) => { const value = Number(event.target.value); setPerPage(value); setPage(1); void loadPayments(1, value); }}>
             {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
           </Select>
-          <span className="pb-3 text-sm text-slate-600">{loading ? 'Se incarca...' : `Afisare ${payments.length} din ${meta.total} plati.`}</span>
+          <span className="pb-2 text-sm font-medium text-slate-600">{loading ? 'Se incarca...' : `Afisare ${payments.length} din ${meta.total} plati.`}</span>
         </div>
         <TableShell>
-          <DataTable>
-            <thead><tr className="border-b border-slate-200"><TableHeadCell>first_name</TableHeadCell><TableHeadCell>last_name</TableHeadCell><TableHeadCell>payment_type</TableHeadCell><TableHeadCell>model_type</TableHeadCell><TableHeadCell>model_id</TableHeadCell><TableHeadCell>amount</TableHeadCell><TableHeadCell>paid_at</TableHeadCell><TableHeadCell>admin</TableHeadCell><TableHeadCell align="right">Actiuni</TableHeadCell></tr></thead>
+          <DataTable className="min-w-[1100px]">
+            <thead><tr><TableHeadCell>first_name</TableHeadCell><TableHeadCell>last_name</TableHeadCell><TableHeadCell>payment_type</TableHeadCell><TableHeadCell>model_type</TableHeadCell><TableHeadCell>model_id</TableHeadCell><TableHeadCell>amount</TableHeadCell><TableHeadCell>paid_at</TableHeadCell><TableHeadCell>admin</TableHeadCell><TableHeadCell align="right">Actiuni</TableHeadCell></tr></thead>
             <tbody>{payments.length ? payments.map((payment) => {
               const modelLink = resolvePaymentModelLink(payment);
 
-              return <tr key={payment.id} className="border-b border-slate-100 align-top"><TableCell>{payment.first_name}</TableCell><TableCell>{payment.last_name}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell>{payment.model_type}</TableCell><TableCell>{payment.model_id ?? '-'}</TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right">{modelLink ? <ButtonLink to={modelLink.to} size="sm" title={modelLink.title}><LinkIcon className="h-4 w-4" />{modelLink.label}</ButtonLink> : <span className="text-sm text-slate-500">Model fara ruta directa</span>}</TableCell></tr>;
+              return <tr key={payment.id} className="align-top hover:bg-slate-50/70"><TableCell>{payment.first_name}</TableCell><TableCell>{payment.last_name}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell>{payment.model_type}</TableCell><TableCell>{payment.model_id ?? '-'}</TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right">{modelLink ? <ButtonLink to={modelLink.to} size="sm" title={modelLink.title}><LinkIcon className="h-4 w-4" />{modelLink.label}</ButtonLink> : <span className="text-sm text-slate-500">Model fara ruta directa</span>}</TableCell></tr>;
             }) : <EmptyTableRow colSpan={9}>{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</EmptyTableRow>}</tbody>
           </DataTable>
         </TableShell>

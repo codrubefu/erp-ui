@@ -21,25 +21,25 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard title={t('dashboard.activeMembers')} value={String(activeMembers)} change={t('dashboard.liveUpdated')} helper={t('dashboard.activeMembersHelper')} icon={UserCheck} />
         <StatCard title={t('dashboard.flaggedSubscriptions')} value={String(expiringSoon)} change={t('dashboard.expiredOrSuspended')} helper={t('dashboard.needsFollowUp')} icon={CalendarClock} />
         <StatCard title={t('dashboard.totalRevenue')} value={`${totalRevenue.toLocaleString('ro-RO')} RON`} change={t('dashboard.paymentsCalculated')} helper={t('dashboard.persistentData')} icon={BadgeEuro} />
         <StatCard title={t('dashboard.activeBranches')} value={String(branchesCount)} change={t('dashboard.membersByLocation')} helper={t('dashboard.branchesDefined')} icon={Building2} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <SectionCard title={t('dashboard.savedTransactionsRevenue')} action={<button className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('dashboard.autoUpdated')}</button>}>
-            <div className="h-80 w-full">
+          <SectionCard title={t('dashboard.savedTransactionsRevenue')} action={<button className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm">{t('dashboard.autoUpdated')}</button>}>
+            <div className="h-72 w-full xl:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData.length ? revenueData : [{ month: 'P1', revenue: 0 }]}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="revenue" radius={[12, 12, 0, 0]} fill="#8b5cf6" />
+                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
+                  <Bar dataKey="revenue" radius={[8, 8, 0, 0]} fill="#5b45f0" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -47,10 +47,10 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
         </div>
         <div>
           <SectionCard title={t('dashboard.memberStatus')}>
-            <div className="h-80 w-full">
+            <div className="h-72 w-full xl:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusCounts} dataKey="value" nameKey="name" innerRadius={70} outerRadius={105} paddingAngle={4}>
+                  <Pie data={statusCounts} dataKey="value" nameKey="name" innerRadius={64} outerRadius={100} paddingAngle={4}>
                     {statusCounts.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                   </Pie>
                   <Tooltip />
@@ -59,7 +59,7 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
             </div>
             <div className="mt-4 space-y-2">
               {statusCounts.map((item) => (
-                <div key={item.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+                <div key={item.name} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
                   <div className="flex items-center gap-3">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-sm font-medium text-slate-700">{item.name}</span>
@@ -72,15 +72,15 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <SectionCard title={t('dashboard.weeklyActivity')}>
-            <div className="h-72 w-full">
+            <div className="h-64 w-full xl:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={activityData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" />
-                  <YAxis />
+                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="day" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
                   <Tooltip />
                   <Line type="monotone" dataKey="active" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="messages" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4 }} />
@@ -99,7 +99,7 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
                 t('dashboard.automationScheduledAnnouncements'),
                 t('dashboard.automationSubscriptionsTotal', { count: subscriptionsData.length }),
               ].map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3">
+                <div key={item} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
                   <div className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{item}</p>

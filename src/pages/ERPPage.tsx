@@ -363,6 +363,13 @@ export default function ERPAdminPanel() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} />
+        {sidebarOpen ? (
+          <button
+            aria-label="Close navigation"
+            className="fixed inset-0 z-20 bg-slate-950/30 backdrop-blur-[1px] lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        ) : null}
         <div className="min-w-0 flex-1">
           <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onQuickCreate={handleQuickCreate} onLogout={handleLogout} currentUser={currentUser} organizationName={organizationName} />
           <Content

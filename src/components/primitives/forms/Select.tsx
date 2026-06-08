@@ -9,8 +9,8 @@ type SelectProps = {
 export function Select({ label, children, className, ...props }: SelectProps) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <select {...props} className={cn('w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100', className)}>
+      <span className="mb-1.5 block text-xs font-semibold uppercase text-slate-600">{label}</span>
+      <select {...props} className={cn('h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100', className)}>
         {children}
       </select>
     </label>

@@ -275,18 +275,18 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         <SectionCard
           title={editing ? t('subscriptions.editCardTitle', { id: editing.id }) : t('subscriptions.add')}
           action={
-            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Input label={t('subscriptions.name')} value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
             <Input label={t('subscriptions.price')} type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
             <Input label={t('subscriptions.currency')} maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
             <Input label={t('subscriptions.durationDays')} type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
             <Input label={t('subscriptions.maxUsers')} type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+            <label className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
               <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
               {t('subscriptions.activeSubscription')}
             </label>
@@ -295,9 +295,9 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
             </div>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+            <button onClick={closeForm} className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm">{t('common.cancel')}</button>
             <Can anyOf={editing ? ['subscriptions.update', 'subscriptions.manage'] : ['subscriptions.create', 'subscriptions.manage']}>
-              <button onClick={() => void saveSubscription()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <button onClick={() => void saveSubscription()} disabled={saving} className="h-10 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6] disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('subscriptions.save')}
               </button>
             </Can>
@@ -319,36 +319,36 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         <SectionCard
           title={t('subscriptions.subscriptionMembers')}
           action={
-            <button onClick={closeUsersPanel} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={closeUsersPanel} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
             {subscriptionUsersLoading ? t('subscriptions.loadingMembers') : t('subscriptions.showingMembers', { count: usersForSelectedSubscription.length })}
           </div>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="min-w-[760px] w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="pb-3 font-semibold">{t('payments.member')}</th>
-                  <th className="pb-3 font-semibold">{t('users.contact')}</th>
-                  <th className="pb-3 font-semibold">{t('common.status')}</th>
+                <tr className="bg-slate-50 text-xs uppercase text-slate-500">
+                  <th className="px-4 py-3 font-semibold">{t('payments.member')}</th>
+                  <th className="px-4 py-3 font-semibold">{t('users.contact')}</th>
+                  <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {usersForSelectedSubscription.length > 0 ? usersForSelectedSubscription.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100 align-top">
-                    <td className="py-4">
+                  <tr key={user.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
+                    <td className="px-4 py-3">
                       <p className="font-semibold text-slate-900">{userName(user)}</p>
                       <p className="text-xs text-slate-500">#{user.id}</p>
                     </td>
-                    <td className="py-4 text-slate-600">
+                    <td className="px-4 py-3 text-slate-600">
                       <p>{user.email}</p>
                       <p className="text-xs text-slate-500">{user.phone || '-'}</p>
                     </td>
-                    <td className="py-4"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
+                    <td className="px-4 py-3"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
                   </tr>
                 )) : (
                   <tr>
@@ -371,21 +371,21 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         title={t('subscriptions.managementTitle')}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={resetFilters} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={resetFilters} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
-            <button onClick={() => void loadSubscriptions()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={() => void loadSubscriptions()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
             <Can anyOf={['subscriptions.create', 'subscriptions.manage']}>
-              <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+              <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]">
                 <Plus className="mr-2 inline h-4 w-4" />{t('subscriptions.add')}
               </button>
             </Can>
           </div>
         }
       >
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_150px_150px_auto]">
+        <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_150px_150px_auto]">
           <Input
             label={t('common.search')}
             value={searchTerm}
@@ -397,7 +397,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
           />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.status')}</span>
-            <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as typeof activeFilter)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
+            <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as typeof activeFilter)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
               <option value="all">{t('common.all')}</option>
               <option value="active">{t('subscriptions.active')}</option>
               <option value="inactive">{t('subscriptions.inactive')}</option>
@@ -405,49 +405,49 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
           </label>
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.perPage')}</span>
-            <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
+            <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           <div className="flex items-end">
-            <button onClick={() => void loadSubscriptions()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => void loadSubscriptions()} className="h-10 w-full rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <div className="mb-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('subscriptions.showingCount', { count: subscriptions.length })}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="min-w-[1050px] w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-3 font-semibold">{t('subscriptions.subscription')}</th>
-                <th className="pb-3 font-semibold">{t('subscriptions.price')}</th>
-                <th className="pb-3 font-semibold">{t('subscriptions.limits')}</th>
-                <th className="pb-3 font-semibold">{t('subscriptions.members')}</th>
-                <th className="pb-3 font-semibold">{t('common.status')}</th>
-                <th className="pb-3 font-semibold text-right">{t('common.actions')}</th>
+              <tr className="bg-slate-50 text-xs uppercase text-slate-500">
+                <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>
+                <th className="px-4 py-3 font-semibold">{t('subscriptions.price')}</th>
+                <th className="px-4 py-3 font-semibold">{t('subscriptions.limits')}</th>
+                <th className="px-4 py-3 font-semibold">{t('subscriptions.members')}</th>
+                <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
+                <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {subscriptions.length > 0 ? subscriptions.map((subscription) => (
-                <tr key={subscription.id} className="border-b border-slate-100 align-top">
-                  <td className="max-w-[320px] py-4">
+                <tr key={subscription.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
+                  <td className="max-w-[320px] px-4 py-3">
                     <p className="font-semibold text-slate-900">{subscription.name}</p>
                     <p className="text-xs text-slate-500">#{subscription.id} - {t('branches.updated')} {formatDate(subscription.updated_at)}</p>
                     <p className="mt-1 text-sm text-slate-600">{subscription.description || '-'}</p>
                   </td>
-                  <td className="py-4 font-semibold text-slate-900">{subscription.price} {subscription.currency}</td>
-                  <td className="py-4 text-slate-600">
+                  <td className="px-4 py-3 font-semibold text-slate-900">{subscription.price} {subscription.currency}</td>
+                  <td className="px-4 py-3 text-slate-600">
                     <p>{t('subscriptions.duration')}: {subscription.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</p>
                     <p>{t('branches.users')}: {subscription.max_users ?? '-'}</p>
                   </td>
-                  <td className="py-4 text-slate-600">{subscription.users_count ?? subscription.users?.length ?? '-'}</td>
-                  <td className="py-4"><StatusBadge status={subscription.is_active ? t('users.statusActive') : t('users.statusInactive')} /></td>
-                  <td className="py-4 text-right">
+                  <td className="px-4 py-3 text-slate-600">{subscription.users_count ?? subscription.users?.length ?? '-'}</td>
+                  <td className="px-4 py-3"><StatusBadge status={subscription.is_active ? t('users.statusActive') : t('users.statusInactive')} /></td>
+                  <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => openUsersPanel(subscription)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         {t('subscriptions.members')}

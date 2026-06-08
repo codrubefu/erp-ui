@@ -101,9 +101,14 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
   const displayName = fullName || getUserName(user) || user?.email || t('profile.unknownUser');
 
   return (
-    <aside className={cn('fixed inset-y-0 left-0 z-30 w-[17rem] border-r border-slate-200 bg-[#faf7ff] p-4 transition-transform lg:static lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
+    <aside className={cn('fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200 bg-white p-3 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
       <div className="flex h-full flex-col">
-        <nav className="mt-4 space-y-3">
+        <div className="border-b border-slate-100 px-2 pb-3 pt-1">
+          <p className="text-xs font-semibold uppercase text-slate-400">ERP Console</p>
+          <p className="mt-1 truncate text-sm font-bold text-slate-950">{displayName}</p>
+        </div>
+
+        <nav className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
           {navGroups.map((group) => {
             const visibleItems = group.items.filter((item) => !item.rights || hasAnyRight(item.rights));
             if (visibleItems.length === 0) return null;
@@ -117,10 +122,10 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                 {isGrouped ? (
                   <button
                     onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-                    className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 hover:bg-white"
+                    className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50"
                   >
-                    <span className="flex items-center gap-3">
-                      <span className="rounded-xl bg-slate-100 p-2 text-slate-700">
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span className="rounded-lg bg-slate-100 p-1.5 text-slate-600">
                         <GroupIcon className="h-4 w-4" />
                       </span>
                       <span className="truncate">{groupLabel}</span>
@@ -130,7 +135,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                 ) : null}
 
                 {(!isGrouped || isOpen) && (
-                  <div className={cn('space-y-1', isGrouped && 'ml-3 border-l border-violet-100 pl-3')}>
+                  <div className={cn('space-y-1', isGrouped && 'ml-3 border-l border-slate-100 pl-2')}>
                     {visibleItems.map((item) => {
                       const Icon = item.icon;
                       const active = current === item.id;
@@ -139,15 +144,15 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                           key={item.id}
                           onClick={() => setCurrent(item.id as SectionId)}
                           className={cn(
-                            'flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 text-left text-sm transition',
-                            active ? 'bg-white text-violet-700 shadow-md ring-1 ring-violet-100' : 'text-slate-600 hover:bg-white hover:shadow-sm'
+                            'flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-sm transition',
+                            active ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                           )}
                         >
-                          <span className="flex items-center gap-2.5 font-medium">
-                            <span className={cn('rounded-xl p-2', active ? 'bg-violet-100' : 'bg-slate-100')}>
+                          <span className="flex min-w-0 items-center gap-2.5 font-medium">
+                            <span className={cn('rounded-lg p-1.5', active ? 'bg-white text-indigo-700' : 'bg-slate-100 text-slate-500')}>
                               <Icon className="h-4 w-4" />
                             </span>
-                            {t(item.labelKey)}
+                            <span className="truncate">{t(item.labelKey)}</span>
                           </span>
                           <ChevronRight className="h-4 w-4 opacity-60" />
                         </button>
@@ -160,10 +165,10 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
           })}
         </nav>
 
-        <div className="mt-auto rounded-3xl border border-violet-100 bg-white p-3.5 shadow-sm">
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
           <div className="mb-2.5"><LanguageSelector /></div>
-          <button type="button" onClick={() => setCurrent('profile-info')} className="flex w-full items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2.5 text-left text-sm font-semibold text-slate-900 hover:bg-violet-50">
-            <UserCircle className="h-5 w-5 text-violet-600" />
+          <button type="button" onClick={() => setCurrent('profile-info')} className="flex w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-left text-sm font-semibold text-slate-900 hover:bg-indigo-50">
+            <UserCircle className="h-5 w-5 text-indigo-600" />
             <span className="min-w-0 truncate">{displayName}</span>
           </button>
         </div>

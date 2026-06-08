@@ -77,6 +77,6 @@ export default function Content({ current, page, membersData, subscriptionsData,
     }
   }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment, formSuccess]);
 
-  return <main className="space-y-6 p-4 md:p-8">{view}</main>;
+  return <main className="mx-auto w-full max-w-[1600px] space-y-5 p-4 md:p-6 xl:p-8">{view}</main>;
 }
 

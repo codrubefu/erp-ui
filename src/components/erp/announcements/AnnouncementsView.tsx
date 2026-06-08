@@ -1,4 +1,4 @@
-import { Eye, Pencil } from 'lucide-react';
+import { Eye, Pencil, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SectionCard, StatusBadge } from '../../primitives';
 import type { AnnouncementsViewProps } from '../shared/types';
@@ -7,10 +7,10 @@ export function AnnouncementsView({ items, onCreate, onEdit }: AnnouncementsView
   const { t } = useTranslation();
 
   return (
-    <SectionCard title={t('announcements.title')} action={<button onClick={onCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">{t('announcements.new')}</button>}>
+    <SectionCard title={t('announcements.title')} action={<button onClick={onCreate} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]"><Plus className="h-4 w-4" />{t('announcements.new')}</button>}>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {items.map((item) => (
-          <div key={item.id} className="rounded-3xl border border-slate-200 p-5 shadow-sm">
+          <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h4 className="text-lg font-semibold text-slate-900">{item.title}</h4>
@@ -18,10 +18,10 @@ export function AnnouncementsView({ items, onCreate, onEdit }: AnnouncementsView
               </div>
               <StatusBadge status={item.status} />
             </div>
-            <div className="mt-5 rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">{t('announcements.publishAt', { value: item.scheduled })}</div>
+            <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">{t('announcements.publishAt', { value: item.scheduled })}</div>
             <div className="mt-4 flex gap-2">
-              <button onClick={() => onEdit(item)} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"><Pencil className="mr-2 inline h-4 w-4" />{t('common.edit')}</button>
-              <button className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"><Eye className="mr-2 inline h-4 w-4" />{t('common.preview')}</button>
+              <button onClick={() => onEdit(item)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"><Pencil className="h-4 w-4" />{t('common.edit')}</button>
+              <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"><Eye className="h-4 w-4" />{t('common.preview')}</button>
             </div>
           </div>
         ))}

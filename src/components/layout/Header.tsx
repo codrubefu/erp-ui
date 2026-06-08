@@ -1,4 +1,4 @@
-import { LogOut, Menu, Search } from 'lucide-react';
+import { LogOut, Menu, Plus, Search, UserCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '../LanguageSelector';
 
@@ -14,26 +14,34 @@ export function Header({ onToggleSidebar, onQuickCreate, onLogout, currentUser, 
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur md:px-6">
-      <div className="flex items-center gap-2.5">
-        <button onClick={onToggleSidebar} className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-700 lg:hidden">
+    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-3 px-4 md:px-6 xl:px-8">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <button onClick={onToggleSidebar} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden" aria-label="Toggle navigation">
           <Menu className="h-5 w-5" />
         </button>
-        <div>
-          <h1 className="text-[19px] font-bold text-slate-900">{organizationName}</h1>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase text-slate-400">{t('common.administrator')}</p>
+          <h1 className="truncate text-lg font-bold text-slate-950">{organizationName}</h1>
         </div>
       </div>
-      <div className="flex items-center gap-2.5">
-        <div className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-1.5 md:flex">
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 md:flex xl:w-80">
           <Search className="h-4 w-4 text-slate-400" />
-          <input className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder={t('header.searchPlaceholder')} />
+          <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder={t('header.searchPlaceholder')} />
         </div>
-        <LanguageSelector />
-        <div className="hidden rounded-2xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600 md:block">{currentUser || t('common.administrator')}</div>
-        <button onClick={onQuickCreate} className="rounded-2xl bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-200">{t('common.quickAction')}</button>
-        <button onClick={onLogout} className="rounded-2xl border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700">
-          <LogOut className="mr-2 inline h-4 w-4" />{t('common.logout')}
+        <div className="hidden md:block"><LanguageSelector /></div>
+        <div className="hidden h-10 max-w-52 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 lg:flex">
+          <UserCircle className="h-4 w-4 text-indigo-600" />
+          <span className="truncate">{currentUser || t('common.administrator')}</span>
+        </div>
+        <button onClick={onQuickCreate} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-[#5b45f0] px-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]">
+          <Plus className="h-4 w-4" /><span className="hidden sm:inline">{t('common.quickAction')}</span>
         </button>
+        <button onClick={onLogout} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+          <LogOut className="h-4 w-4" /><span className="hidden xl:inline">{t('common.logout')}</span>
+        </button>
+      </div>
       </div>
     </header>
   );

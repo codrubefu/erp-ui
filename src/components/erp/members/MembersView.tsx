@@ -899,22 +899,22 @@ export function UserManagementView({
         backLabel={t('common.backToList', { list: resolvedCountLabel })}
         onBack={closeForm}
       >
-        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('users.editCardTitle', { label: resolvedEntityLabel, id: editing.id }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
-            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
-          <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200">
+          <div className="mb-5 flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
             {formTabs.map(([tab, label]) => (
               <button
                 key={tab}
                 onClick={() => setActiveFormTab(tab as UserFormTab)}
-                className={`border-b-2 px-4 py-3 text-sm font-semibold transition ${activeFormTab === tab ? 'border-violet-600 text-violet-700' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
+                className={`h-9 rounded-lg px-3 text-sm font-semibold transition ${activeFormTab === tab ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-900'}`}
               >
                 {label}
               </button>
@@ -928,7 +928,7 @@ export function UserManagementView({
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
               <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
-              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+              <label className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
               </label>
@@ -943,7 +943,7 @@ export function UserManagementView({
                         const groupIds = idsFromSelect(event.currentTarget.selectedOptions);
                         setForm((prev) => ({ ...prev, group_ids: groupIds }));
                       }}
-                      className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                      className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
                     >
                       {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
                     </select>
@@ -957,7 +957,7 @@ export function UserManagementView({
                         const locationIds = idsFromSelect(event.currentTarget.selectedOptions);
                         setForm((prev) => ({ ...prev, location_ids: locationIds }));
                       }}
-                      className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                      className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
                     >
                       {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
                     </select>
@@ -1140,19 +1140,19 @@ export function UserManagementView({
         title={resolvedTitle}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={resetFilters} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={resetFilters} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
-            <button onClick={() => void loadUsers()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={() => void loadUsers()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
-            <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+            <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]">
               <Plus className="mr-2 inline h-4 w-4" />{resolvedAddLabel}
             </button>
           </div>
         }
       >
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_160px_auto]">
+        <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_160px_auto]">
           <Input
             label={t('common.search')}
             value={searchTerm}
@@ -1175,7 +1175,7 @@ export function UserManagementView({
                 setPage(1);
                 void fetchUsers(searchTerm, nextPerPage, 1);
               }}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none"
             >
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
@@ -1184,53 +1184,53 @@ export function UserManagementView({
             <button onClick={() => {
               setPage(1);
               void fetchUsers(searchTerm, perPage, 1);
-            }} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
+            }} className="h-10 w-full rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <div className="mb-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('users.showingCount', { count: pagination.total || users.length, label: resolvedCountLabel })}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="min-w-[1120px] w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-3 font-semibold">{t('users.user')}</th>
-                <th className="pb-3 font-semibold">{t('users.contact')}</th>
-                {showGroupsInList ? <th className="pb-3 font-semibold">{t('users.groups')}</th> : null}
-                <th className="pb-3 font-semibold">{t('users.subscriptions')}</th>
-                <th className="pb-3 font-semibold">{t('articles.locations')}</th>
-                <th className="pb-3 font-semibold">{t('common.status')}</th>
-                <th className="pb-3 font-semibold text-right">{t('common.actions')}</th>
+              <tr className="bg-slate-50 text-xs uppercase text-slate-500">
+                <th className="px-4 py-3 font-semibold">{t('users.user')}</th>
+                <th className="px-4 py-3 font-semibold">{t('users.contact')}</th>
+                {showGroupsInList ? <th className="px-4 py-3 font-semibold">{t('users.groups')}</th> : null}
+                <th className="px-4 py-3 font-semibold">{t('users.subscriptions')}</th>
+                <th className="px-4 py-3 font-semibold">{t('articles.locations')}</th>
+                <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
+                <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {users.length > 0 ? users.map((user) => (
-                <tr key={user.id} className="border-b border-slate-100 align-top">
-                  <td className="py-4">
+                <tr key={user.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
+                  <td className="px-4 py-3">
                     <p className="font-semibold text-slate-900">{userName(user)}</p>
                     <p className="text-xs text-slate-500">{user.user_code || `#${user.id}`}</p>
                   </td>
-                  <td className="py-4 text-slate-600">
+                  <td className="px-4 py-3 text-slate-600">
                     <p>{user.email}</p>
                     <p className="text-xs text-slate-500">{user.phone || '-'}</p>
                   </td>
-                  {showGroupsInList ? <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.groups)}</td> : null}
-                  <td className="max-w-[260px] py-4 text-slate-600">
+                  {showGroupsInList ? <td className="max-w-[260px] px-4 py-3 text-slate-600">{relationLabels(user.groups)}</td> : null}
+                  <td className="max-w-[260px] px-4 py-3 text-slate-600">
                     <p>{userSubscriptionLabels(user)}</p>
                     <div className="mt-2"><StatusBadge status={hasActiveSubscription(user) ? t('users.statusActive') : t('users.noActiveSubscription')} /></div>
                   </td>
-                  <td className="max-w-[260px] py-4 text-slate-600">{relationLabels(user.locations)}</td>
-                  <td className="py-4"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
-                  <td className="py-4 text-right">
+                  <td className="max-w-[260px] px-4 py-3 text-slate-600">{relationLabels(user.locations)}</td>
+                  <td className="px-4 py-3"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
+                  <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => void startEdit(user)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      <button onClick={() => void startEdit(user)} className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
                       </button>
-                      <button onClick={() => void deleteUser(user)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                      <button onClick={() => void deleteUser(user)} className="inline-flex h-9 items-center rounded-lg border border-red-100 px-3 text-sm font-medium text-red-600 hover:bg-red-50">
                         <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                       </button>
                     </div>

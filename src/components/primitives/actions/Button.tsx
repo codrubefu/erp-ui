@@ -11,16 +11,16 @@ type ButtonProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-violet-600 text-white shadow-sm hover:bg-violet-700',
-  secondary: 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+  primary: 'bg-[#5b45f0] text-white shadow-sm hover:bg-[#4c38d6]',
+  secondary: 'border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50',
   dark: 'bg-slate-900 text-white hover:bg-slate-800',
-  danger: 'border border-red-100 bg-white text-red-600 hover:bg-red-50',
+  danger: 'border border-red-200 bg-white text-red-600 hover:bg-red-50',
   ghost: 'text-slate-700 hover:bg-slate-50',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'rounded-xl px-3 py-2 text-sm',
-  md: 'rounded-2xl px-4 py-2 text-sm',
+  sm: 'h-9 rounded-lg px-3 text-sm',
+  md: 'h-10 rounded-xl px-4 text-sm',
   icon: 'h-10 w-10 rounded-xl p-0',
 };
 
@@ -29,7 +29,7 @@ export function Button({ variant = 'secondary', size = 'md', className, children
     <button
       {...props}
       className={cn(
-        'inline-flex items-center justify-center gap-2 font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap font-semibold transition focus:outline-none focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60',
         variantClasses[variant],
         sizeClasses[size],
         className
@@ -45,7 +45,7 @@ export function ButtonLink({ variant = 'secondary', size = 'md', className, chil
     <Link
       {...props}
       className={cn(
-        'inline-flex items-center justify-center gap-2 font-semibold transition',
+        'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap font-semibold transition focus:outline-none focus:ring-4 focus:ring-indigo-100',
         variantClasses[variant],
         sizeClasses[size],
         className

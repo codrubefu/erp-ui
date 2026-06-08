@@ -10,16 +10,16 @@ type StatCardProps = {
 
 export function StatCard({ title, value, change, icon: Icon, helper }: StatCardProps) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-slate-300 lg:p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
-          <p className="mt-2 text-sm text-emerald-600">{change}</p>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase text-slate-500">{title}</p>
+          <p className="mt-2 truncate text-2xl font-bold tracking-tight text-slate-950 xl:text-3xl">{value}</p>
+          <p className="mt-2 text-sm font-medium text-emerald-600">{change}</p>
           <p className="mt-1 text-xs text-slate-500">{helper}</p>
         </div>
-        <div className="rounded-2xl bg-violet-100 p-3 text-violet-700">
-          <Icon className="h-6 w-6" />
+        <div className="rounded-xl bg-indigo-50 p-2.5 text-indigo-600">
+          <Icon className="h-5 w-5" />
         </div>
       </div>
     </div>
