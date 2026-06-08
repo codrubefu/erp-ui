@@ -6,11 +6,14 @@ import {
   CreditCard,
   CalendarDays,
   FileBarChart2,
+  Info,
+  KeyRound,
   LayoutDashboard,
   MessageSquare,
   ShieldCheck,
   SlidersHorizontal,
   UserCheck,
+  UserCircle,
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -18,8 +21,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '../LanguageSelector';
-
-type SectionId = 'dashboard' | 'branches' | 'admins' | 'access' | 'custom-fields' | 'members' | 'subscriptions' | 'events' | 'articles' | 'announcements' | 'sms' | 'payments' | 'reports';
+import type { SectionId } from '../../types/erp';
 
 type SidebarProps = {
   current: SectionId;
@@ -45,6 +47,17 @@ const navGroups: readonly NavGroup[] = [
   {
     id: 'general',
     items: [{ id: 'dashboard', labelKey: 'menu.dashboard', icon: LayoutDashboard }],
+  },
+  {
+    id: 'profile',
+    labelKey: 'profile.menu',
+    icon: UserCircle,
+    items: [
+      { id: 'profile-security', labelKey: 'profile.security', icon: KeyRound },
+      { id: 'profile-info', labelKey: 'profile.info', icon: Info },
+      { id: 'profile-events', labelKey: 'profile.events', icon: CalendarDays },
+      { id: 'profile-subscriptions', labelKey: 'profile.subscriptions', icon: BadgeEuro },
+    ],
   },
   {
     id: 'organization',
@@ -75,10 +88,17 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
+function getUserName(user: ReturnType<typeof useAuth>['user']) {
+  return user && 'name' in user ? user.name : '';
+}
+
 export function Sidebar({ current, setCurrent, open }: SidebarProps) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
-  const { hasAnyRight } = useAuth();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ profile: true, organization: true });
+  const { hasAnyRight, user } = useAuth();
   const { t } = useTranslation();
+
+  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
+  const displayName = fullName || getUserName(user) || user?.email || t('profile.unknownUser');
 
   return (
     <aside className={cn('fixed inset-y-0 left-0 z-30 w-[17rem] border-r border-slate-200 bg-[#faf7ff] p-4 transition-transform lg:static lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
@@ -90,6 +110,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
             const GroupIcon = group.icon ?? Building2;
             const isGrouped = Boolean(group.labelKey);
             const isOpen = openGroups[group.id] ?? true;
+            const groupLabel = group.id === 'profile' ? displayName : group.labelKey ? t(group.labelKey) : '';
 
             return (
               <div key={group.id} className="space-y-1">
@@ -102,7 +123,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                       <span className="rounded-xl bg-slate-100 p-2 text-slate-700">
                         <GroupIcon className="h-4 w-4" />
                       </span>
-                      {group.labelKey ? t(group.labelKey) : ''}
+                      <span className="truncate">{groupLabel}</span>
                     </span>
                     <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
                   </button>
@@ -141,14 +162,10 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
 
         <div className="mt-auto rounded-3xl border border-violet-100 bg-white p-3.5 shadow-sm">
           <div className="mb-2.5"><LanguageSelector /></div>
-          <p className="text-sm font-semibold text-slate-900">{t('common.currentRole')}</p>
-          <div className="mt-2.5 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2.5">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{t('common.administrator')}</p>
-              <p className="text-xs text-slate-500">{t('common.fullAccess')}</p>
-            </div>
-            <UserCheck className="h-5 w-5 text-violet-600" />
-          </div>
+          <button type="button" onClick={() => setCurrent('profile-info')} className="flex w-full items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2.5 text-left text-sm font-semibold text-slate-900 hover:bg-violet-50">
+            <UserCircle className="h-5 w-5 text-violet-600" />
+            <span className="min-w-0 truncate">{displayName}</span>
+          </button>
         </div>
       </div>
     </aside>

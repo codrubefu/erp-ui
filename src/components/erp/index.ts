@@ -11,6 +11,7 @@ export { MembersView } from './members/MembersView';
 export { UsersView } from './users/UsersView';
 export { PaymentFormPage } from './payments/PaymentFormPage';
 export { PaymentsView } from './payments/PaymentsView';
+export { ProfileEventsPage, ProfileInfoPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
 export { ReportsView } from './reports/ReportsView';
 export { QuickCreateMenu } from './shared/QuickCreateMenu';
 export { PageShell } from './shared/PageShell';

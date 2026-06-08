@@ -11,6 +11,7 @@ import { DashboardView } from './dashboard/DashboardView';
 import { EventsModuleRoutes } from './events/EventsModule';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
+import { ProfileEventsPage, ProfileInfoPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
 import { ReportsView } from './reports/ReportsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
 import type { ContentProps } from './shared/types';
@@ -34,6 +35,14 @@ export default function Content({ current, page, membersData, subscriptionsData,
     }
 
     switch (current) {
+      case 'profile-info':
+        return <ProfileInfoPage />;
+      case 'profile-security':
+        return <ProfileSecurityPage />;
+      case 'profile-events':
+        return <ProfileEventsPage />;
+      case 'profile-subscriptions':
+        return <ProfileSubscriptionsPage />;
       case 'members':
         return <UsersView />;
       case 'branches':
