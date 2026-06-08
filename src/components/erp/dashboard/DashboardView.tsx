@@ -10,7 +10,9 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
   const branchesCount = new Set(membersData.map((item) => item.branch).filter(Boolean)).size;
   const activeMembers = membersData.filter((item) => item.status === 'Activ').length;
   const expiringSoon = membersData.filter((item) => item.status === 'Expirat' || item.status === 'Suspendat').length;
-  const totalRevenue = paymentsData.filter((item) => item.status === 'Platit' || item.status === 'Plătit').reduce((sum, item) => sum + parsePrice(item.amount), 0);
+  const totalRevenue = paymentsData
+    .filter((item) => item.status === 'Plătit')
+    .reduce((sum, item) => sum + parsePrice(item.amount), 0);
   const revenueData = paymentsData.slice(0, 6).map((item, index) => ({ month: `P${index + 1}`, revenue: parsePrice(item.amount) }));
   const statusCounts = ['Activ', 'Expirat', 'Suspendat', 'Rezervat'].map((status, index) => ({
     name: status,

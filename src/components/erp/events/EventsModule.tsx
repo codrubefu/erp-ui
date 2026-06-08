@@ -3,7 +3,7 @@ import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { eventService, type ApiValidationError, type EventItem, type EventParticipant, type EventPayload, type EventPaymentType, type EventStatus, type EventSubscription, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
+import { eventService, type ApiValidationError, type EventItem, type EventParticipant, type EventPayload, type EventStatus, type EventSubscription, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
 import { SectionCard } from '../../primitives';

@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
+import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';

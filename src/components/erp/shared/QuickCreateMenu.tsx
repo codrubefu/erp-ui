@@ -1,20 +1,22 @@
-import { BadgeEuro, Bell, CreditCard, FileText, Users } from 'lucide-react';
-import type React from 'react';
+import { BadgeEuro, Bell, CreditCard, FileText, Users, type LucideIcon } from 'lucide-react';
 import { SectionCard } from '../../primitives';
 import type { FormType } from '../../../types/erp';
 import type { QuickCreateMenuProps } from './types';
 import { useAuth } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 
+type QuickCreateAction = { key: FormType; label: string; icon: LucideIcon; rights?: string[] };
+
 export function QuickCreateMenu({ onNavigate }: QuickCreateMenuProps) {
   const { hasAnyRight } = useAuth();
   const { t } = useTranslation();
-  const actions: Array<{ key: FormType; label: string; icon: React.ComponentType<{ className?: string }>; rights?: string[] }> = [
+  const allActions = [
     { key: 'member', label: t('quick.member'), icon: Users, rights: ['users.manage'] },
     { key: 'subscription', label: t('quick.subscription'), icon: BadgeEuro, rights: ['subscriptions.create', 'subscriptions.manage'] },
     { key: 'article', label: t('quick.article'), icon: Bell, rights: ['articles.create', 'articles.manage'] },
     { key: 'payment', label: t('quick.payment'), icon: CreditCard },
-  ].filter((item) => !item.rights || hasAnyRight(item.rights));
+  ] satisfies QuickCreateAction[];
+  const actions = allActions.filter((item) => !item.rights || hasAnyRight(item.rights));
 
   return (
     <SectionCard title={t('quick.title')} action={<FileText className="h-5 w-5 text-violet-600" />}>

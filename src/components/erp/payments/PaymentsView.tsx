@@ -21,7 +21,8 @@ function normalizeMeta<T>(payload: { data: T[]; meta?: typeof defaultMeta; curre
 function adminLabel(payment: ApiPayment) {
   const admin = payment.admin;
   if (!admin) return payment.admin_id ? `#${payment.admin_id}` : '-';
-  return admin.name || `${admin.first_name ?? ''} ${admin.last_name ?? ''}`.trim() || admin.email || `#${admin.id ?? payment.admin_id}`;
+  const name = 'name' in admin ? admin.name : undefined;
+  return name || `${admin.first_name ?? ''} ${admin.last_name ?? ''}`.trim() || admin.email || `#${admin.id ?? payment.admin_id}`;
 }
 
 function resolvePaymentModelLink(payment: ApiPayment) {
