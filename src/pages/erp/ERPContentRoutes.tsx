@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { ProtectedRoute } from '../../components/ProtectedRoute';
 import {
   AdminsView,
   AnnouncementFormPage,
@@ -87,13 +88,13 @@ export default function ERPContentRoutes({
 
       <Route path="branches" element={<BranchesView />} />
       <Route path="profile-info" element={<ProfileInfoPage />} />
-      <Route path="profile-security" element={<ProfileSecurityPage />} />
-      <Route path="profile-events" element={<ProfileEventsPage />} />
+      <Route path="profile-security" element={<ProtectedRoute><ProfileSecurityPage /></ProtectedRoute>} />
+      <Route path="profile-events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><ProfileEventsPage /></ProtectedRoute>} />
       <Route path="profile-subscriptions" element={<ProfileSubscriptionsPage />} />
 
       <Route path="profile/info" element={<ProfileInfoPage />} />
-      <Route path="profile/security" element={<ProfileSecurityPage />} />
-      <Route path="profile/events" element={<ProfileEventsPage />} />
+      <Route path="profile/security" element={<ProtectedRoute><ProfileSecurityPage /></ProtectedRoute>} />
+      <Route path="profile/events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><ProfileEventsPage /></ProtectedRoute>} />
       <Route path="profile/subscriptions" element={<ProfileSubscriptionsPage />} />
 
       <Route path="admins" element={<AdminsView />} />

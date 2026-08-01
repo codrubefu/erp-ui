@@ -55,7 +55,7 @@ const navGroups: readonly NavGroup[] = [
     items: [
       { id: 'profile-security', labelKey: 'profile.security', icon: KeyRound },
       { id: 'profile-info', labelKey: 'profile.info', icon: Info },
-      { id: 'profile-events', labelKey: 'profile.events', icon: CalendarDays },
+      { id: 'profile-events', labelKey: 'profile.events', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
       { id: 'profile-subscriptions', labelKey: 'profile.subscriptions', icon: BadgeEuro },
     ],
   },

@@ -11,6 +11,7 @@ import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from '
 import { useAuth } from '../../../context/AuthContext';
 import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
 import { ParticipantPaymentModal } from './ParticipantPaymentModal';
+import { ProtectedRoute } from '../../ProtectedRoute';
 
 const weekdays: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const weekdayLabelKeys: Record<Weekday, string> = { monday: 'events.weekdays.monday', tuesday: 'events.weekdays.tuesday', wednesday: 'events.weekdays.wednesday', thursday: 'events.weekdays.thursday', friday: 'events.weekdays.friday', saturday: 'events.weekdays.saturday', sunday: 'events.weekdays.sunday' };
@@ -658,18 +659,18 @@ function EventParticipantsPage() {
 export function EventsModuleRoutes() {
   return (
     <Routes>
-      <Route path="" element={<EventsPage />} />
-      <Route path="events" element={<EventsPage />} />
-      <Route path="new" element={<EventForm mode="create" />} />
-      <Route path="events/new" element={<EventForm mode="create" />} />
-      <Route path=":eventId" element={<EventDetailsPage />} />
-      <Route path="events/:eventId" element={<EventDetailsPage />} />
-      <Route path=":eventId/edit" element={<EventForm mode="edit" />} />
-      <Route path="events/:eventId/edit" element={<EventForm mode="edit" />} />
-      <Route path=":eventId/occurrences" element={<EventOccurrencesPage />} />
-      <Route path="events/:eventId/occurrences" element={<EventOccurrencesPage />} />
-      <Route path=":eventId/occurrences/:occurrenceId/participants" element={<EventParticipantsPage />} />
-      <Route path="events/:eventId/occurrences/:occurrenceId/participants" element={<EventParticipantsPage />} />
+      <Route path="" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventsPage /></ProtectedRoute>} />
+      <Route path="events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventsPage /></ProtectedRoute>} />
+      <Route path="new" element={<ProtectedRoute requiredRights={['events.manage']}><EventForm mode="create" /></ProtectedRoute>} />
+      <Route path="events/new" element={<ProtectedRoute requiredRights={['events.manage']}><EventForm mode="create" /></ProtectedRoute>} />
+      <Route path=":eventId" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventDetailsPage /></ProtectedRoute>} />
+      <Route path="events/:eventId" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventDetailsPage /></ProtectedRoute>} />
+      <Route path=":eventId/edit" element={<ProtectedRoute requiredRights={['events.manage']}><EventForm mode="edit" /></ProtectedRoute>} />
+      <Route path="events/:eventId/edit" element={<ProtectedRoute requiredRights={['events.manage']}><EventForm mode="edit" /></ProtectedRoute>} />
+      <Route path=":eventId/occurrences" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventOccurrencesPage /></ProtectedRoute>} />
+      <Route path="events/:eventId/occurrences" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventOccurrencesPage /></ProtectedRoute>} />
+      <Route path=":eventId/occurrences/:occurrenceId/participants" element={<ProtectedRoute requiredRights={['event_participants.view', 'event_participants.manage']}><EventParticipantsPage /></ProtectedRoute>} />
+      <Route path="events/:eventId/occurrences/:occurrenceId/participants" element={<ProtectedRoute requiredRights={['event_participants.view', 'event_participants.manage']}><EventParticipantsPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/erp/events" replace />} />
     </Routes>
   );

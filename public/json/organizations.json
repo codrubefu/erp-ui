@@ -1,11 +1,11 @@
 [
   {
-    "url": "http://localhost:5174",
+    "url": "http://localhost:5173",
     "organisation_id": 1,
     "organisation_name": "Default Organization"
   },
   {
-    "url": "http://dao.localhost:5174",
+    "url": "http://dao.localhost:5147",
     "organisation_id": 5,
     "organisation_name": "Dao"
   },

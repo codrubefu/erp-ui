@@ -774,7 +774,7 @@ export function UserManagementView({
       return (
         <label key={key} className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-          <select value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+          <select value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
             <option value="">{t('common.select')}</option>
             {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
           </select>
@@ -786,7 +786,7 @@ export function UserManagementView({
       return (
         <label key={key} className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-          <select multiple value={arrayValue(value)} onChange={(event) => updateCustomField(field, Array.from(event.currentTarget.selectedOptions).map((option) => option.value))} className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+          <select multiple value={arrayValue(value)} onChange={(event) => updateCustomField(field, Array.from(event.currentTarget.selectedOptions).map((option) => option.value))} className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
             {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
           </select>
         </label>
@@ -795,7 +795,7 @@ export function UserManagementView({
 
     if (field.type === 'checkbox' || field.type === 'boolean') {
       return (
-        <label key={key} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+        <label key={key} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
           <input type="checkbox" checked={Boolean(value)} onChange={(event) => updateCustomField(field, event.target.checked)} className="h-4 w-4 accent-violet-600" />
           {label}
         </label>
@@ -813,7 +813,7 @@ export function UserManagementView({
   const renderGroupCheckboxes = () => (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {groups.length ? groups.map((group) => (
-        <label key={group.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+        <label key={group.id} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
           <input
             type="checkbox"
             checked={selectedGroupIds.includes(String(group.id))}
@@ -823,7 +823,7 @@ export function UserManagementView({
           {group.label || group.name}
         </label>
       )) : (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
           {t('access.empty')}
         </div>
       )}
@@ -833,7 +833,7 @@ export function UserManagementView({
   const renderLocationCheckboxes = () => (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {locations.length ? locations.map((location) => (
-        <label key={location.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+        <label key={location.id} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
           <input
             type="checkbox"
             checked={selectedLocationIds.includes(String(location.id))}
@@ -843,7 +843,7 @@ export function UserManagementView({
           {location.name}
         </label>
       )) : (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
           {t('branches.empty')}
         </div>
       )}
@@ -968,7 +968,7 @@ export function UserManagementView({
           ) : activeFormTab === 'information' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {userCustomFields.length ? userCustomFields.map(renderCustomField) : (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
                   {t('users.noCustomFields')}
                 </div>
               )}
@@ -982,7 +982,7 @@ export function UserManagementView({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.addSubscription')}</span>
-                  <select value={subscriptionToAdd} onChange={(event) => setSubscriptionToAdd(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+                  <select value={subscriptionToAdd} onChange={(event) => setSubscriptionToAdd(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                     <option value="">{t('users.selectSubscription')}</option>
                     {subscriptions.filter((subscription) => !selectedSubscriptionIds.includes(String(subscription.id))).map((subscription) => (
                       <option key={subscription.id} value={subscription.id}>{subscription.name}</option>
@@ -1019,8 +1019,8 @@ export function UserManagementView({
 
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.currentSubscriptions')}</h3>
-                <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="min-w-full text-left text-sm">
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="min-w-[980px] w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
                         <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>
@@ -1094,8 +1094,8 @@ export function UserManagementView({
 
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.subscriptionHistory')}</h3>
-                <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="min-w-full text-left text-sm">
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="min-w-[760px] w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
                         <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>

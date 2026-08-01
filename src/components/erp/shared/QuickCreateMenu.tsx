@@ -24,8 +24,8 @@ export function QuickCreateMenu({ onNavigate }: QuickCreateMenuProps) {
         {actions.map((item) => {
           const Icon = item.icon;
           return (
-            <button key={item.key} onClick={() => onNavigate(item.key)} className="rounded-3xl border border-slate-200 p-5 text-left transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg">
-              <div className="inline-flex rounded-2xl bg-violet-100 p-3 text-violet-700"><Icon className="h-5 w-5" /></div>
+            <button key={item.key} onClick={() => onNavigate(item.key)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-indigo-200 hover:bg-slate-50">
+              <div className="inline-flex rounded-xl bg-indigo-50 p-2.5 text-indigo-700"><Icon className="h-5 w-5" /></div>
               <p className="mt-4 text-base font-semibold text-slate-900">{item.label}</p>
               <p className="mt-1 text-sm text-slate-500">{t('quick.description')}</p>
             </button>

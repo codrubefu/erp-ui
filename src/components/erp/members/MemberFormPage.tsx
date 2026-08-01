@@ -29,8 +29,8 @@ function MemberFormPage({ mode, data, branchOptions, subscriptionOptions, onChan
           <div className="md:col-span-2"><Textarea label={t('members.notes')} value={data.notes} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('notes', e.target.value)} placeholder={t('members.notesPlaceholder')} /></div>
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-          <button onClick={onSave} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Save className="mr-2 inline h-4 w-4" />{t('members.save')}</button>
+          <button onClick={onBack} className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm">{t('common.cancel')}</button>
+          <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]"><Save className="h-4 w-4" />{t('members.save')}</button>
         </div>
       </SectionCard>
     </PageShell>
