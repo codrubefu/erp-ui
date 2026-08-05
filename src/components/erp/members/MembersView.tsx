@@ -119,6 +119,18 @@ function toggleId(value: string, id: number, checked: boolean) {
   return Array.from(ids).join(', ');
 }
 
+function toggleIds(value: string, idsToToggle: number[], checked: boolean) {
+  const ids = new Set(toIdList(value));
+  idsToToggle.forEach((id) => {
+    if (checked) {
+      ids.add(id);
+    } else {
+      ids.delete(id);
+    }
+  });
+  return Array.from(ids).join(', ');
+}
+
 function userName(user: ApiUser) {
   return `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || user.email;
 }
@@ -376,6 +388,26 @@ function arrayValue(value: unknown) {
   return Array.isArray(value) ? value.map(String) : value ? String(value).split(',').map((item) => item.trim()).filter(Boolean) : [];
 }
 
+function groupLocationsByBranch(locations: ApiLocation[]) {
+  const groups = new Map<string, { id: string; name: string; locations: ApiLocation[] }>();
+
+  locations.forEach((location) => {
+    const groupId = location.location_group?.id ?? location.location_group_id ?? 'none';
+    const id = String(groupId);
+    const name = location.location_group?.name ?? 'Fara filiala';
+    const current = groups.get(id) ?? { id, name, locations: [] };
+    current.locations.push(location);
+    groups.set(id, current);
+  });
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      locations: [...group.locations].sort((left, right) => left.name.localeCompare(right.name)),
+    }))
+    .sort((left, right) => (left.id === 'none' ? 1 : right.id === 'none' ? -1 : left.name.localeCompare(right.name)));
+}
+
 export function UserManagementView({
   resource,
   title,
@@ -424,6 +456,7 @@ export function UserManagementView({
 
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
+  const locationsByBranch = useMemo(() => groupLocationsByBranch(locations), [locations]);
   const selectedSubscriptionIds = useMemo(() => form.subscriptions.map((subscription) => String(subscription.id)), [form.subscriptions]);
   const selectedPaymentSubscription = useMemo(() => {
     const subscriptionId = Number(paymentSubscriptionId);
@@ -831,19 +864,50 @@ export function UserManagementView({
   );
 
   const renderLocationCheckboxes = () => (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      {locations.length ? locations.map((location) => (
-        <label key={location.id} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
-          <input
-            type="checkbox"
-            checked={selectedLocationIds.includes(String(location.id))}
-            onChange={(event) => setForm((prev) => ({ ...prev, location_ids: toggleId(prev.location_ids, location.id, event.target.checked) }))}
-            className="h-4 w-4 accent-violet-600"
-          />
-          {location.name}
-        </label>
-      )) : (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+    <div className="space-y-4">
+      {locationsByBranch.length ? locationsByBranch.map((group) => {
+        const groupLocationIds = group.locations.map((location) => location.id);
+        const selectedCount = groupLocationIds.filter((id) => selectedLocationIds.includes(String(id))).length;
+        const allSelected = selectedCount === groupLocationIds.length;
+        const partiallySelected = selectedCount > 0 && !allSelected;
+
+        return (
+          <div key={group.id} className="rounded-xl border border-slate-200 bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">{group.name}</h3>
+                <p className="text-xs text-slate-500">{selectedCount}/{group.locations.length} {t('articles.locations')}</p>
+              </div>
+              <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = partiallySelected;
+                  }}
+                  onChange={(event) => setForm((prev) => ({ ...prev, location_ids: toggleIds(prev.location_ids, groupLocationIds, event.target.checked) }))}
+                  className="h-4 w-4 accent-violet-600"
+                />
+                {t('common.selectAll')}
+              </label>
+            </div>
+            <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
+              {group.locations.map((location) => (
+                <label key={location.id} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={selectedLocationIds.includes(String(location.id))}
+                    onChange={(event) => setForm((prev) => ({ ...prev, location_ids: toggleId(prev.location_ids, location.id, event.target.checked) }))}
+                    className="h-4 w-4 accent-violet-600"
+                  />
+                  {location.name}
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+      }) : (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
           {t('branches.empty')}
         </div>
       )}
@@ -948,20 +1012,10 @@ export function UserManagementView({
                       {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
                     </select>
                   </label>
-                  <label className="block">
+                  <div className="md:col-span-2">
                     <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.locations')}</span>
-                    <select
-                      multiple
-                      value={selectedLocationIds}
-                      onChange={(event) => {
-                        const locationIds = idsFromSelect(event.currentTarget.selectedOptions);
-                        setForm((prev) => ({ ...prev, location_ids: locationIds }));
-                      }}
-                      className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-                    >
-                      {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
-                    </select>
-                  </label>
+                    {renderLocationCheckboxes()}
+                  </div>
                 </>
               ) : null}
             </div>
