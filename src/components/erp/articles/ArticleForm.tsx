@@ -67,7 +67,7 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
     return () => {
       disposed = true;
     };
-  }, []);
+  }, [t]);
 
   const title = useMemo(() => (mode === 'create' ? t('articles.add') : t('articles.edit')), [mode, t]);
 

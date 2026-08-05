@@ -611,7 +611,11 @@ export function UserManagementView({
     if (!paymentSubscriptionId || paymentForm.id) return;
     setPaymentError('');
     setPaymentSuccess('');
-    setPaymentForm(paymentFormFromSelection(form, selectedPaymentSubscription));
+    setPaymentForm(paymentFormFromSelection({
+      ...emptyForm,
+      first_name: form.first_name,
+      last_name: form.last_name,
+    }, selectedPaymentSubscription));
   }, [form.first_name, form.last_name, paymentForm.id, paymentSubscriptionId, selectedPaymentSubscription]);
 
   const resetFilters = () => {

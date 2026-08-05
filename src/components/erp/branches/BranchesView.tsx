@@ -73,7 +73,7 @@ export function BranchesView() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadLocations = useCallback(() => fetchLocations(searchTerm), [fetchLocations, searchTerm]);
 

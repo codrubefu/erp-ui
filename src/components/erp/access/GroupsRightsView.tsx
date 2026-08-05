@@ -209,7 +209,7 @@ export function GroupsRightsView() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadUsers();

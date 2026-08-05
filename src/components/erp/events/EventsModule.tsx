@@ -1,6 +1,6 @@
 import { AlertTriangle, CalendarClock, ChevronLeft, ChevronRight, CreditCard, Edit3, Eye, Plus, RefreshCw, Save, Search, Trash2, Users, X } from 'lucide-react';
 import type React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { eventService, type ApiValidationError, type EventItem, type EventParticipant, type EventPayload, type EventStatus, type EventSubscription, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
@@ -8,7 +8,7 @@ import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
 import { SectionCard } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
 import { ParticipantPaymentModal } from './ParticipantPaymentModal';
 import { ProtectedRoute } from '../../ProtectedRoute';
@@ -556,7 +556,7 @@ function EventParticipantsPage() {
     }
   };
 
-  const loadOccurrencePayments = async (items = participants) => {
+  const loadOccurrencePayments = useCallback(async (items = participants) => {
     const modelIds = items.map(participantPaymentModelId).filter((value): value is number => Boolean(value));
     if (!modelIds.length) {
       setOccurrencePayments([]);
@@ -573,11 +573,11 @@ function EventParticipantsPage() {
     } finally {
       setPaymentsLoading(false);
     }
-  };
+  }, [participants, t]);
 
   useEffect(() => {
     void loadOccurrencePayments(participants);
-  }, [participants]);
+  }, [loadOccurrencePayments, participants]);
 
   const paymentsByParticipant = new Map<number, ApiPayment[]>();
   occurrencePayments.forEach((payment) => {

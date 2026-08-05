@@ -1,12 +1,13 @@
 import { Edit3, Eye, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { SectionCard } from '../../primitives';
 import { articlesService, type Article, type ArticleRelation } from '../../../services/articlesService';
-import { names, normalizeList, Toast } from './ui';
+import { names, normalizeList } from './articleUiUtils';
+import { Toast } from './ui';
 import { Can } from '../../Can';
 import { ProtectedRoute } from '../../ProtectedRoute';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 import { useTranslation } from 'react-i18next';
 
 function labelFor(item: ArticleRelation) {
@@ -33,7 +34,7 @@ export default function ArticlesList() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(routeState?.message ? { type: 'success', message: routeState.message } : null);
   const [deleting, setDeleting] = useState<Article | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -50,11 +51,11 @@ export default function ArticlesList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.group, filters.location, filters.search, t]);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   const visibleArticles = useMemo(() => {
     const search = filters.search.trim().toLowerCase();

@@ -6,7 +6,7 @@ import { Header, LoginView, Sidebar } from '../components/AppLayout';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { erpJsonDataService, type ActivityPoint } from '../services/ErpJsonDataService';
 import { organizationConfigService } from '../services/OrganizationConfigService';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import type {
   Announcement,
   AppPage,

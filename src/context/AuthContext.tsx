@@ -1,26 +1,11 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ApiClientError } from '../api/apiClient';
 import { getAuthenticatedUser } from '../api/authApi';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { extractUserRights, hasAllRights as hasAllRightsHelper, hasAnyRight as hasAnyRightHelper, hasRight as hasRightHelper } from '../permissions/permissions';
+import { AuthContext, type AuthContextValue } from './authContextValue';
 
 const AUTH_USER_KEY = 'master-erp-auth-user';
-
-type AuthContextValue = {
-  user: AuthenticatedUser | null;
-  rights: Set<string>;
-  permissions: string[];
-  loading: boolean;
-  error: string;
-  refreshUser: () => Promise<void>;
-  setAuthenticatedUser: (user: AuthenticatedUser | null) => void;
-  clearAuthenticatedUser: () => void;
-  hasRight: (rightName: string) => boolean;
-  hasAnyRight: (rightNames: string[]) => boolean;
-  hasAllRights: (rightNames: string[]) => boolean;
-};
-
-const AuthContext = createContext<AuthContextValue | null>(null);
 
 function loadStoredUser() {
   try {
@@ -103,10 +88,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }), [clearAuthenticatedUser, error, loading, permissions, refreshUser, rights, setAuthenticatedUser, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used inside AuthProvider.');
-  return context;
 }

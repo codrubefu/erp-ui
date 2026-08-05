@@ -6,7 +6,7 @@ import { Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../..
 import { erpApiService, type ApiSubscription, type ApiSubscriptionUser } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { Can } from '../../Can';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 import { apiClient } from '../../../api/apiClient';
 
 type SubscriptionForm = {
@@ -120,7 +120,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadSubscriptions = useCallback(() => fetchSubscriptions(searchTerm, perPage, activeFilter), [activeFilter, fetchSubscriptions, perPage, searchTerm]);
 
@@ -159,7 +159,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     };
 
     void loadSubscriptionForMembersPage();
-  }, [membersSubscriptionId]);
+  }, [membersSubscriptionId, t]);
 
   const usersForSelectedSubscription = useMemo(() => {
     return subscriptionMembers;

@@ -33,7 +33,7 @@ export default function ArticleEdit() {
     return () => {
       disposed = true;
     };
-  }, [id]);
+  }, [id, t]);
 
   const save = async (form: ArticlePayload) => {
     setSubmitting(true);

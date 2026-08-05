@@ -2,7 +2,7 @@ import { BadgeEuro, Bell, CreditCard, FileText, Users, type LucideIcon } from 'l
 import { SectionCard } from '../../primitives';
 import type { FormType } from '../../../types/erp';
 import type { QuickCreateMenuProps } from './types';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 import { useTranslation } from 'react-i18next';
 
 type QuickCreateAction = { key: FormType; label: string; icon: LucideIcon; rights?: string[] };

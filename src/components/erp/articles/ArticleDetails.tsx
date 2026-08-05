@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SectionCard } from '../../primitives';
 import { articlesService, type Article } from '../../../services/articlesService';
-import { names } from './ui';
+import { names } from './articleUiUtils';
 import { Can } from '../../Can';
 import { ProtectedRoute } from '../../ProtectedRoute';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +33,7 @@ export default function ArticleDetails() {
     return () => {
       disposed = true;
     };
-  }, [id]);
+  }, [id, t]);
 
   if (loading) return <SectionCard title={t('articles.details')}><p className="text-sm text-slate-500">{t('articles.loadingOne')}</p></SectionCard>;
   if (error || !article) return <SectionCard title={t('articles.details')}><p className="text-sm font-semibold text-red-700">{error || t('articles.notFound')}</p></SectionCard>;

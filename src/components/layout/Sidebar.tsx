@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '../LanguageSelector';
 import type { SectionId } from '../../types/erp';

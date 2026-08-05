@@ -9,7 +9,7 @@ import {
   updateAuthenticatedUserPassword,
   type AuthenticatedUserEvent,
 } from '../../../api/authApi';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 import type { ApiCustomFieldValue, ApiPaginated, ApiSubscription } from '../../../services/ErpApiService';
 import { Alert, Input, SectionCard, StatusBadge } from '../../primitives';
 

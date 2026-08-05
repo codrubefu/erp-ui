@@ -6,7 +6,7 @@ import { PageShell } from '../shared/PageShell';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
 import type { PaymentFormPageProps } from '../shared/types';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 
 type PaymentModelType = ApiPayment['model_type'];
 

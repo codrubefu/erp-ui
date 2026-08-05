@@ -5,7 +5,7 @@ import type { ApiPayment } from '../../../services/ErpApiService';
 import type { PaymentsViewProps } from '../shared/types';
 import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
 import { paymentService } from '../../../services/paymentService';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 
 const defaultMeta = { current_page: 1, last_page: 1, per_page: 15, total: 0 };
 

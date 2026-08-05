@@ -181,7 +181,10 @@ export const eventService = {
   deleteEvent: (id: number) => request<void>(`/events/${id}`, { method: 'DELETE' }),
   getEventOccurrences: (eventId: number, params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>(`/events/${eventId}/occurrences`, {}, params),
   getOccurrence: (id: number) => request<EventOccurrence>(`/event-occurrences/${id}`),
-  cancelOccurrence: (_id: number) => Promise.reject(new Error('Swagger nu expune un endpoint pentru anularea aparitiei.')),
+  cancelOccurrence: (id: number) => {
+    void id;
+    return Promise.reject(new Error('Swagger nu expune un endpoint pentru anularea aparitiei.'));
+  },
   getOccurrenceParticipants: (occurrenceId: number) => request<Paginated<EventParticipant> | EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`, {}, { per_page: 100 }),
   addOccurrenceParticipant: (occurrenceId: number, payload: AddParticipantPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants`, { method: 'POST', body: JSON.stringify(payload) }),
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
