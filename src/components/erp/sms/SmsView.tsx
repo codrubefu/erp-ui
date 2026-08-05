@@ -182,7 +182,6 @@ export function SmsView() {
                 <tr key={message.id} className="border-b border-slate-100 align-top">
                   <td className="py-4 pr-4">
                     <p className="font-semibold text-slate-900">{userName(message)}</p>
-                    <p className="text-xs text-slate-500">{message.user?.user_code || (message.user_id ? `#${message.user_id}` : '-')}</p>
                   </td>
                   <td className="py-4 pr-4 text-slate-600">{message.destination || '-'}</td>
                   <td className="max-w-[420px] py-4 pr-4 text-slate-600">{message.message || '-'}</td>

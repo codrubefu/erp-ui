@@ -1,12 +1,12 @@
-import { ChevronLeft, ChevronRight, Edit3, Filter, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Edit3, Eye, EyeOff, Filter, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 
-type UserFormTab = 'details' | 'information' | 'groups' | 'locations' | 'subscriptions';
+type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions';
 
 type UserForm = {
   user_code: string;
@@ -446,6 +446,10 @@ export function UserManagementView({
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
+  const [scanningCode, setScanningCode] = useState(false);
+  const [scanBuffer, setScanBuffer] = useState('');
+  const scanBufferRef = useRef('');
+  const [userCodeVisible, setUserCodeVisible] = useState(false);
 
   const resolvedTitle = title ?? t('members.title');
   const resolvedAddLabel = addLabel ?? t('members.add');
@@ -469,6 +473,7 @@ export function UserManagementView({
   const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
     const tabs: Array<[UserFormTab, string]> = [
       ['details', 'Date utilizator'],
+      ['code', t('users.userCode')],
       ['information', t('users.information')],
     ];
 
@@ -479,6 +484,55 @@ export function UserManagementView({
     tabs.push(['subscriptions', t('users.subscriptions')]);
     return tabs;
   }, [t, useRelationTabs]);
+
+  useEffect(() => {
+    if (!scanningCode || activeFormTab !== 'code') return undefined;
+
+    const handleScanKey = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const code = scanBufferRef.current.trim();
+        if (code) {
+          setForm((prev) => ({ ...prev, user_code: code }));
+        }
+        scanBufferRef.current = '';
+        setScanBuffer('');
+        setScanningCode(false);
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        scanBufferRef.current = '';
+        setScanBuffer('');
+        setScanningCode(false);
+        return;
+      }
+
+      if (event.key === 'Backspace') {
+        event.preventDefault();
+        scanBufferRef.current = scanBufferRef.current.slice(0, -1);
+        setScanBuffer(scanBufferRef.current);
+        return;
+      }
+
+      if (event.key.length === 1) {
+        event.preventDefault();
+        scanBufferRef.current = `${scanBufferRef.current}${event.key}`.slice(0, 32);
+        setScanBuffer(scanBufferRef.current);
+      }
+    };
+
+    window.addEventListener('keydown', handleScanKey);
+    return () => window.removeEventListener('keydown', handleScanKey);
+  }, [activeFormTab, scanningCode]);
+
+  useEffect(() => {
+    if (activeFormTab === 'code') return;
+    scanBufferRef.current = '';
+    setScanBuffer('');
+    setScanningCode(false);
+  }, [activeFormTab]);
 
   const loadLookups = useCallback(async () => {
     try {
@@ -966,7 +1020,7 @@ export function UserManagementView({
         {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
-          title={editing ? t('users.editCardTitle', { label: resolvedEntityLabel, id: editing.id }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
+          title={editing ? t('users.editTitle', { label: resolvedEntityLabel }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
             <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
@@ -987,7 +1041,6 @@ export function UserManagementView({
 
           {activeFormTab === 'details' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Input label={t('users.userCode')} value={form.user_code} onChange={(event) => setForm((prev) => ({ ...prev, user_code: event.target.value }))} placeholder="USR00000000000000000000000000001" maxLength={32} />
               <Input label={t('users.firstName')} value={form.first_name} onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))} placeholder="John" />
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
@@ -1018,6 +1071,45 @@ export function UserManagementView({
                   </div>
                 </>
               ) : null}
+            </div>
+          ) : activeFormTab === 'code' ? (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+                <Input label={t('users.userCode')} type={userCodeVisible ? 'text' : 'password'} value={form.user_code} onChange={(event) => setForm((prev) => ({ ...prev, user_code: event.target.value }))} placeholder="USR00000000000000000000000000001" maxLength={32} />
+                <div className="flex flex-wrap items-end gap-2">
+                  <Button
+                    onClick={() => setUserCodeVisible((prev) => !prev)}
+                    variant="secondary"
+                    className="w-full py-3 md:w-auto"
+                    type="button"
+                  >
+                    {userCodeVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {userCodeVisible ? t('users.hideCode') : t('users.showCode')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      scanBufferRef.current = '';
+                      setScanBuffer('');
+                      setScanningCode(true);
+                    }}
+                    variant={scanningCode ? 'secondary' : 'primary'}
+                    className="w-full py-3 md:w-auto"
+                    type="button"
+                  >
+                    <ScanLine className="h-4 w-4" />{scanningCode ? t('users.scanning') : t('users.scan')}
+                  </Button>
+                </div>
+              </div>
+              <div className={`rounded-xl border px-4 py-3 text-sm ${scanningCode ? 'border-indigo-200 bg-indigo-50 text-indigo-800' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+                {scanningCode ? (
+                  <div className="space-y-1">
+                    <p className="font-semibold">{t('users.scanWaiting')}</p>
+                    <p>{scanBuffer || t('users.scanEmpty')}</p>
+                  </div>
+                ) : (
+                  <p>{form.user_code ? t('users.currentUserCode', { code: userCodeVisible ? form.user_code : '••••••••' }) : t('users.noUserCode')}</p>
+                )}
+              </div>
             </div>
           ) : activeFormTab === 'information' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1266,7 +1358,6 @@ export function UserManagementView({
                 <tr key={user.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
                   <td className="px-4 py-3">
                     <p className="font-semibold text-slate-900">{userName(user)}</p>
-                    <p className="text-xs text-slate-500">{user.user_code || `#${user.id}`}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     <p>{user.email}</p>

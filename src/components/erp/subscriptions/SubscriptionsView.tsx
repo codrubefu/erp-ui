@@ -342,7 +342,6 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
                   <tr key={user.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
                     <td className="px-4 py-3">
                       <p className="font-semibold text-slate-900">{userName(user)}</p>
-                      <p className="text-xs text-slate-500">#{user.id}</p>
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       <p>{user.email}</p>

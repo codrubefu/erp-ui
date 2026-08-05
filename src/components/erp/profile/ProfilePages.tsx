@@ -123,7 +123,6 @@ export function ProfileInfoPage() {
               <span className="rounded-2xl bg-violet-100 p-3 text-violet-700"><UserCircle className="h-6 w-6" /></span>
               <div className="min-w-0">
                 <p className="truncate text-lg font-bold text-slate-900">{displayName}</p>
-                <p className="text-sm text-slate-500">#{user?.id ?? '-'}</p>
               </div>
             </div>
           </div>
