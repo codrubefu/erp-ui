@@ -132,7 +132,7 @@ function toggleIds(value: string, idsToToggle: number[], checked: boolean) {
 }
 
 function userName(user: ApiUser) {
-  return `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || user.email;
+  return `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim() || user.email;
 }
 
 function todayDate() {

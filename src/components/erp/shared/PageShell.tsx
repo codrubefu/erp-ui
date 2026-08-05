@@ -17,7 +17,6 @@ export function PageShell({ title, subtitle, backLabel, onBack, children }: Page
             <h2 className="mt-1 text-xl font-bold text-slate-950">{title}</h2>
             <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
           </div>
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700">{t('common.localFormData')}</div>
         </div>
       </div>
       {children}
