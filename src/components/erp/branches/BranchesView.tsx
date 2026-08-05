@@ -1,19 +1,21 @@
-import { Building2, Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
+import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, SectionCard, SuccessMessage } from '../../primitives';
-import { erpApiService, type ApiLocation } from '../../../services/ErpApiService';
+import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell } from '../../primitives';
+import { erpApiService, type ApiLocation, type ApiLocationGroup } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
 type LocationForm = {
   name: string;
   description: string;
+  location_group_id: string;
   user_ids: string;
 };
 
 const emptyForm: LocationForm = {
   name: '',
   description: '',
+  location_group_id: '',
   user_ids: '',
 };
 
@@ -28,6 +30,7 @@ function buildPayload(form: LocationForm) {
   return {
     name: form.name,
     description: form.description || null,
+    location_group_id: form.location_group_id ? Number(form.location_group_id) : null,
     user_ids: toIdList(form.user_ids),
   };
 }
@@ -36,6 +39,7 @@ function formFromLocation(location: ApiLocation): LocationForm {
   return {
     name: location.name ?? '',
     description: location.description ?? '',
+    location_group_id: String(location.location_group_id ?? location.location_group?.id ?? ''),
     user_ids: '',
   };
 }
@@ -48,6 +52,7 @@ function formatDate(value?: string | null) {
 export function BranchesView() {
   const { t } = useTranslation();
   const [locations, setLocations] = useState<ApiLocation[]>([]);
+  const [locationGroups, setLocationGroups] = useState<ApiLocationGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -75,6 +80,12 @@ export function BranchesView() {
   useEffect(() => {
     void fetchLocations('');
   }, [fetchLocations]);
+
+  useEffect(() => {
+    erpApiService.list<ApiLocationGroup>('location-groups', { per_page: 100 })
+      .then(setLocationGroups)
+      .catch(() => setLocationGroups([]));
+  }, []);
 
   const startCreate = () => {
     setEditing(null);
@@ -151,6 +162,13 @@ export function BranchesView() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Input label={t('branches.name')} value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Main Office" />
             <Input label={t('branches.description')} value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Headquarters" />
+            <label className="block text-sm font-medium text-slate-700">
+              <span className="mb-2 block">{t('branches.locationGroup')}</span>
+              <select value={form.location_group_id} onChange={(event) => setForm((prev) => ({ ...prev, location_group_id: event.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+                <option value="">{t('branches.noLocationGroup')}</option>
+                {locationGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+              </select>
+            </label>
             <div className="md:col-span-2">
               <Input label={t('branches.userIds')} value={form.user_ids} onChange={(event) => setForm((prev) => ({ ...prev, user_ids: event.target.value }))} placeholder="1, 2" />
               <p className="mt-2 text-xs text-slate-500">{t('branches.userIdsHint')}</p>
@@ -203,35 +221,43 @@ export function BranchesView() {
           {t('branches.showingCount', { count: locations.length })}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          {locations.map((location) => (
-            <div key={location.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="text-lg font-semibold text-slate-900">{location.name}</h4>
-                  <p className="mt-1 text-sm text-slate-500">{location.description || t('branches.defaultDescription')}</p>
-                </div>
-                <div className="rounded-2xl bg-violet-100 p-3 text-violet-700">
-                  <Building2 className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="mt-5 space-y-3">
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600"><span className="font-semibold text-slate-900">{t('branches.users')}:</span> {location.users_count ?? 0}</div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600"><span className="font-semibold text-slate-900">{t('branches.updated')}:</span> {formatDate(location.updated_at)}</div>
-              </div>
-              <div className="mt-5 flex justify-end gap-2">
-                <button onClick={() => startEdit(location)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                  <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
-                </button>
-                <button onClick={() => void deleteLocation(location)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                  <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
-                </button>
-              </div>
-            </div>
-          ))}
-          {!loading && locations.length === 0 ? <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 xl:col-span-3">{t('branches.empty')}</div> : null}
-          {loading ? <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 xl:col-span-3">{t('branches.loadingList')}</div> : null}
-        </div>
+        <TableShell>
+          <DataTable>
+            <thead>
+              <tr>
+                <TableHeadCell>{t('branches.name')}</TableHeadCell>
+                <TableHeadCell>{t('branches.description')}</TableHeadCell>
+                <TableHeadCell>{t('branches.locationGroup')}</TableHeadCell>
+                <TableHeadCell>{t('branches.users')}</TableHeadCell>
+                <TableHeadCell>{t('branches.updated')}</TableHeadCell>
+                <TableHeadCell align="right">{t('common.actions')}</TableHeadCell>
+              </tr>
+            </thead>
+            <tbody>
+              {locations.map((location) => (
+                <tr key={location.id} className="hover:bg-slate-50/70">
+                  <TableCell className="font-semibold text-slate-900">{location.name}</TableCell>
+                  <TableCell className="max-w-[360px] text-slate-600">{location.description || t('branches.defaultDescription')}</TableCell>
+                  <TableCell className="text-slate-600">{location.location_group?.name ?? t('branches.noLocationGroup')}</TableCell>
+                  <TableCell className="text-slate-600">{location.users_count ?? 0}</TableCell>
+                  <TableCell className="text-slate-600">{formatDate(location.updated_at)}</TableCell>
+                  <TableCell align="right">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => startEdit(location)} className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
+                        <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
+                      </button>
+                      <button onClick={() => void deleteLocation(location)} className="inline-flex items-center rounded-xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                        <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
+                      </button>
+                    </div>
+                  </TableCell>
+                </tr>
+              ))}
+              {!loading && locations.length === 0 ? <EmptyTableRow colSpan={6}>{t('branches.empty')}</EmptyTableRow> : null}
+              {loading ? <EmptyTableRow colSpan={6}>{t('branches.loadingList')}</EmptyTableRow> : null}
+            </tbody>
+          </DataTable>
+        </TableShell>
       </SectionCard>
 
     </div>

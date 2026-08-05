@@ -19,7 +19,7 @@ import type {
   Subscription,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-events', 'profile-subscriptions', 'branches', 'admins', 'access', 'custom-fields', 'members', 'subscriptions', 'events', 'articles', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-events', 'profile-subscriptions', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'members', 'subscriptions', 'events', 'articles', 'announcements', 'sms', 'payments', 'reports'];
 const USE_LOCAL_ERP_CACHE = import.meta.env.VITE_USE_LOCAL_ERP_CACHE === 'true';
 const USE_LOCAL_ERP_SEED = import.meta.env.VITE_USE_LOCAL_ERP_SEED === 'true';
 

@@ -11,6 +11,7 @@ export type SectionId =
   | 'profile-events'
   | 'profile-subscriptions'
   | 'branches'
+  | 'location-groups'
   | 'admins'
   | 'access'
   | 'custom-fields'

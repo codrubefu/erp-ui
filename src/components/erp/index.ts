@@ -3,6 +3,7 @@ export { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 export { AnnouncementsView } from './announcements/AnnouncementsView';
 export { ArticlesModuleRoutes } from './articles/ArticlesModule';
 export { BranchesView } from './branches/BranchesView';
+export { LocationGroupsView } from './location-groups/LocationGroupsView';
 export { CustomFieldsView } from './custom-fields/CustomFieldsView';
 export { DashboardView } from './dashboard/DashboardView';
 export { EventsModuleRoutes } from './events/EventsModule';

@@ -9,6 +9,7 @@ import { BranchesView } from './branches/BranchesView';
 import { CustomFieldsView } from './custom-fields/CustomFieldsView';
 import { DashboardView } from './dashboard/DashboardView';
 import { EventsModuleRoutes } from './events/EventsModule';
+import { LocationGroupsView } from './location-groups/LocationGroupsView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
 import { ProfileEventsPage, ProfileInfoPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
@@ -47,6 +48,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <UsersView />;
       case 'branches':
         return <BranchesView />;
+      case 'location-groups':
+        return <LocationGroupsView />;
       case 'admins':
         return <AdminsView />;
       case 'access':

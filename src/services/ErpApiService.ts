@@ -71,7 +71,18 @@ export type ApiLocation = {
   id: number;
   name: string;
   description: string | null;
+  location_group_id?: number | null;
+  location_group?: ApiLocationGroup | null;
   users_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ApiLocationGroup = {
+  id: number;
+  name: string;
+  description: string | null;
+  locations?: ApiLocation[];
   created_at?: string | null;
   updated_at?: string | null;
 };

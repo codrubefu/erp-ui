@@ -11,6 +11,7 @@ import {
   DashboardView,
   EventsModuleRoutes,
   GroupsRightsView,
+  LocationGroupsView,
   PaymentFormPage,
   PaymentsView,
   ProfileEventsPage,
@@ -86,7 +87,8 @@ export default function ERPContentRoutes({
         }
       />
 
-      <Route path="branches" element={<BranchesView />} />
+      <Route path="branches" element={<ProtectedRoute requiredRights={['locations.view', 'locations.manage']}><BranchesView /></ProtectedRoute>} />
+      <Route path="location-groups" element={<ProtectedRoute requiredRights={['location_groups.view', 'location_groups.manage']}><LocationGroupsView /></ProtectedRoute>} />
       <Route path="profile-info" element={<ProfileInfoPage />} />
       <Route path="profile-security" element={<ProtectedRoute><ProfileSecurityPage /></ProtectedRoute>} />
       <Route path="profile-events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><ProfileEventsPage /></ProtectedRoute>} />
@@ -97,9 +99,9 @@ export default function ERPContentRoutes({
       <Route path="profile/events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><ProfileEventsPage /></ProtectedRoute>} />
       <Route path="profile/subscriptions" element={<ProfileSubscriptionsPage />} />
 
-      <Route path="admins" element={<AdminsView />} />
-      <Route path="access" element={<GroupsRightsView />} />
-      <Route path="custom-fields" element={<CustomFieldsView />} />
+      <Route path="admins" element={<ProtectedRoute requiredRights={['users.view', 'users.manage']}><AdminsView /></ProtectedRoute>} />
+      <Route path="access" element={<ProtectedRoute requiredRights={['groups.view', 'groups.manage']}><GroupsRightsView /></ProtectedRoute>} />
+      <Route path="custom-fields" element={<ProtectedRoute requiredRights={['custom-fields.view', 'custom-fields.manage']}><CustomFieldsView /></ProtectedRoute>} />
 
       <Route path="members" element={<UsersView />} />
       <Route path="members/new" element={<UsersView />} />

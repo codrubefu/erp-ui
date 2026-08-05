@@ -6,6 +6,7 @@ import {
   CreditCard,
   CalendarDays,
   FileBarChart2,
+  FolderTree,
   Info,
   KeyRound,
   LayoutDashboard,
@@ -65,6 +66,7 @@ const navGroups: readonly NavGroup[] = [
     icon: Building2,
     items: [
       { id: 'branches', labelKey: 'menu.branches', icon: Building2, rights: ['locations.view', 'locations.manage'] },
+      { id: 'location-groups', labelKey: 'menu.locationGroups', icon: FolderTree, rights: ['location_groups.view', 'location_groups.manage'] },
       { id: 'admins', labelKey: 'menu.admins', icon: UserCheck, rights: ['users.view', 'users.manage'] },
       { id: 'access', labelKey: 'menu.access', icon: ShieldCheck, rights: ['groups.view', 'groups.manage'] },
       { id: 'custom-fields', labelKey: 'menu.customFields', icon: SlidersHorizontal ,rights: ['custom-fields.view', 'custom-fields.manage'] },
