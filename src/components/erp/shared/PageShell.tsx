@@ -1,10 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import type { PageShellProps } from './types';
 
 export function PageShell({ title, subtitle, backLabel, onBack, children }: PageShellProps) {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-5">
       <div className="border-b border-slate-200 pb-4">
