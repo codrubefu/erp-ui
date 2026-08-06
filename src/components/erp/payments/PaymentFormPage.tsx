@@ -99,6 +99,7 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
           <div className="mt-6 flex justify-end gap-2">
             <Button type="button" onClick={() => navigate('/erp/payments')}>Anuleaza</Button>
             <Button variant="primary" disabled={saving}><Save className="h-4 w-4" />Salveaza payment</Button>
+            <Button variant="dark" disabled={saving}><Save className="h-4 w-4" />Salveaza si inchide</Button>
           </div>
         </SectionCard>
       </form>

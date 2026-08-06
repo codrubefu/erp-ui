@@ -432,6 +432,7 @@ export function ReportsView(props: ReportsViewProps) {
               </label>
               <div className="flex items-end gap-2 lg:col-span-2">
                 <Button onClick={() => void saveSegment()} disabled={segmentsLoading} variant="primary"><Save className="h-4 w-4" />{segmentForm.id ? t('common.save') : t('common.add')}</Button>
+                <Button onClick={() => void saveSegment()} disabled={segmentsLoading} variant="dark"><Save className="h-4 w-4" />{t('common.saveAndClose')}</Button>
                 <Button onClick={() => setSegmentForm(emptySegmentForm)}>{t('common.cancel')}</Button>
               </div>
             </div>

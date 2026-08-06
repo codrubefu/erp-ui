@@ -5,7 +5,7 @@ import { Input, SectionCard, StatusBadge, Textarea } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 import type { SubscriptionFormPageProps } from '../shared/types';
 
-export function SubscriptionFormPage({ mode, data, onChange, onBack, onSave }: SubscriptionFormPageProps) {
+export function SubscriptionFormPage({ mode, data, onChange, onBack, onSave, onSaveAndClose }: SubscriptionFormPageProps) {
   const { t } = useTranslation();
 
   return (
@@ -27,6 +27,7 @@ export function SubscriptionFormPage({ mode, data, onChange, onBack, onSave }: S
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
           <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]"><Save className="h-4 w-4" />{t('subscriptions.save')}</button>
+          <button onClick={onSaveAndClose ?? onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button>
         </div>
       </SectionCard>
     </PageShell>

@@ -229,7 +229,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
     }
   };
 
-  const saveSubscription = async () => {
+  const saveSubscription = async (closeAfterSave = false) => {
     if (editing && !hasAnyRight(['subscriptions.update', 'subscriptions.manage'])) return;
     if (!editing && !hasAnyRight(['subscriptions.create', 'subscriptions.manage'])) return;
     setSaving(true);
@@ -246,6 +246,7 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
       setForm(formFromSubscription(savedSubscription));
       setSuccess(t('common.saved'));
       await loadSubscriptions();
+      if (closeAfterSave) closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('subscriptions.saveError'));
     } finally {
@@ -345,6 +346,9 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
             <Can anyOf={editing ? ['subscriptions.update', 'subscriptions.manage'] : ['subscriptions.create', 'subscriptions.manage']}>
               <button onClick={() => void saveSubscription()} disabled={saving} className="h-10 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6] disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('subscriptions.save')}
+              </button>
+              <button onClick={() => void saveSubscription(true)} disabled={saving} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('common.saveAndClose')}
               </button>
             </Can>
           </div>

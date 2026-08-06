@@ -201,6 +201,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [form, setForm] = useState<FormValues>(emptyEventForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [closeAfterSave, setCloseAfterSave] = useState(false);
   const recurrenceType = form.recurrence_type;
   const needsSubscription = form.requires_active_subscription;
   const needsPayment = form.requires_payment;
@@ -256,12 +257,14 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
       const savedEvent = mode === 'edit' ? await eventService.updateEvent(id, payload) : await eventService.createEvent(payload);
       setForm({ ...savedEvent, recurrence_days: savedEvent.recurrence_days ?? [], description: savedEvent.description ?? '', location: savedEvent.location ?? '', end_date: savedEvent.end_date ?? null });
       setToast({ type: 'success', message: t('events.saved') });
+      if (closeAfterSave) navigate('/erp/events');
     } catch (err) {
       const apiError = err as ApiValidationError;
       setServerErrors(apiError.errors);
       setToast({ type: 'error', message: apiError.message });
     } finally {
       setIsSubmitting(false);
+      setCloseAfterSave(false);
     }
   };
 
@@ -291,7 +294,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
           </div>
           <label className="md:col-span-2"><span className="mb-2 block text-sm font-medium text-slate-700">description</span><textarea value={form.description ?? ''} onChange={(e) => updateField('description', e.target.value)} rows={4} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none" />{fieldError(serverErrors, 'description') ? <span className="text-xs text-red-600">{fieldError(serverErrors, 'description')}</span> : null}</label>
         </div>
-        <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => navigate('/erp/events')} className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button><button disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.save')}</button></div>
+        <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => navigate('/erp/events')} className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button><button type="submit" onClick={() => setCloseAfterSave(false)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.save')}</button><button type="submit" onClick={() => setCloseAfterSave(true)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button></div>
       </SectionCard>
     </form>
   );

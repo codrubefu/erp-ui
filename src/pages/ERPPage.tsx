@@ -288,9 +288,19 @@ export default function ERPAdminPanel() {
     setFormSuccess(t('common.saved'));
   };
 
+  const saveAnnouncementAndClose = () => {
+    saveAnnouncement();
+    goBackToList('announcements');
+  };
+
   const savePayment = () => {
     setPaymentsData((prev) => upsertById(prev, { ...paymentForm }));
     setFormSuccess(t('common.saved'));
+  };
+
+  const savePaymentAndClose = () => {
+    savePayment();
+    goBackToList('payments');
   };
 
   const handleSidebarChange = (id: SectionId) => {
@@ -394,7 +404,9 @@ export default function ERPAdminPanel() {
             saveMember={saveMember}
             saveSubscription={saveSubscription}
             saveAnnouncement={saveAnnouncement}
+            saveAnnouncementAndClose={saveAnnouncementAndClose}
             savePayment={savePayment}
+            savePaymentAndClose={savePaymentAndClose}
             formSuccess={formSuccess}
           />
         </div>

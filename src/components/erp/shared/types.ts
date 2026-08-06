@@ -70,6 +70,7 @@ export type MemberFormPageProps = {
   onChange: (field: keyof Member, value: string) => void;
   onBack: () => void;
   onSave: () => void;
+  onSaveAndClose?: () => void;
 };
 
 export type SubscriptionFormPageProps = {
@@ -78,6 +79,7 @@ export type SubscriptionFormPageProps = {
   onChange: (field: keyof Subscription, value: string) => void;
   onBack: () => void;
   onSave: () => void;
+  onSaveAndClose?: () => void;
 };
 
 export type AnnouncementFormPageProps = {
@@ -86,6 +88,7 @@ export type AnnouncementFormPageProps = {
   onChange: (field: keyof Announcement, value: string) => void;
   onBack: () => void;
   onSave: () => void;
+  onSaveAndClose?: () => void;
   successMessage?: string;
 };
 
@@ -95,6 +98,7 @@ export type PaymentFormPageProps = {
   onChange: (field: keyof Payment, value: string) => void;
   onBack: () => void;
   onSave: () => void;
+  onSaveAndClose?: () => void;
   successMessage?: string;
 };
 
@@ -124,6 +128,8 @@ export type ContentProps = {
   saveMember: () => void;
   saveSubscription: () => void;
   saveAnnouncement: () => void;
+  saveAnnouncementAndClose?: () => void;
   savePayment: () => void;
+  savePaymentAndClose?: () => void;
   formSuccess?: string;
 };

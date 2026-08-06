@@ -20,7 +20,7 @@ import { SmsView } from './sms/SmsView';
 import { SubscriptionsView } from './subscriptions/SubscriptionsView';
 import { UsersView } from './users/UsersView';
 
-export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment, formSuccess }: ContentProps) {
+export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
       return <UsersView />;
@@ -29,10 +29,10 @@ export default function Content({ current, page, membersData, subscriptionsData,
       return <SubscriptionsView openOnMount={page.mode === 'create'} />;
     }
     if (page.section === 'announcementForm') {
-      return <AnnouncementFormPage mode={page.mode ?? 'create'} data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} successMessage={formSuccess} />;
+      return <AnnouncementFormPage mode={page.mode ?? 'create'} data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} onSaveAndClose={saveAnnouncementAndClose} successMessage={formSuccess} />;
     }
     if (page.section === 'paymentForm') {
-      return <PaymentFormPage mode={page.mode ?? 'create'} data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} successMessage={formSuccess} />;
+      return <PaymentFormPage mode={page.mode ?? 'create'} data={paymentForm} onChange={(field, value) => setPaymentForm((prev) => ({ ...prev, [field]: value } as Payment))} onBack={() => goBackToList('payments')} onSave={savePayment} onSaveAndClose={savePaymentAndClose} successMessage={formSuccess} />;
     }
 
     switch (current) {
@@ -78,7 +78,7 @@ export default function Content({ current, page, membersData, subscriptionsData,
           </div>
         );
     }
-  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, savePayment, formSuccess]);
+  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess]);
 
   return <main className="mx-auto w-full max-w-[1600px] space-y-5 p-4 md:p-6 xl:p-8">{view}</main>;
 }

@@ -108,7 +108,7 @@ export function BranchesView() {
     setSuccess('');
   };
 
-  const saveLocation = async () => {
+  const saveLocation = async (closeAfterSave = false) => {
     setSaving(true);
     setError('');
     setSuccess('');
@@ -123,6 +123,7 @@ export function BranchesView() {
       setForm(formFromLocation(savedLocation));
       setSuccess(t('common.saved'));
       await loadLocations();
+      if (closeAfterSave) closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('branches.saveError'));
     } finally {
@@ -178,6 +179,9 @@ export function BranchesView() {
             <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
             <button onClick={() => void saveLocation()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('branches.save')}
+            </button>
+            <button onClick={() => void saveLocation(true)} disabled={saving} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('common.saveAndClose')}
             </button>
           </div>
         </SectionCard>

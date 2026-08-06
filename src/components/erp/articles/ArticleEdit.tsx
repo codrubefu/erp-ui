@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SectionCard } from '../../primitives';
 import ArticleForm from './ArticleForm';
 import { articlesService, type Article, type ArticlePayload } from '../../../services/articlesService';
@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function ArticleEdit() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { id } = useParams();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ export default function ArticleEdit() {
     };
   }, [id, t]);
 
-  const save = async (form: ArticlePayload) => {
+  const save = async (form: ArticlePayload, options?: { closeAfterSave?: boolean }) => {
     setSubmitting(true);
     setError('');
     setSuccess('');
@@ -43,6 +44,7 @@ export default function ArticleEdit() {
       const savedArticle = await articlesService.update(id, form);
       setArticle(savedArticle);
       setSuccess(t('articles.updated'));
+      if (options?.closeAfterSave) navigate('/erp/articles');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('articles.updateError'));
     } finally {

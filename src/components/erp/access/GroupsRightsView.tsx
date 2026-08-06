@@ -245,7 +245,7 @@ export function GroupsRightsView() {
     setFormOpen(false);
   };
 
-  const save = async () => {
+  const save = async (closeAfterSave = false) => {
     setSaving(true);
     setError('');
     setSuccess('');
@@ -263,6 +263,7 @@ export function GroupsRightsView() {
       await loadItems(search);
       await loadUsers();
       await loadRights();
+      if (closeAfterSave) closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('access.saveError'));
     } finally {
@@ -369,8 +370,11 @@ export function GroupsRightsView() {
             })}
             <div className="flex flex-wrap justify-end gap-2">
               <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-              <button onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-100 disabled:cursor-not-allowed disabled:opacity-60">
+              <button onClick={() => void save()} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-100 disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.save')}
+              </button>
+              <button onClick={() => void save(true)} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+                <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.saveAndClose')}
               </button>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } fro
 import { PageShell } from '../shared/PageShell';
 import type { AnnouncementFormPageProps } from '../shared/types';
 
-export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave, successMessage }: AnnouncementFormPageProps) {
+export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave, onSaveAndClose, successMessage }: AnnouncementFormPageProps) {
   const { t } = useTranslation();
 
   return (
@@ -24,6 +24,7 @@ export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave, suc
           <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
           <button className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><Eye className="mr-2 inline h-4 w-4" />{t('common.preview')}</button>
           <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]"><Save className="h-4 w-4" />{t('announcements.save')}</button>
+          <button onClick={onSaveAndClose ?? onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button>
         </div>
       </SectionCard>
     </PageShell>

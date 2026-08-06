@@ -1118,7 +1118,7 @@ export function UserManagementView({
     </div>
   );
 
-  const saveUser = async () => {
+  const saveUser = async (closeAfterSave = false) => {
     setSaving(true);
     setError('');
     setSuccess('');
@@ -1141,6 +1141,7 @@ export function UserManagementView({
       await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
       setSuccess(t('common.saved'));
       await loadUsers();
+      if (closeAfterSave) closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('users.saveError', { label: resolvedSingularLabel }));
     } finally {
@@ -1511,6 +1512,9 @@ export function UserManagementView({
             <Button onClick={closeForm}>{t('common.cancel')}</Button>
             {!['subscriptions', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
+            </Button> : null}
+            {!['subscriptions', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
+              <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.saveAndClose')}
             </Button> : null}
           </div>
         </SectionCard>

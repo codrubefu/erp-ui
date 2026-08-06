@@ -127,6 +127,8 @@ Shared primitives:
 
 Feature modules should reuse these primitives and keep dense operational layouts. Avoid landing-page style sections inside ERP screens.
 
+Forms that persist data should expose both `Save` and `Save and close` actions where the form stays open after a normal save. The `Save and close` action must persist, reload the relevant list, then return to the list view or close the inline form.
+
 Shared ERP types:
 
 - `src/types/erp.ts`

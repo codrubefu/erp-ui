@@ -13,7 +13,7 @@ const segments: ArticleAudienceSegment[] = ['all_users', 'active_subscribers', '
 type ArticleFormProps = {
   mode: 'create' | 'edit';
   initialData?: Article | null;
-  onSubmit: (form: ArticlePayload) => void;
+  onSubmit: (form: ArticlePayload, options?: { closeAfterSave?: boolean }) => void;
   submitting: boolean;
   serverError?: string;
   successMessage?: string;
@@ -96,6 +96,11 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
     onSubmit(form);
   };
 
+  const submitAndClose = () => {
+    if (!validate()) return;
+    onSubmit(form, { closeAfterSave: true });
+  };
+
   return (
     <form onSubmit={submit} className="space-y-6">
       <SectionCard title={title} action={<Link to="/erp/articles" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.back')}</Link>}>
@@ -140,6 +145,10 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
           <button disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
             <Save className="h-4 w-4" />
             {t('common.save')}
+          </button>
+          <button type="button" onClick={submitAndClose} disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+            <Save className="h-4 w-4" />
+            {t('common.saveAndClose')}
           </button>
         </div>
       </SectionCard>
