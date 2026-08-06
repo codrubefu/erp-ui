@@ -1,5 +1,5 @@
 import { apiClient } from '../api/apiClient';
-import type { ApiPaginated, ApiUser } from './ErpApiService';
+import { erpApiService, type ApiUser } from './ErpApiService';
 
 export type SegmentCriteria = {
   expires_in_days?: number;
@@ -35,5 +35,5 @@ export const segmentsService = {
     body: JSON.stringify(payload),
   }),
   delete: (segmentId: number) => apiClient<void>(`/segments/${segmentId}`, { method: 'DELETE' }),
-  listMembers: (segmentId: number, perPage = 15) => apiClient<ApiPaginated<ApiUser>>(`/segments/${segmentId}/members?per_page=${perPage}`),
+  listMembers: (segmentId: number, perPage = 15) => erpApiService.listPaginated<ApiUser>(`segments/${segmentId}/members`, { per_page: perPage }),
 };
