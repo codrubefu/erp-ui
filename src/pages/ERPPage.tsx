@@ -310,26 +310,6 @@ export default function ERPAdminPanel() {
     setSidebarOpen(false);
   };
 
-  const handleQuickCreate = () => {
-    if (current === 'members') {
-      setPage({ section: 'list', mode: null });
-      navigate('/erp/members');
-      return;
-    }
-    if (current === 'subscriptions') return navigateToForm('subscription', 'create');
-    if (current === 'events') {
-      navigate('/erp/events/new');
-      return;
-    }
-    if (current === 'articles') {
-      navigate('/erp/articles/create');
-      return;
-    }
-    if (current === 'announcements') return navigateToForm('announcement', 'create');
-    if (current === 'payments') return navigateToForm('payment', 'create');
-    return navigateToForm('member', 'create');
-  };
-
   const handleLogin = async () => {
     setAuthLoading(true);
     setAuthError('');
@@ -381,7 +361,7 @@ export default function ERPAdminPanel() {
           />
         ) : null}
         <div className="min-w-0 flex-1">
-          <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onQuickCreate={handleQuickCreate} onLogout={handleLogout} currentUser={currentUser} organizationName={organizationName} />
+          <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} currentUser={currentUser} organizationName={organizationName} />
           <Content
             current={current}
             page={page}

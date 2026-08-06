@@ -7,14 +7,11 @@ import {
   CalendarDays,
   FileBarChart2,
   FolderTree,
-  Info,
-  KeyRound,
   LayoutDashboard,
   MessageSquare,
   ShieldCheck,
   SlidersHorizontal,
   UserCheck,
-  UserCircle,
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -48,17 +45,6 @@ const navGroups: readonly NavGroup[] = [
   {
     id: 'general',
     items: [{ id: 'dashboard', labelKey: 'menu.dashboard', icon: LayoutDashboard }],
-  },
-  {
-    id: 'profile',
-    labelKey: 'profile.menu',
-    icon: UserCircle,
-    items: [
-      { id: 'profile-security', labelKey: 'profile.security', icon: KeyRound },
-      { id: 'profile-info', labelKey: 'profile.info', icon: Info },
-      { id: 'profile-events', labelKey: 'profile.events', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
-      { id: 'profile-subscriptions', labelKey: 'profile.subscriptions', icon: BadgeEuro },
-    ],
   },
   {
     id: 'organization',
@@ -95,7 +81,7 @@ function getUserName(user: ReturnType<typeof useAuth>['user']) {
 }
 
 export function Sidebar({ current, setCurrent, open }: SidebarProps) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ profile: true, organization: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
   const { hasAnyRight, user } = useAuth();
   const { t } = useTranslation();
 
@@ -117,7 +103,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
             const GroupIcon = group.icon ?? Building2;
             const isGrouped = Boolean(group.labelKey);
             const isOpen = openGroups[group.id] ?? true;
-            const groupLabel = group.id === 'profile' ? displayName : group.labelKey ? t(group.labelKey) : '';
+            const groupLabel = group.labelKey ? t(group.labelKey) : '';
 
             return (
               <div key={group.id} className="space-y-1">
@@ -169,10 +155,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
 
         <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
           <div className="mb-2.5"><LanguageSelector /></div>
-          <button type="button" onClick={() => setCurrent('profile-info')} className="flex w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-left text-sm font-semibold text-slate-900 hover:bg-indigo-50">
-            <UserCircle className="h-5 w-5 text-indigo-600" />
-            <span className="min-w-0 truncate">{displayName}</span>
-          </button>
+          <p className="truncate px-1 text-xs font-semibold text-slate-500">{displayName}</p>
         </div>
       </div>
     </aside>
