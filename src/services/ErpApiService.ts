@@ -171,6 +171,7 @@ export type ApiUserSubscriptionHistory = {
   status_reason?: string | null;
   activation_payment_id?: number | null;
   is_active: boolean;
+  is_currently_active?: boolean;
 };
 
 export type ApiSubscriptionAssignment = {

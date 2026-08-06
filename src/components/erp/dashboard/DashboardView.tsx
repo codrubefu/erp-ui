@@ -38,7 +38,8 @@ function statusLabel(status: string, t: ReturnType<typeof useTranslation>['t']) 
   return translated === key ? status : translated;
 }
 
-export function DashboardView(_props: DashboardViewProps) {
+export function DashboardView(props: DashboardViewProps) {
+  void props;
   const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const canViewDashboard = hasAnyRight(['dashboard.view', 'dashboard.manage', 'reports.view', 'reports.manage']);

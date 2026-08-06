@@ -155,6 +155,10 @@ Main files:
 
 The members module manages users, profile fields, locations, subscription assignments, assignment lifecycle actions, and related payments. Subscription assignment status should come from the API payload (`subscription.status` or `subscription.pivot.status`) and not be recalculated only from dates.
 
+Free subscriptions can be activated without a payment. Paid subscriptions still activate through a confirmed payment linked to the `subscription_user` assignment. When editing a user's subscriptions, the UI should preserve existing assignment ids/status/payment links by sending the current assignment list rather than forcing a detach/recreate flow.
+
+Subscription history must display the lifecycle status returned by the API. Do not collapse non-active states into a generic expired label and do not decide history membership only from dates.
+
 ### Subscriptions
 
 Main files:

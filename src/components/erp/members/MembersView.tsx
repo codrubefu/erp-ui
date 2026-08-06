@@ -311,7 +311,10 @@ function assignmentStatusLabel(status: SubscriptionAssignmentStatus | null | und
 
 function subscriptionHistoryRows(user: ApiUser | null) {
   if (!user) return [];
-  if (user.subscription_history?.length) return user.subscription_history.filter((item) => !item.is_active);
+  const currentStatuses: Array<SubscriptionAssignmentStatus | undefined | null> = ['active', 'reserved', 'pending'];
+  if (user.subscription_history?.length) {
+    return user.subscription_history.filter((item) => !currentStatuses.includes(item.status) && !item.is_currently_active);
+  }
 
   return mergeById(user.subscriptions, user.active_subscriptions).map((subscription) => ({
     id: subscription.pivot?.id ?? null,
@@ -319,8 +322,9 @@ function subscriptionHistoryRows(user: ApiUser | null) {
     name: subscription.name,
     start_date: subscriptionStartDate(subscription),
     expires_at: subscriptionExpiresAt(subscription),
+    status: subscriptionAssignmentStatus(subscription),
     is_active: subscriptionIsActive(user, subscription.id, subscription),
-  })).filter((item) => !item.is_active);
+  })).filter((item) => !currentStatuses.includes(item.status) && !item.is_active);
 }
 
 function userSubscriptionLabels(user: ApiUser) {
@@ -876,8 +880,8 @@ export function UserManagementView({
       setPaymentError('Select a valid payment type.');
       return;
     }
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setPaymentError('Payment amount must be greater than zero.');
+    if (!Number.isFinite(amount) || amount < 0) {
+      setPaymentError('Payment amount cannot be negative.');
       return;
     }
     if (!paymentForm.first_name.trim() || !paymentForm.last_name.trim() || !paymentForm.paid_at) {
@@ -939,12 +943,14 @@ export function UserManagementView({
     void persistSubscriptionAssignments(nextSubscriptions);
   };
 
-  const runLifecycleAction = async (assignmentId: number, action: 'resume' | 'consume') => {
+  const runLifecycleAction = async (assignmentId: number, action: 'activate' | 'resume' | 'consume') => {
     setLifecycleSavingId(assignmentId);
     setError('');
     setSuccess('');
     try {
-      if (action === 'resume') {
+      if (action === 'activate') {
+        await subscriptionLifecycleService.activate(assignmentId);
+      } else if (action === 'resume') {
         await subscriptionLifecycleService.resume(assignmentId);
       } else {
         await subscriptionLifecycleService.consume(assignmentId);
@@ -1419,6 +1425,11 @@ export function UserManagementView({
                                 <Button onClick={() => selectSubscriptionForPayment(assignment.id)}>
                                   <Plus className="h-4 w-4" />Adauga plata noua
                                 </Button>
+                                {subscriptionUserId && subscription && Number(subscription.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
+                                  <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'activate')} disabled={lifecycleSavingId === subscriptionUserId} variant="primary">
+                                    {t('subscriptions.activate')}
+                                  </Button>
+                                ) : null}
                                 {subscriptionUserId && ['active', 'reserved'].includes(lifecycleStatus ?? '') ? (
                                   <Button onClick={() => {
                                     setSuspendAssignmentId(subscriptionUserId);
@@ -1483,7 +1494,7 @@ export function UserManagementView({
                           <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
                           <td className="px-4 py-3 text-slate-600">{formatDate(item.start_date)}</td>
                           <td className="px-4 py-3 text-slate-600">{item.expires_at ? formatDate(item.expires_at) : t('subscriptions.noAutoExpiry')}</td>
-                          <td className="px-4 py-3"><StatusBadge status={item.is_active ? t('users.statusActive') : t('users.statusExpired')} /></td>
+                          <td className="px-4 py-3"><StatusBadge status={assignmentStatusLabel(item.status, t)} /></td>
                         </tr>
                       )) : (
                         <tr>

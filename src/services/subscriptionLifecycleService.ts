@@ -7,9 +7,9 @@ export type SuspendSubscriptionAssignmentPayload = {
 };
 
 export const subscriptionLifecycleService = {
-  activate: (assignmentId: number, paymentId: number) => apiClient<ApiSubscriptionAssignment>(`/subscription-assignments/${assignmentId}/activate`, {
+  activate: (assignmentId: number, paymentId?: number | null) => apiClient<ApiSubscriptionAssignment>(`/subscription-assignments/${assignmentId}/activate`, {
     method: 'POST',
-    body: JSON.stringify({ payment_id: paymentId }),
+    body: JSON.stringify(paymentId ? { payment_id: paymentId } : {}),
   }),
   suspend: (assignmentId: number, payload: SuspendSubscriptionAssignmentPayload) => apiClient<ApiSubscriptionAssignment>(`/subscription-assignments/${assignmentId}/suspend`, {
     method: 'POST',
