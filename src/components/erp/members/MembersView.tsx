@@ -15,12 +15,6 @@ type UserForm = {
   email: string;
   phone: string;
   active: boolean;
-  notification_consents: {
-    sms: boolean;
-    mail: boolean;
-    push: boolean;
-  };
-  push_token: string;
   group_ids: string;
   location_ids: string;
   subscriptions: ApiUserSubscriptionAssignment[];
@@ -60,12 +54,6 @@ const emptyForm: UserForm = {
   email: '',
   phone: '',
   active: true,
-  notification_consents: {
-    sms: false,
-    mail: false,
-    push: false,
-  },
-  push_token: '',
   group_ids: '',
   location_ids: '',
   subscriptions: [],
@@ -322,8 +310,6 @@ function buildPayload(form: UserForm) {
     email: form.email,
     phone: form.phone || null,
     active: form.active,
-    notification_consents: form.notification_consents,
-    push_token: form.push_token || null,
     group_ids: toIdList(form.group_ids),
     location_ids: toIdList(form.location_ids),
     subscriptions: form.subscriptions.map((subscription) => ({
@@ -375,12 +361,6 @@ function formFromUser(user: ApiUser): UserForm {
     email: user.email ?? '',
     phone: user.phone ?? '',
     active: Boolean(user.active),
-    notification_consents: {
-      sms: Boolean(user.notification_consents?.sms),
-      mail: Boolean(user.notification_consents?.mail),
-      push: Boolean(user.notification_consents?.push),
-    },
-    push_token: user.push_token ?? '',
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
     subscriptions: subscriptionAssignmentsFromUser(user),
@@ -1115,20 +1095,6 @@ export function UserManagementView({
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
               </label>
-              <div className="md:col-span-2">
-                <span className="mb-2 block text-sm font-medium text-slate-700">notification_consents</span>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {(['sms', 'mail', 'push'] as const).map((channel) => (
-                    <label key={channel} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
-                      <input type="checkbox" checked={form.notification_consents[channel]} onChange={(event) => setForm((prev) => ({ ...prev, notification_consents: { ...prev.notification_consents, [channel]: event.target.checked } }))} className="h-4 w-4 accent-violet-600" />
-                      {channel}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <Input label="push_token" value={form.push_token} onChange={(event) => setForm((prev) => ({ ...prev, push_token: event.target.value }))} />
-              </div>
               {!useRelationTabs ? (
                 <>
                   <label className="block">
