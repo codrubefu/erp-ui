@@ -1,45 +1,136 @@
-import { BadgeEuro, Building2, CalendarClock, UserCheck } from 'lucide-react';
+import { BadgeEuro, Building2, CalendarClock, RefreshCw, UserCheck } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { SectionCard, StatCard } from '../../primitives';
-import { parsePrice } from '../../../utils/erp/parsePrice';
+import { dashboardService, type DashboardAutomation, type DashboardPayload } from '../../../services/dashboardService';
+import { Alert, Button, SectionCard, StatCard } from '../../primitives';
+import { useAuth } from '../../../context/useAuth';
 import type { DashboardViewProps } from '../shared/types';
 
-export function DashboardView({ membersData, subscriptionsData, paymentsData, activityData }: DashboardViewProps) {
+const statusColors: Record<string, string> = {
+  active: '#2563eb',
+  inactive: '#64748b',
+  expired: '#f59e0b',
+  suspended: '#dc2626',
+  pending: '#7c3aed',
+  reserved: '#0891b2',
+  consumed: '#16a34a',
+};
+
+function money(value: number) {
+  return new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(value);
+}
+
+function automationTitle(automation: DashboardAutomation, t: ReturnType<typeof useTranslation>['t']) {
+  const values = { count: automation.count ?? 0 };
+  const translated = t(`dashboard.automationLabels.${automation.key}`, values);
+  return translated === `dashboard.automationLabels.${automation.key}` ? automation.label : translated;
+}
+
+function automationHelper(automation: DashboardAutomation, t: ReturnType<typeof useTranslation>['t']) {
+  const translated = t(`dashboard.automationHelpers.${automation.key}`);
+  return translated === `dashboard.automationHelpers.${automation.key}` ? automation.helper : translated;
+}
+
+function statusLabel(status: string, t: ReturnType<typeof useTranslation>['t']) {
+  const key = `dashboard.statuses.${status}`;
+  const translated = t(key);
+  return translated === key ? status : translated;
+}
+
+export function DashboardView(_props: DashboardViewProps) {
   const { t } = useTranslation();
-  const branchesCount = new Set(membersData.map((item) => item.branch).filter(Boolean)).size;
-  const activeMembers = membersData.filter((item) => item.status === 'Activ').length;
-  const expiringSoon = membersData.filter((item) => item.status === 'Expirat' || item.status === 'Suspendat').length;
-  const totalRevenue = paymentsData
-    .filter((item) => item.status === 'Plătit')
-    .reduce((sum, item) => sum + parsePrice(item.amount), 0);
-  const revenueData = paymentsData.slice(0, 6).map((item, index) => ({ month: `P${index + 1}`, revenue: parsePrice(item.amount) }));
-  const statusCounts = ['Activ', 'Expirat', 'Suspendat', 'Rezervat'].map((status, index) => ({
-    name: status,
-    value: membersData.filter((item) => item.status === status).length,
-    color: ['#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'][index],
-  }));
+  const { hasAnyRight } = useAuth();
+  const canViewDashboard = hasAnyRight(['dashboard.view', 'dashboard.manage', 'reports.view', 'reports.manage']);
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadDashboard = useCallback(async () => {
+    if (!canViewDashboard) return;
+    setLoading(true);
+    setError('');
+    try {
+      setDashboard(await dashboardService.getDashboard({ group_by: 'month' }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('dashboard.loadError'));
+    } finally {
+      setLoading(false);
+    }
+  }, [canViewDashboard, t]);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
+  const statusCounts = useMemo(() => {
+    const points = dashboard?.member_status ?? [];
+    return points.map((item) => ({
+      name: statusLabel(item.status, t),
+      value: item.count,
+      color: statusColors[item.status] ?? '#475569',
+    }));
+  }, [dashboard, t]);
+
+  const revenueData = useMemo(() => {
+    return (dashboard?.revenue_by_period ?? []).map((item) => ({ period: item.period, revenue: item.revenue }));
+  }, [dashboard]);
+
+  const activityData = useMemo(() => {
+    return (dashboard?.activity ?? []).map((item) => ({ period: item.period, active: item.active, messages: item.messages }));
+  }, [dashboard]);
+
+  if (!canViewDashboard) {
+    return (
+      <SectionCard title={t('nav.dashboard')}>
+        <Alert tone="warning">{t('dashboard.missingViewRight')}</Alert>
+      </SectionCard>
+    );
+  }
+
+  if (loading && !dashboard) {
+    return (
+      <SectionCard title={t('nav.dashboard')}>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">{t('dashboard.loading')}</div>
+      </SectionCard>
+    );
+  }
+
+  const stats = dashboard?.stats ?? { active_members: 0, flagged_subscriptions: 0, total_revenue: 0, active_locations: 0 };
+  const automations = dashboard?.automations ?? [];
 
   return (
     <div className="space-y-5">
+      {error && (
+        <Alert tone="error">
+          <span className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>{error}</span>
+            <Button type="button" size="sm" onClick={() => void loadDashboard()}>
+              <RefreshCw size={16} />
+              {t('common.refresh')}
+            </Button>
+          </span>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={t('dashboard.activeMembers')} value={String(activeMembers)} change={t('dashboard.liveUpdated')} helper={t('dashboard.activeMembersHelper')} icon={UserCheck} />
-        <StatCard title={t('dashboard.flaggedSubscriptions')} value={String(expiringSoon)} change={t('dashboard.expiredOrSuspended')} helper={t('dashboard.needsFollowUp')} icon={CalendarClock} />
-        <StatCard title={t('dashboard.totalRevenue')} value={`${totalRevenue.toLocaleString('ro-RO')} RON`} change={t('dashboard.paymentsCalculated')} helper={t('dashboard.persistentData')} icon={BadgeEuro} />
-        <StatCard title={t('dashboard.activeBranches')} value={String(branchesCount)} change={t('dashboard.membersByLocation')} helper={t('dashboard.branchesDefined')} icon={Building2} />
+        <StatCard title={t('dashboard.activeMembers')} value={String(stats.active_members)} change={t('dashboard.liveUpdated')} helper={t('dashboard.activeMembersHelper')} icon={UserCheck} />
+        <StatCard title={t('dashboard.flaggedSubscriptions')} value={String(stats.flagged_subscriptions)} change={t('dashboard.expiredOrSuspended')} helper={t('dashboard.needsFollowUp')} icon={CalendarClock} />
+        <StatCard title={t('dashboard.totalRevenue')} value={`${money(stats.total_revenue)} RON`} change={t('dashboard.paymentsCalculated')} helper={t('dashboard.persistentData')} icon={BadgeEuro} />
+        <StatCard title={t('dashboard.activeBranches')} value={String(stats.active_locations)} change={t('dashboard.membersByLocation')} helper={t('dashboard.branchesDefined')} icon={Building2} />
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <SectionCard title={t('dashboard.savedTransactionsRevenue')} action={<button className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm">{t('dashboard.autoUpdated')}</button>}>
+          <SectionCard title={t('dashboard.savedTransactionsRevenue')} action={<Button type="button" size="sm" onClick={() => void loadDashboard()} disabled={loading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
             <div className="h-72 w-full xl:h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData.length ? revenueData : [{ month: 'P1', revenue: 0 }]}>
+                <BarChart data={revenueData.length ? revenueData : [{ period: t('dashboard.noData'), revenue: 0 }]}>
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} />
                   <YAxis tickLine={false} axisLine={false} />
                   <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="revenue" radius={[8, 8, 0, 0]} fill="#5b45f0" />
+                  <Bar dataKey="revenue" radius={[8, 8, 0, 0]} fill="#2563eb" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -50,16 +141,16 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
             <div className="h-72 w-full xl:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusCounts} dataKey="value" nameKey="name" innerRadius={64} outerRadius={100} paddingAngle={4}>
-                    {statusCounts.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                  <Pie data={statusCounts.length ? statusCounts : [{ name: t('dashboard.noData'), value: 1, color: '#e2e8f0' }]} dataKey="value" nameKey="name" innerRadius={64} outerRadius={100} paddingAngle={4}>
+                    {(statusCounts.length ? statusCounts : [{ name: t('dashboard.noData'), value: 1, color: '#e2e8f0' }]).map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="mt-4 space-y-2">
-              {statusCounts.map((item) => (
-                <div key={item.name} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+              {(statusCounts.length ? statusCounts : [{ name: t('dashboard.noData'), value: 0, color: '#e2e8f0' }]).map((item) => (
+                <div key={item.name} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
                   <div className="flex items-center gap-3">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-sm font-medium text-slate-700">{item.name}</span>
@@ -77,13 +168,13 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
           <SectionCard title={t('dashboard.weeklyActivity')}>
             <div className="h-64 w-full xl:h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activityData}>
+                <LineChart data={activityData.length ? activityData : [{ period: t('dashboard.noData'), active: 0, messages: 0 }]}>
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} />
                   <YAxis tickLine={false} axisLine={false} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="active" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="messages" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="active" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="messages" stroke="#0891b2" strokeWidth={3} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -92,21 +183,17 @@ export function DashboardView({ membersData, subscriptionsData, paymentsData, ac
         <div>
           <SectionCard title={t('dashboard.activeAutomations')}>
             <div className="space-y-3">
-              {[
-                t('dashboard.automationExpiryNotifications'),
-                t('dashboard.automationPaymentActivation'),
-                t('dashboard.automationServiceExpiry'),
-                t('dashboard.automationScheduledAnnouncements'),
-                t('dashboard.automationSubscriptionsTotal', { count: subscriptionsData.length }),
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
-                  <div className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              {automations.length ? automations.map((item) => (
+                <div key={item.key} className="flex items-start gap-3 rounded-lg bg-slate-50 p-3">
+                  <div className={`mt-1 h-2.5 w-2.5 rounded-full ${item.enabled ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{item}</p>
-                    <p className="text-xs text-slate-500">{t('dashboard.localSessionData')}</p>
+                    <p className="text-sm font-semibold text-slate-900">{automationTitle(item, t)}</p>
+                    <p className="text-xs text-slate-500">{automationHelper(item, t)}</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">{t('dashboard.noData')}</div>
+              )}
             </div>
           </SectionCard>
         </div>

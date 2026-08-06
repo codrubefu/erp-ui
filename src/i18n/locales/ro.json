@@ -161,7 +161,34 @@
     "automationServiceExpiry": "Expirare automata servicii consumate",
     "automationScheduledAnnouncements": "Publicare anunturi programate",
     "automationSubscriptionsTotal": "Total abonamente definite: {{count}}",
-    "localSessionData": "Date pastrate local si valabile in sesiune si dupa refresh."
+    "localSessionData": "Date pastrate local si valabile in sesiune si dupa refresh.",
+    "loadError": "Nu am putut incarca dashboard-ul",
+    "loading": "Se incarca datele din dashboard...",
+    "noData": "Fara date",
+    "missingViewRight": "Ai nevoie de dreptul dashboard.view, reports.view sau reports.manage pentru a vedea dashboard-ul.",
+    "statuses": {
+      "active": "Activ",
+      "inactive": "Inactiv",
+      "expired": "Expirat",
+      "suspended": "Suspendat",
+      "pending": "In asteptare",
+      "reserved": "Rezervat",
+      "consumed": "Consumat"
+    },
+    "automationLabels": {
+      "subscription_expiry_notifications": "Notificari expirare abonamente",
+      "payment_activation": "Activare dupa plata confirmata",
+      "service_expiry": "Expirare automata servicii",
+      "scheduled_announcements": "Publicare anunturi programate",
+      "subscriptions_total": "Total abonamente definite: {{count}}"
+    },
+    "automationHelpers": {
+      "subscription_expiry_notifications": "Verifica abonamentele expirate, suspendate sau care expira curand.",
+      "payment_activation": "Urmareste platile confirmate care pot activa assignment-uri.",
+      "service_expiry": "Monitorizeaza assignment-urile de abonament si consum.",
+      "scheduled_announcements": "Verifica anunturile gestionate prin modulul de articole.",
+      "subscriptions_total": "Numar total de definitii de abonament din organizatie."
+    }
   },
   "announcements": {
     "title": "Anunturi",

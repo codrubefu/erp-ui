@@ -161,7 +161,34 @@
     "automationServiceExpiry": "Automatic expiry for consumed services",
     "automationScheduledAnnouncements": "Scheduled announcement publishing",
     "automationSubscriptionsTotal": "Total defined subscriptions: {{count}}",
-    "localSessionData": "Data is kept locally and remains available in-session and after refresh."
+    "localSessionData": "Data is kept locally and remains available in-session and after refresh.",
+    "loadError": "Could not load the dashboard",
+    "loading": "Loading dashboard data...",
+    "noData": "No data",
+    "missingViewRight": "You need dashboard.view, reports.view, or reports.manage to view the dashboard.",
+    "statuses": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "expired": "Expired",
+      "suspended": "Suspended",
+      "pending": "Pending",
+      "reserved": "Reserved",
+      "consumed": "Consumed"
+    },
+    "automationLabels": {
+      "subscription_expiry_notifications": "Subscription expiry notifications",
+      "payment_activation": "Activation after confirmed payment",
+      "service_expiry": "Automatic service expiry",
+      "scheduled_announcements": "Scheduled announcement publishing",
+      "subscriptions_total": "Total defined subscriptions: {{count}}"
+    },
+    "automationHelpers": {
+      "subscription_expiry_notifications": "Checks expired, suspended, and soon-to-expire subscriptions.",
+      "payment_activation": "Tracks confirmed payments that can activate assignments.",
+      "service_expiry": "Monitors subscription assignments and usage consumption.",
+      "scheduled_announcements": "Checks announcements managed through the articles module.",
+      "subscriptions_total": "Total subscription definitions in the organization."
+    }
   },
   "announcements": {
     "title": "Announcements",

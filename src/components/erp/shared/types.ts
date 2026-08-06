@@ -12,10 +12,10 @@ import type {
 import type { ActivityPoint } from '../../../services/ErpJsonDataService';
 
 export type DashboardViewProps = {
-  membersData: Member[];
-  subscriptionsData: Subscription[];
-  paymentsData: Payment[];
-  activityData: ActivityPoint[];
+  membersData?: Member[];
+  subscriptionsData?: Subscription[];
+  paymentsData?: Payment[];
+  activityData?: ActivityPoint[];
 };
 
 export type MembersViewProps = {

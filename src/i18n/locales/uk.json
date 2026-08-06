@@ -161,7 +161,34 @@
     "automationServiceExpiry": "Автоматичне завершення використаних послуг",
     "automationScheduledAnnouncements": "Публікація запланованих оголошень",
     "automationSubscriptionsTotal": "Усього визначених абонементів: {{count}}",
-    "localSessionData": "Дані зберігаються локально і доступні в сесії та після оновлення."
+    "localSessionData": "Дані зберігаються локально і доступні в сесії та після оновлення.",
+    "loadError": "Не вдалося завантажити панель",
+    "loading": "Завантаження даних панелі...",
+    "noData": "Немає даних",
+    "missingViewRight": "Потрібне право dashboard.view, reports.view або reports.manage для перегляду панелі.",
+    "statuses": {
+      "active": "Активний",
+      "inactive": "Неактивний",
+      "expired": "Прострочений",
+      "suspended": "Призупинений",
+      "pending": "Очікує",
+      "reserved": "Зарезервований",
+      "consumed": "Використаний"
+    },
+    "automationLabels": {
+      "subscription_expiry_notifications": "Сповіщення про завершення абонементів",
+      "payment_activation": "Активація після підтвердженої оплати",
+      "service_expiry": "Автоматичне завершення послуг",
+      "scheduled_announcements": "Публікація запланованих оголошень",
+      "subscriptions_total": "Усього визначених абонементів: {{count}}"
+    },
+    "automationHelpers": {
+      "subscription_expiry_notifications": "Перевіряє прострочені, призупинені та ті, що скоро завершаться, абонементи.",
+      "payment_activation": "Відстежує підтверджені платежі, які можуть активувати призначення.",
+      "service_expiry": "Моніторить призначення абонементів і використання доступів.",
+      "scheduled_announcements": "Перевіряє оголошення, керовані через модуль статей.",
+      "subscriptions_total": "Загальна кількість визначень абонементів в організації."
+    }
   },
   "announcements": {
     "title": "Оголошення",
