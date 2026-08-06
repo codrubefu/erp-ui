@@ -18,7 +18,6 @@ import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useTranslation } from 'react-i18next';
-import { LanguageSelector } from '../LanguageSelector';
 import type { SectionId } from '../../types/erp';
 
 type SidebarProps = {
@@ -76,24 +75,16 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
-function getUserName(user: ReturnType<typeof useAuth>['user']) {
-  return user && 'name' in user ? user.name : '';
-}
-
 export function Sidebar({ current, setCurrent, open }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
-  const { hasAnyRight, user } = useAuth();
+  const { hasAnyRight } = useAuth();
   const { t } = useTranslation();
-
-  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
-  const displayName = fullName || getUserName(user) || user?.email || t('profile.unknownUser');
 
   return (
     <aside className={cn('fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200 bg-white p-3 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
       <div className="flex h-full flex-col">
         <div className="border-b border-slate-100 px-2 pb-3 pt-1">
           <p className="text-xs font-semibold uppercase text-slate-400">ERP Console</p>
-          <p className="mt-1 truncate text-sm font-bold text-slate-950">{displayName}</p>
         </div>
 
         <nav className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
@@ -152,11 +143,6 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
             );
           })}
         </nav>
-
-        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-          <div className="mb-2.5"><LanguageSelector /></div>
-          <p className="truncate px-1 text-xs font-semibold text-slate-500">{displayName}</p>
-        </div>
       </div>
     </aside>
   );
