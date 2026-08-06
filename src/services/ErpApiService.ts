@@ -246,6 +246,8 @@ export type ApiPayment = {
   receipt_number?: string | null;
   provider?: string | null;
   provider_transaction_id?: string | null;
+  bank_reference?: string | null;
+  reconciled_at?: string | null;
   model_type: 'subscription_user' | 'event_occurrence_user';
   model_id?: number | null;
   subscription_id: number | null;
