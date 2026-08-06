@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, LinkIcon, Plus, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, LinkIcon, Plus, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, ButtonLink, DataTable, EmptyTableRow, SectionCard, Select, TableCell, TableHeadCell, TableShell } from '../../primitives';
 import type { ApiPayment } from '../../../services/ErpApiService';
@@ -49,6 +49,7 @@ export function PaymentsView(props: PaymentsViewProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success] = useState('');
+  const [receiptLoadingId, setReceiptLoadingId] = useState<number | null>(null);
 
   const loadPayments = useCallback(async (nextPage = page, nextPerPage = perPage) => {
     setLoading(true);
@@ -67,6 +68,26 @@ export function PaymentsView(props: PaymentsViewProps) {
       setLoading(false);
     }
   }, [page, perPage]);
+
+  const downloadReceipt = async (payment: ApiPayment) => {
+    setReceiptLoadingId(payment.id);
+    setError('');
+    try {
+      const blob = await paymentService.downloadReceipt(payment.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${payment.receipt_number ?? payment.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nu am putut descarca receipt-ul.');
+    } finally {
+      setReceiptLoadingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!canViewPayments) return;
@@ -90,12 +111,14 @@ export function PaymentsView(props: PaymentsViewProps) {
         </div>
         <TableShell>
           <DataTable className="min-w-[1100px]">
-            <thead><tr><TableHeadCell>first_name</TableHeadCell><TableHeadCell>last_name</TableHeadCell><TableHeadCell>payment_type</TableHeadCell><TableHeadCell>model_type</TableHeadCell><TableHeadCell>model_id</TableHeadCell><TableHeadCell>amount</TableHeadCell><TableHeadCell>paid_at</TableHeadCell><TableHeadCell>admin</TableHeadCell><TableHeadCell align="right">Actiuni</TableHeadCell></tr></thead>
+            <thead><tr><TableHeadCell>first_name</TableHeadCell><TableHeadCell>last_name</TableHeadCell><TableHeadCell>status</TableHeadCell><TableHeadCell>payment_type</TableHeadCell><TableHeadCell>provider</TableHeadCell><TableHeadCell>receipt</TableHeadCell><TableHeadCell>model</TableHeadCell><TableHeadCell>amount</TableHeadCell><TableHeadCell>paid_at</TableHeadCell><TableHeadCell>lifecycle</TableHeadCell><TableHeadCell>admin</TableHeadCell><TableHeadCell align="right">Actiuni</TableHeadCell></tr></thead>
             <tbody>{payments.length ? payments.map((payment) => {
               const modelLink = resolvePaymentModelLink(payment);
 
-              return <tr key={payment.id} className="align-top hover:bg-slate-50/70"><TableCell>{payment.first_name}</TableCell><TableCell>{payment.last_name}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell>{payment.model_type}</TableCell><TableCell>{payment.model_id ?? '-'}</TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right">{modelLink ? <ButtonLink to={modelLink.to} size="sm" title={modelLink.title}><LinkIcon className="h-4 w-4" />{modelLink.label}</ButtonLink> : <span className="text-sm text-slate-500">Model fara ruta directa</span>}</TableCell></tr>;
-            }) : <EmptyTableRow colSpan={9}>{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</EmptyTableRow>}</tbody>
+              const canDownloadReceipt = payment.status === 'confirmed' && Boolean(payment.receipt_number);
+
+              return <tr key={payment.id} className="align-top hover:bg-slate-50/70"><TableCell>{payment.first_name}</TableCell><TableCell>{payment.last_name}</TableCell><TableCell>{payment.status ?? '-'}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell><p>{payment.provider ?? '-'}</p><p className="text-xs text-slate-500">{payment.provider_transaction_id ?? payment.external_reference ?? ''}</p></TableCell><TableCell>{payment.receipt_number ?? '-'}</TableCell><TableCell><p>{payment.model_type}</p><p className="text-xs text-slate-500">model_id {payment.model_id ?? '-'}</p><p className="text-xs text-slate-500">org {payment.organization_id ?? '-'} / loc {payment.location_id ?? '-'}</p></TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell><p>confirmed {formatApiDate(payment.confirmed_at)}</p><p>failed {formatApiDate(payment.failed_at)}</p>{payment.failure_reason ? <p className="text-xs text-red-600">{payment.failure_reason}</p> : null}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right"><div className="flex flex-wrap justify-end gap-2">{canDownloadReceipt ? <Button onClick={() => void downloadReceipt(payment)} disabled={receiptLoadingId === payment.id} size="sm"><Download className="h-4 w-4" />Receipt</Button> : null}{modelLink ? <ButtonLink to={modelLink.to} size="sm" title={modelLink.title}><LinkIcon className="h-4 w-4" />{modelLink.label}</ButtonLink> : <span className="text-sm text-slate-500">Model fara ruta directa</span>}</div></TableCell></tr>;
+            }) : <EmptyTableRow colSpan={12}>{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</EmptyTableRow>}</tbody>
           </DataTable>
         </TableShell>
         <div className="mt-4 flex justify-end gap-2">

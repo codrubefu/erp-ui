@@ -11,13 +11,28 @@ export type Article = {
   id: number;
   title: string;
   description: string;
+  publish_at?: string | null;
+  expires_at?: string | null;
+  priority?: number | null;
+  status?: ArticleStatus;
+  audience_segment?: ArticleAudienceSegment;
   groups?: ArticleRelation[] | number[];
   locations?: ArticleRelation[] | number[];
+  delivered_at?: string | null;
+  viewed_at?: string | null;
 };
+
+export type ArticleStatus = 'draft' | 'scheduled' | 'published' | 'expired';
+export type ArticleAudienceSegment = 'all_users' | 'active_subscribers' | 'expired_users' | 'groups' | 'locations';
 
 export type ArticlePayload = {
   title: string;
   description: string;
+  publish_at?: string | null;
+  expires_at?: string | null;
+  priority?: number;
+  status?: ArticleStatus;
+  audience_segment?: ArticleAudienceSegment;
   groups: number[];
   locations: number[];
 };
@@ -40,6 +55,11 @@ function articlePayload(data: ArticlePayload): ArticlePayload {
   return {
     title: data.title,
     description: data.description,
+    publish_at: data.publish_at || null,
+    expires_at: data.expires_at || null,
+    priority: Number(data.priority ?? 0),
+    status: data.status ?? 'draft',
+    audience_segment: data.audience_segment ?? 'all_users',
     groups: ids(data.groups),
     locations: ids(data.locations),
   };
@@ -60,6 +80,12 @@ export const articlesService = {
   },
   remove(id: string | number | undefined) {
     return erpApiService.remove('articles', Number(id));
+  },
+  feed(filters: Record<string, string | number | undefined> = {}) {
+    return erpApiService.listPaginated<Article>('articles-feed', filters);
+  },
+  markViewed(id: string | number | undefined) {
+    return erpApiService.create<Article>(`articles/${Number(id)}/view`, {});
   },
   async groups() {
     return normalizeCollection(await erpApiService.list<ArticleRelation>('groups'));

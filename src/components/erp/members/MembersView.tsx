@@ -2,11 +2,11 @@ import { ChevronLeft, ChevronRight, Edit3, Eye, EyeOff, Filter, Plus, RefreshCw,
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
-import { erpApiService, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
+import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 
-type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions';
+type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'activity';
 
 type UserForm = {
   user_code: string;
@@ -15,6 +15,12 @@ type UserForm = {
   email: string;
   phone: string;
   active: boolean;
+  notification_consents: {
+    sms: boolean;
+    mail: boolean;
+    push: boolean;
+  };
+  push_token: string;
   group_ids: string;
   location_ids: string;
   subscriptions: ApiUserSubscriptionAssignment[];
@@ -54,6 +60,12 @@ const emptyForm: UserForm = {
   email: '',
   phone: '',
   active: true,
+  notification_consents: {
+    sms: false,
+    mail: false,
+    push: false,
+  },
+  push_token: '',
   group_ids: '',
   location_ids: '',
   subscriptions: [],
@@ -310,6 +322,8 @@ function buildPayload(form: UserForm) {
     email: form.email,
     phone: form.phone || null,
     active: form.active,
+    notification_consents: form.notification_consents,
+    push_token: form.push_token || null,
     group_ids: toIdList(form.group_ids),
     location_ids: toIdList(form.location_ids),
     subscriptions: form.subscriptions.map((subscription) => ({
@@ -361,6 +375,12 @@ function formFromUser(user: ApiUser): UserForm {
     email: user.email ?? '',
     phone: user.phone ?? '',
     active: Boolean(user.active),
+    notification_consents: {
+      sms: Boolean(user.notification_consents?.sms),
+      mail: Boolean(user.notification_consents?.mail),
+      push: Boolean(user.notification_consents?.push),
+    },
+    push_token: user.push_token ?? '',
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
     subscriptions: subscriptionAssignmentsFromUser(user),
@@ -450,6 +470,10 @@ export function UserManagementView({
   const [scanBuffer, setScanBuffer] = useState('');
   const scanBufferRef = useRef('');
   const [userCodeVisible, setUserCodeVisible] = useState(false);
+  const [activities, setActivities] = useState<ApiActivity[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState('');
+  const [activityFilters, setActivityFilters] = useState({ type: '', from: '', to: '' });
 
   const resolvedTitle = title ?? t('members.title');
   const resolvedAddLabel = addLabel ?? t('members.add');
@@ -482,8 +506,9 @@ export function UserManagementView({
     }
 
     tabs.push(['subscriptions', t('users.subscriptions')]);
+    if (editing) tabs.push(['activity', 'Activity']);
     return tabs;
-  }, [t, useRelationTabs]);
+  }, [editing, t, useRelationTabs]);
 
   useEffect(() => {
     if (!scanningCode || activeFormTab !== 'code') return undefined;
@@ -578,6 +603,30 @@ export function UserManagementView({
 
   const loadUsers = useCallback((nextPage = page) => fetchUsers(searchTerm, perPage, nextPage), [fetchUsers, searchTerm, perPage, page]);
 
+  const loadActivity = useCallback(async (userId = editing?.id) => {
+    if (!userId) {
+      setActivities([]);
+      return;
+    }
+
+    setActivityLoading(true);
+    setActivityError('');
+    try {
+      const payload = await erpApiService.userActivity(userId, {
+        type: activityFilters.type,
+        from: activityFilters.from,
+        to: activityFilters.to,
+        per_page: 50,
+      });
+      setActivities(payload.data);
+    } catch (err) {
+      setActivityError(err instanceof Error ? err.message : 'Nu am putut incarca activitatea.');
+      setActivities([]);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [activityFilters.from, activityFilters.to, activityFilters.type, editing?.id]);
+
   const loadSubscriptionPayments = useCallback(async (user: ApiUser | null, assignments: ApiUserSubscriptionAssignment[]) => {
     if (!user || !assignments.length) {
       setSubscriptionPayments([]);
@@ -618,6 +667,11 @@ export function UserManagementView({
     }, selectedPaymentSubscription));
   }, [form.first_name, form.last_name, paymentForm.id, paymentSubscriptionId, selectedPaymentSubscription]);
 
+  useEffect(() => {
+    if (activeFormTab !== 'activity' || !editing) return;
+    void loadActivity(editing.id);
+  }, [activeFormTab, editing, loadActivity]);
+
   const resetFilters = () => {
     setSearchTerm('');
     setPerPage(15);
@@ -635,6 +689,9 @@ export function UserManagementView({
     setPaymentSubscriptionId(null);
     setPaymentForm(emptyPaymentForm);
     setSubscriptionPayments([]);
+    setActivities([]);
+    setActivityError('');
+    setActivityFilters({ type: '', from: '', to: '' });
     setPaymentError('');
     setPaymentSuccess('');
     setFormOpen(true);
@@ -657,6 +714,9 @@ export function UserManagementView({
     setPaymentSubscriptionId(null);
     setPaymentForm(emptyPaymentForm);
     setSubscriptionPayments([]);
+    setActivities([]);
+    setActivityError('');
+    setActivityFilters({ type: '', from: '', to: '' });
     setPaymentError('');
     setPaymentSuccess('');
     setFormOpen(true);
@@ -674,6 +734,8 @@ export function UserManagementView({
     setPaymentSubscriptionId(null);
     setPaymentForm(emptyPaymentForm);
     setSubscriptionPayments([]);
+    setActivities([]);
+    setActivityError('');
     setPaymentError('');
     setPaymentSuccess('');
   };
@@ -1053,6 +1115,20 @@ export function UserManagementView({
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
               </label>
+              <div className="md:col-span-2">
+                <span className="mb-2 block text-sm font-medium text-slate-700">notification_consents</span>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {(['sms', 'mail', 'push'] as const).map((channel) => (
+                    <label key={channel} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
+                      <input type="checkbox" checked={form.notification_consents[channel]} onChange={(event) => setForm((prev) => ({ ...prev, notification_consents: { ...prev.notification_consents, [channel]: event.target.checked } }))} className="h-4 w-4 accent-violet-600" />
+                      {channel}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <Input label="push_token" value={form.push_token} onChange={(event) => setForm((prev) => ({ ...prev, push_token: event.target.value }))} />
+              </div>
               {!useRelationTabs ? (
                 <>
                   <label className="block">
@@ -1127,6 +1203,48 @@ export function UserManagementView({
             renderGroupCheckboxes()
           ) : activeFormTab === 'locations' ? (
             renderLocationCheckboxes()
+          ) : activeFormTab === 'activity' ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
+                <Input label="type" value={activityFilters.type} onChange={(event) => setActivityFilters((prev) => ({ ...prev, type: event.target.value }))} placeholder="subscription_assigned" />
+                <Input label="from" type="date" value={activityFilters.from} onChange={(event) => setActivityFilters((prev) => ({ ...prev, from: event.target.value }))} />
+                <Input label="to" type="date" value={activityFilters.to} onChange={(event) => setActivityFilters((prev) => ({ ...prev, to: event.target.value }))} />
+                <div className="flex items-end">
+                  <Button onClick={() => void loadActivity()} disabled={activityLoading} className="w-full">
+                    <RefreshCw className="h-4 w-4" />{activityLoading ? 'Se incarca...' : 'Filtreaza'}
+                  </Button>
+                </div>
+              </div>
+              {activityError ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{activityError}</p> : null}
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="min-w-[920px] w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">type</th>
+                      <th className="px-4 py-3 font-semibold">model</th>
+                      <th className="px-4 py-3 font-semibold">actor</th>
+                      <th className="px-4 py-3 font-semibold">created_at</th>
+                      <th className="px-4 py-3 font-semibold">new_values</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activities.length ? activities.map((activity) => (
+                      <tr key={activity.id} className="border-t border-slate-100 align-top">
+                        <td className="px-4 py-3 font-semibold text-slate-900">{activity.type}</td>
+                        <td className="px-4 py-3 text-slate-600">{activity.model_type ?? '-'} #{activity.model_id ?? '-'}</td>
+                        <td className="px-4 py-3 text-slate-600">{activity.actor_id ?? '-'}</td>
+                        <td className="px-4 py-3 text-slate-600">{formatDate(activity.created_at)}</td>
+                        <td className="max-w-[360px] px-4 py-3 text-xs text-slate-600"><pre className="whitespace-pre-wrap font-mono">{JSON.stringify(activity.new_values ?? {}, null, 2)}</pre></td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">{activityLoading ? 'Se incarca activitatea...' : 'Nu exista activitate.'}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
@@ -1275,7 +1393,7 @@ export function UserManagementView({
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <Button onClick={closeForm}>{t('common.cancel')}</Button>
-            {activeFormTab !== 'subscriptions' ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
+            {!['subscriptions', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
             </Button> : null}
           </div>

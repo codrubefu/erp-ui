@@ -6,6 +6,8 @@ export type ApiUser = {
   first_name: string;
   last_name: string;
   phone: string | null;
+  notification_consents?: ApiNotificationConsents;
+  push_token?: string | null;
   active: boolean;
   email: string;
   email_verified_at?: string | null;
@@ -19,6 +21,12 @@ export type ApiUser = {
   custom_field_values?: Record<string, unknown> | ApiCustomFieldValue[];
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type ApiNotificationConsents = {
+  sms?: boolean;
+  mail?: boolean;
+  push?: boolean;
 };
 
 export type ApiCustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'email' | 'phone' | 'select' | 'multi_select' | 'checkbox' | 'boolean' | 'file';
@@ -164,16 +172,40 @@ export type ApiPayment = {
   last_name: string;
   payment_type_id: 1 | 2 | 3;
   payment_type?: 'cash' | 'card' | 'bank_transfer';
+  organization_id?: number | null;
+  location_id?: number | null;
+  status?: 'initiated' | 'pending' | 'confirmed' | 'failed' | 'refunded' | 'cancelled';
+  external_reference?: string | null;
+  receipt_number?: string | null;
+  provider?: string | null;
+  provider_transaction_id?: string | null;
   model_type: 'subscription_user' | 'event_occurrence_user';
   model_id?: number | null;
   subscription_id: number | null;
   subscription?: ApiSubscription | ApiUserSubscription | null;
   amount: string;
   paid_at: string | null;
+  confirmed_at?: string | null;
+  failed_at?: string | null;
+  refunded_at?: string | null;
+  cancelled_at?: string | null;
+  failure_reason?: string | null;
   admin_id?: number | null;
   admin?: AuthenticatedUser | null;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type ApiActivity = {
+  id: number;
+  type: string;
+  actor_id?: number | null;
+  subject_user_id?: number | null;
+  model_type?: string | null;
+  model_id?: number | null;
+  old_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  created_at?: string | null;
 };
 
 export type AuthenticatedUser = ApiUser | {
@@ -340,6 +372,30 @@ export class ErpApiService {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  async downloadPaymentReceipt(paymentId: number) {
+    const response = await fetch(endpoint(`/payments/${paymentId}/receipt`), {
+      headers: apiHeaders(),
+    });
+
+    if (!response.ok) {
+      const payload = await parseJsonResponse(response);
+      throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+    }
+
+    return response.blob();
+  }
+
+  async userActivity(userId: number, params: Record<string, string | number | undefined> = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') query.set(key, String(value));
+    });
+    const payload = await this.requestRaw<ApiPaginated<ApiActivity> | ApiActivity[]>(`/users/${userId}/activity${query.size ? `?${query.toString()}` : ''}`);
+    return Array.isArray(payload)
+      ? { data: payload, current_page: 1, last_page: 1, per_page: payload.length, total: payload.length }
+      : payload;
   }
 
   async saveEntityCustomFieldValues<T>(entityType: string, entityId: number, values: Record<string, unknown>) {

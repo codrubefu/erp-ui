@@ -10,6 +10,8 @@ export type PaymentPayload = {
   amount: number;
   payment_type_id: 1 | 2 | 3;
   paid_at: string;
+  external_reference?: string;
+  provider?: string;
 };
 
 function uniqueById(payments: ApiPayment[]) {
@@ -22,6 +24,7 @@ export const paymentService = {
   listPaginated: (page: number, perPage: number) => erpApiService.listPaginated<ApiPayment>('payments', { page, per_page: perPage }),
   create: (payload: PaymentPayload) => erpApiService.create<ApiPayment>('payments', payload),
   attachModel: (paymentId: number, payload: { model_type: PaymentModelType; model_id: number }) => erpApiService.attachPaymentModel<ApiPayment>(paymentId, payload),
+  downloadReceipt: (paymentId: number) => erpApiService.downloadPaymentReceipt(paymentId),
   listForModels: async (modelType: PaymentModelType, modelIds: number[]) => {
     const ids = Array.from(new Set(modelIds.filter(Boolean)));
     if (!ids.length) return [];

@@ -18,6 +18,8 @@ const initialForm = {
   model_id: '',
   amount: '',
   paid_at: '',
+  external_reference: '',
+  provider: '',
 };
 
 export function PaymentFormPage(props: PaymentFormPageProps) {
@@ -61,6 +63,8 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
         model_id: Number(form.model_id),
         amount: Number(form.amount),
         paid_at: form.paid_at,
+        external_reference: form.external_reference.trim() || undefined,
+        provider: form.provider.trim() || undefined,
       });
       navigate('/erp/payments');
     } catch (err) {
@@ -89,6 +93,8 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
             <div><Input label={modelIdLabel} type="number" min={1} value={form.model_id} onChange={(event) => updateField('model_id', event.target.value)} />{errors.model_id ? <p className="mt-1 text-xs font-medium text-red-600">{errors.model_id}</p> : null}<p className="mt-1 text-xs text-slate-500">{form.model_type === 'event_occurrence_user' ? 'ID-ul apartine relatiei participantului la event occurrence.' : 'ID-ul apartine relatiei subscription_user.'}</p></div>
             <div><Input label="amount" type="number" min={0} step="0.01" value={form.amount} onChange={(event) => updateField('amount', event.target.value)} />{errors.amount ? <p className="mt-1 text-xs font-medium text-red-600">{errors.amount}</p> : null}</div>
             <div><Input label="paid_at" type="datetime-local" value={form.paid_at} onChange={(event) => updateField('paid_at', event.target.value)} />{errors.paid_at ? <p className="mt-1 text-xs font-medium text-red-600">{errors.paid_at}</p> : null}</div>
+            <Input label="external_reference" value={form.external_reference} onChange={(event) => updateField('external_reference', event.target.value)} />
+            <Input label="provider" value={form.provider} onChange={(event) => updateField('provider', event.target.value)} placeholder="manual / card provider" />
           </div>
           <div className="mt-6 flex justify-end gap-2">
             <Button type="button" onClick={() => navigate('/erp/payments')}>Anuleaza</Button>

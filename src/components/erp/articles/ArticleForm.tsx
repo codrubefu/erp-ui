@@ -3,10 +3,12 @@ import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { SectionCard, SuccessMessage } from '../../primitives';
-import { articlesService, type Article, type ArticlePayload, type ArticleRelation } from '../../../services/articlesService';
+import { Input, SectionCard, Select, SuccessMessage } from '../../primitives';
+import { articlesService, type Article, type ArticleAudienceSegment, type ArticlePayload, type ArticleRelation, type ArticleStatus } from '../../../services/articlesService';
 
-const emptyForm: ArticlePayload = { title: '', description: '', groups: [], locations: [] };
+const emptyForm: ArticlePayload = { title: '', description: '', publish_at: '', expires_at: '', priority: 0, status: 'draft', audience_segment: 'all_users', groups: [], locations: [] };
+const statuses: ArticleStatus[] = ['draft', 'scheduled', 'published', 'expired'];
+const segments: ArticleAudienceSegment[] = ['all_users', 'active_subscribers', 'expired_users', 'groups', 'locations'];
 
 type ArticleFormProps = {
   mode: 'create' | 'edit';
@@ -29,6 +31,10 @@ function labelFor(item: ArticleRelation) {
   return item.label || item.name || item.title || `#${item.id}`;
 }
 
+function toDateTimeLocal(value?: string | null) {
+  return value ? value.replace(' ', 'T').slice(0, 16) : '';
+}
+
 export default function ArticleForm({ mode, initialData, onSubmit, submitting, serverError, successMessage }: ArticleFormProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<ArticlePayload>(emptyForm);
@@ -42,6 +48,11 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
     setForm({
       title: initialData?.title ?? '',
       description: initialData?.description ?? '',
+      publish_at: toDateTimeLocal(initialData?.publish_at),
+      expires_at: toDateTimeLocal(initialData?.expires_at),
+      priority: initialData?.priority ?? 0,
+      status: initialData?.status ?? 'draft',
+      audience_segment: initialData?.audience_segment ?? 'all_users',
       groups: fieldIds(initialData?.groups),
       locations: fieldIds(initialData?.locations),
     });
@@ -97,6 +108,15 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
             <input value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
             {errors.title ? <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span> : null}
           </label>
+          <Select label="status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as ArticleStatus }))}>
+            {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
+          </Select>
+          <Select label="audience_segment" value={form.audience_segment} onChange={(event) => setForm((prev) => ({ ...prev, audience_segment: event.target.value as ArticleAudienceSegment }))}>
+            {segments.map((segment) => <option key={segment} value={segment}>{segment}</option>)}
+          </Select>
+          <Input label="priority" type="number" min={0} value={String(form.priority ?? 0)} onChange={(event) => setForm((prev) => ({ ...prev, priority: Number(event.target.value) }))} />
+          <Input label="publish_at" type="datetime-local" value={form.publish_at ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, publish_at: event.target.value }))} />
+          <Input label="expires_at" type="datetime-local" value={form.expires_at ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, expires_at: event.target.value }))} />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.groups')}</span>
             <select multiple value={form.groups.map(String)} disabled={loadingOptions} onChange={(event) => setForm((prev) => ({ ...prev, groups: selectedOptions(event) }))} className="min-h-32 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100">

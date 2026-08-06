@@ -7,6 +7,7 @@ import { names } from './articleUiUtils';
 import { Can } from '../../Can';
 import { ProtectedRoute } from '../../ProtectedRoute';
 import { useTranslation } from 'react-i18next';
+import { formatApiDate } from '../../../utils/erp/formatters';
 
 export default function ArticleDetails() {
   const { t } = useTranslation();
@@ -43,6 +44,12 @@ export default function ArticleDetails() {
       <SectionCard title={article.title} action={<div className="flex gap-2"><Link to="/erp/articles" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.back')}</Link><Can anyOf={['articles.update', 'articles.manage']}><Link to={`/erp/articles/${article.id}/edit`} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Edit3 className="h-4 w-4" />{t('common.edit')}</Link></Can></div>}>
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
           <p className="md:col-span-2"><b>{t('articles.description')}:</b> {article.description || '-'}</p>
+          <p><b>status:</b> {article.status ?? 'draft'}</p>
+          <p><b>audience_segment:</b> {article.audience_segment ?? 'all_users'}</p>
+          <p><b>publish_at:</b> {formatApiDate(article.publish_at)}</p>
+          <p><b>expires_at:</b> {formatApiDate(article.expires_at)}</p>
+          <p><b>priority:</b> {article.priority ?? 0}</p>
+          <p><b>viewed_at:</b> {formatApiDate(article.viewed_at)}</p>
           <p><b>{t('articles.groups')}:</b> {names(article.groups)}</p>
           <p><b>{t('articles.locations')}:</b> {names(article.locations)}</p>
         </div>
