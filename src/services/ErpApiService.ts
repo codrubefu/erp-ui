@@ -95,17 +95,35 @@ export type ApiLocationGroup = {
   updated_at?: string | null;
 };
 
+export type SubscriptionType = 'membership' | 'access_pass';
+export type SubscriptionExpirationRule = 'duration' | 'fixed_date' | 'none';
+export type SubscriptionAssignmentStatus = 'pending' | 'active' | 'expired' | 'suspended' | 'consumed' | 'reserved';
+
 export type ApiUserSubscription = {
   id: number;
   name: string;
   description?: string | null;
+  type?: SubscriptionType;
   price?: string | number;
   currency?: string;
   duration_days?: number | null;
+  expiration_rule?: SubscriptionExpirationRule;
+  fixed_expires_at?: string | null;
+  grace_period_days?: number;
+  max_accesses?: number | null;
   max_users?: number | null;
   is_active?: boolean;
+  assignment_id?: number | null;
   start_date?: string | null;
   expires_at?: string | null;
+  status?: SubscriptionAssignmentStatus | null;
+  accesses_used?: number | null;
+  activated_at?: string | null;
+  suspended_at?: string | null;
+  resume_at?: string | null;
+  status_reason?: string | null;
+  activation_payment_id?: number | null;
+  is_currently_active?: boolean;
   pivot?: ApiUserSubscriptionPivot;
 };
 
@@ -113,14 +131,28 @@ export type ApiUserSubscriptionAssignment = {
   id: number;
   start_date?: string;
   subscription_user_id?: number | null;
+  status?: SubscriptionAssignmentStatus | null;
+  expires_at?: string | null;
+  accesses_used?: number | null;
+  suspended_at?: string | null;
+  resume_at?: string | null;
+  status_reason?: string | null;
+  activation_payment_id?: number | null;
 };
 
 export type ApiUserSubscriptionPivot = {
   id?: number | null;
   user_id?: number;
   subscription_id?: number;
+  status?: SubscriptionAssignmentStatus;
   start_date?: string | null;
   expires_at?: string | null;
+  accesses_used?: number;
+  activated_at?: string | null;
+  suspended_at?: string | null;
+  resume_at?: string | null;
+  status_reason?: string | null;
+  activation_payment_id?: number | null;
   is_active?: boolean;
   created_at?: string | null;
   updated_at?: string | null;
@@ -132,7 +164,30 @@ export type ApiUserSubscriptionHistory = {
   name: string;
   start_date: string | null;
   expires_at: string | null;
+  status?: SubscriptionAssignmentStatus | null;
+  accesses_used?: number | null;
+  suspended_at?: string | null;
+  resume_at?: string | null;
+  status_reason?: string | null;
+  activation_payment_id?: number | null;
   is_active: boolean;
+};
+
+export type ApiSubscriptionAssignment = {
+  id: number;
+  subscription_id: number;
+  user_id: number;
+  status: SubscriptionAssignmentStatus;
+  start_date?: string | null;
+  expires_at?: string | null;
+  accesses_used: number;
+  activated_at?: string | null;
+  suspended_at?: string | null;
+  resume_at?: string | null;
+  status_reason?: string | null;
+  activation_payment_id?: number | null;
+  subscription?: ApiSubscription | ApiUserSubscription | null;
+  user?: ApiUser | ApiSubscriptionUser | null;
 };
 
 export type ApiSubscriptionUser = {
@@ -149,15 +204,27 @@ export type ApiSubscription = {
   id: number;
   name: string;
   description: string | null;
+  type?: SubscriptionType;
   price: string | number;
   currency: string;
   duration_days: number | null;
+  expiration_rule?: SubscriptionExpirationRule;
+  fixed_expires_at?: string | null;
+  grace_period_days?: number;
+  max_accesses?: number | null;
   max_users: number | null;
   is_active: boolean;
   users?: ApiSubscriptionUser[];
   users_count?: number;
   start_date?: string | null;
   expires_at?: string | null;
+  status?: SubscriptionAssignmentStatus | null;
+  accesses_used?: number | null;
+  suspended_at?: string | null;
+  resume_at?: string | null;
+  status_reason?: string | null;
+  activation_payment_id?: number | null;
+  is_currently_active?: boolean;
   pivot?: ApiUserSubscriptionPivot;
   created_at?: string | null;
   updated_at?: string | null;

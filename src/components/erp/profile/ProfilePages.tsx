@@ -41,6 +41,15 @@ function formatDate(value?: string | null) {
   return value.slice(0, 10);
 }
 
+function subscriptionStatus(subscription: ApiSubscription) {
+  return subscription.status ?? subscription.pivot?.status ?? (subscription.is_currently_active ?? subscription.is_active ? 'active' : 'expired');
+}
+
+function subscriptionAccesses(subscription: ApiSubscription) {
+  const used = subscription.accesses_used ?? subscription.pivot?.accesses_used ?? 0;
+  return subscription.max_accesses ? `${used} / ${subscription.max_accesses}` : '-';
+}
+
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '-';
   if (Array.isArray(value)) return value.map(formatValue).join(', ');
@@ -317,6 +326,8 @@ export function ProfileSubscriptionsPage() {
               <th className="pb-3 font-semibold">{t('subscriptions.duration')}</th>
               <th className="pb-3 font-semibold">{t('users.startDate')}</th>
               <th className="pb-3 font-semibold">{t('users.expires')}</th>
+              <th className="pb-3 font-semibold">{t('subscriptions.accesses')}</th>
+              <th className="pb-3 font-semibold">{t('subscriptions.resumeAt')}</th>
               <th className="pb-3 font-semibold">{t('common.status')}</th>
             </tr>
           </thead>
@@ -332,11 +343,16 @@ export function ProfileSubscriptionsPage() {
                 <td className="py-4 text-slate-600">{subscription.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</td>
                 <td className="py-4 text-slate-600">{formatDate(subscription.start_date ?? subscription.pivot?.start_date)}</td>
                 <td className="py-4 text-slate-600">{formatDate(subscription.expires_at ?? subscription.pivot?.expires_at)}</td>
-                <td className="py-4"><StatusBadge status={subscription.is_active ? t('users.statusActive') : t('users.statusInactive')} /></td>
+                <td className="py-4 text-slate-600">{subscriptionAccesses(subscription)}</td>
+                <td className="py-4 text-slate-600">{formatDate(subscription.resume_at ?? subscription.pivot?.resume_at)}</td>
+                <td className="py-4">
+                  <StatusBadge status={t(`subscriptions.assignmentStatuses.${subscriptionStatus(subscription)}`)} />
+                  {subscription.status_reason ?? subscription.pivot?.status_reason ? <p className="mt-1 text-xs text-slate-500">{subscription.status_reason ?? subscription.pivot?.status_reason}</p> : null}
+                </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-sm text-slate-500">{loading ? t('common.loading') : t('profile.noSubscriptions')}</td>
+                <td colSpan={8} className="py-10 text-center text-sm text-slate-500">{loading ? t('common.loading') : t('profile.noSubscriptions')}</td>
               </tr>
             )}
           </tbody>

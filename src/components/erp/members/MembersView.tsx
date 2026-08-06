@@ -2,9 +2,10 @@ import { ChevronLeft, ChevronRight, Edit3, Eye, EyeOff, Filter, Plus, RefreshCw,
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
-import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment } from '../../../services/ErpApiService';
+import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment, type SubscriptionAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
+import { subscriptionLifecycleService } from '../../../services/subscriptionLifecycleService';
 
 type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'activity';
 
@@ -224,9 +225,7 @@ function paymentMethodLabel(payment: ApiPayment) {
 }
 
 function subscriptionAssignmentsFromUser(user: ApiUser): ApiUserSubscriptionAssignment[] {
-  const source = user.active_subscriptions?.length
-    ? user.active_subscriptions
-    : mergeById(user.subscriptions).filter((subscription) => subscriptionIsActive(user, subscription.id, subscription));
+  const source = mergeById(user.subscriptions, user.active_subscriptions);
 
   return source.map((subscription) => {
     const historyItem = user.subscription_history?.find((item) => item.subscription_id === subscription.id);
@@ -234,6 +233,13 @@ function subscriptionAssignmentsFromUser(user: ApiUser): ApiUserSubscriptionAssi
       id: subscription.id,
       start_date: historyItem?.start_date ?? subscription.start_date ?? subscription.pivot?.start_date ?? todayDate(),
       subscription_user_id: subscription.pivot?.id ?? historyItem?.id ?? null,
+      status: historyItem?.status ?? subscription.status ?? subscription.pivot?.status ?? null,
+      expires_at: historyItem?.expires_at ?? subscription.expires_at ?? subscription.pivot?.expires_at ?? null,
+      accesses_used: historyItem?.accesses_used ?? subscription.accesses_used ?? subscription.pivot?.accesses_used ?? null,
+      suspended_at: historyItem?.suspended_at ?? subscription.suspended_at ?? subscription.pivot?.suspended_at ?? null,
+      resume_at: historyItem?.resume_at ?? subscription.resume_at ?? subscription.pivot?.resume_at ?? null,
+      status_reason: historyItem?.status_reason ?? subscription.status_reason ?? subscription.pivot?.status_reason ?? null,
+      activation_payment_id: historyItem?.activation_payment_id ?? subscription.activation_payment_id ?? subscription.pivot?.activation_payment_id ?? null,
     };
   }) ?? [];
 }
@@ -278,10 +284,29 @@ function subscriptionExpiresAt(subscription?: ApiSubscription | ApiUserSubscript
 
 function subscriptionIsActive(user: ApiUser | null, subscriptionId: number, fallback?: ApiSubscription | ApiUserSubscription | null) {
   if (user?.active_subscriptions?.some((subscription) => subscription.id === subscriptionId)) return true;
+  if (fallback?.status) return fallback.status === 'active';
+  if (fallback?.pivot?.status) return fallback.pivot.status === 'active';
+  if (fallback?.is_currently_active !== undefined) return fallback.is_currently_active;
   if (fallback?.pivot?.is_active !== undefined) return fallback.pivot.is_active;
   if (fallback?.expires_at) return fallback.expires_at >= todayDate();
   if (fallback?.pivot?.expires_at) return fallback.pivot.expires_at >= todayDate();
   return fallback?.is_active ?? true;
+}
+
+function subscriptionAssignmentStatus(subscription?: ApiSubscription | ApiUserSubscription | null, assignment?: ApiUserSubscriptionAssignment): SubscriptionAssignmentStatus | null {
+  return assignment?.status ?? subscription?.status ?? subscription?.pivot?.status ?? null;
+}
+
+function assignmentValue<T>(
+  assignment: ApiUserSubscriptionAssignment | undefined,
+  subscription: ApiSubscription | ApiUserSubscription | null | undefined,
+  field: 'accesses_used' | 'suspended_at' | 'resume_at' | 'status_reason' | 'activation_payment_id' | 'expires_at',
+): T | null {
+  return (assignment?.[field] ?? subscription?.[field] ?? subscription?.pivot?.[field] ?? null) as T | null;
+}
+
+function assignmentStatusLabel(status: SubscriptionAssignmentStatus | null | undefined, t: ReturnType<typeof useTranslation>['t']) {
+  return status ? t(`subscriptions.assignmentStatuses.${status}`) : '-';
 }
 
 function subscriptionHistoryRows(user: ApiUser | null) {
@@ -446,6 +471,10 @@ export function UserManagementView({
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
+  const [lifecycleSavingId, setLifecycleSavingId] = useState<number | null>(null);
+  const [suspendAssignmentId, setSuspendAssignmentId] = useState<number | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendResumeAt, setSuspendResumeAt] = useState('');
   const [scanningCode, setScanningCode] = useState(false);
   const [scanBuffer, setScanBuffer] = useState('');
   const scanBufferRef = useRef('');
@@ -473,6 +502,7 @@ export function UserManagementView({
       ?? mergeById(editing?.subscriptions, editing?.active_subscriptions).find((subscription) => subscription.id === subscriptionId)
       ?? null;
   }, [editing, paymentSubscriptionId, subscriptions]);
+
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
   const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
     const tabs: Array<[UserFormTab, string]> = [
@@ -631,6 +661,17 @@ export function UserManagementView({
     }
   }, []);
 
+  const reloadEditingUserSubscriptions = useCallback(async () => {
+    if (!editing) return;
+    const savedUser = await erpApiService.get<ApiUser>('users', editing.id);
+    const customFieldValues = await loadUserCustomFieldValues(savedUser);
+    const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
+    setEditing(savedUser);
+    setForm(savedForm);
+    await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
+    await loadUsers();
+  }, [editing, loadSubscriptionPayments, loadUsers]);
+
   useEffect(() => {
     void loadLookups();
     void fetchUsers('', 15, 1);
@@ -674,6 +715,9 @@ export function UserManagementView({
     setActivityFilters({ type: '', from: '', to: '' });
     setPaymentError('');
     setPaymentSuccess('');
+    setSuspendAssignmentId(null);
+    setSuspendReason('');
+    setSuspendResumeAt('');
     setFormOpen(true);
   };
 
@@ -699,6 +743,9 @@ export function UserManagementView({
     setActivityFilters({ type: '', from: '', to: '' });
     setPaymentError('');
     setPaymentSuccess('');
+    setSuspendAssignmentId(null);
+    setSuspendReason('');
+    setSuspendResumeAt('');
     setFormOpen(true);
     void loadSubscriptionPayments(selectedUser, subscriptionAssignmentsFromUser(selectedUser));
   };
@@ -718,6 +765,9 @@ export function UserManagementView({
     setActivityError('');
     setPaymentError('');
     setPaymentSuccess('');
+    setSuspendAssignmentId(null);
+    setSuspendReason('');
+    setSuspendResumeAt('');
   };
 
   const persistSubscriptionAssignments = async (nextSubscriptions: ApiUserSubscriptionAssignment[]) => {
@@ -854,8 +904,12 @@ export function UserManagementView({
       } else {
         savedPayment = await erpApiService.create<ApiPayment>('payments', payload);
       }
+      const currentStatus = subscriptionAssignmentStatus(selectedPaymentSubscription, assignment);
+      if (!paymentForm.id && savedPayment.id && modelId && ['pending', 'reserved', 'expired'].includes(currentStatus ?? '')) {
+        await subscriptionLifecycleService.activate(modelId, savedPayment.id);
+      }
       if (editing) {
-        await loadSubscriptionPayments(editing, form.subscriptions);
+        await reloadEditingUserSubscriptions();
       } else {
         setSubscriptionPayments((prev) => {
           const withoutSaved = prev.filter((payment) => payment.id !== savedPayment.id);
@@ -883,6 +937,50 @@ export function UserManagementView({
       setPaymentSuccess('');
     }
     void persistSubscriptionAssignments(nextSubscriptions);
+  };
+
+  const runLifecycleAction = async (assignmentId: number, action: 'resume' | 'consume') => {
+    setLifecycleSavingId(assignmentId);
+    setError('');
+    setSuccess('');
+    try {
+      if (action === 'resume') {
+        await subscriptionLifecycleService.resume(assignmentId);
+      } else {
+        await subscriptionLifecycleService.consume(assignmentId);
+      }
+      await reloadEditingUserSubscriptions();
+      setSuccess(t('subscriptions.lifecycleSaved'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('subscriptions.lifecycleError'));
+    } finally {
+      setLifecycleSavingId(null);
+    }
+  };
+
+  const suspendAssignment = async (assignmentId: number) => {
+    if (!suspendReason.trim()) {
+      setError(t('subscriptions.suspendReasonRequired'));
+      return;
+    }
+    setLifecycleSavingId(assignmentId);
+    setError('');
+    setSuccess('');
+    try {
+      await subscriptionLifecycleService.suspend(assignmentId, {
+        reason: suspendReason.trim(),
+        resume_at: suspendResumeAt ? dateTimeLocalToApi(suspendResumeAt) : null,
+      });
+      setSuspendAssignmentId(null);
+      setSuspendReason('');
+      setSuspendResumeAt('');
+      await reloadEditingUserSubscriptions();
+      setSuccess(t('subscriptions.lifecycleSaved'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('subscriptions.lifecycleError'));
+    } finally {
+      setLifecycleSavingId(null);
+    }
   };
 
   const updateCustomField = (field: ApiCustomField, value: unknown) => {
@@ -1271,6 +1369,11 @@ export function UserManagementView({
                         const persistedExpiresAt = subscriptionExpiresAt(userSubscription);
                         const expiresAt = persistedExpiresAt ?? addDays(assignment.start_date, subscription?.duration_days);
                         const subscriptionUserId = subscriptionUserIdForAssignment(assignment, editing, subscription);
+                        const lifecycleStatus = subscriptionAssignmentStatus(userSubscription ?? subscription, assignment);
+                        const accessesUsed = assignmentValue<number>(assignment, userSubscription ?? subscription, 'accesses_used') ?? 0;
+                        const maxAccesses = subscription?.max_accesses ?? userSubscription?.max_accesses ?? null;
+                        const resumeAt = assignmentValue<string>(assignment, userSubscription ?? subscription, 'resume_at');
+                        const statusReason = assignmentValue<string>(assignment, userSubscription ?? subscription, 'status_reason');
                         const paymentsForSubscription = subscriptionPayments.filter((payment) => (
                           subscriptionUserId
                             ? payment.model_id === subscriptionUserId || (payment.model_id === undefined && payment.subscription_id === assignment.id)
@@ -1303,16 +1406,52 @@ export function UserManagementView({
                               <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} disabled={subscriptionSaving} />
                             </td>
                             <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('subscriptions.noAutoExpiry')}</td>
-                            <td className="px-4 py-3"><StatusBadge status={subscriptionIsActive(editing, assignment.id, userSubscription ?? subscription) ? t('users.statusActive') : t('users.statusExpired')} /></td>
+                            <td className="px-4 py-3">
+                              <StatusBadge status={assignmentStatusLabel(lifecycleStatus, t)} />
+                              <div className="mt-2 space-y-1 text-xs text-slate-500">
+                                <p>{t('subscriptions.accesses')}: {maxAccesses ? `${accessesUsed} / ${maxAccesses}` : '-'}</p>
+                                {resumeAt ? <p>{t('subscriptions.resumeAt')}: {formatDate(resumeAt)}</p> : null}
+                                {statusReason ? <p>{t('subscriptions.statusReason')}: {statusReason}</p> : null}
+                              </div>
+                            </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex flex-wrap justify-end gap-2">
                                 <Button onClick={() => selectSubscriptionForPayment(assignment.id)}>
                                   <Plus className="h-4 w-4" />Adauga plata noua
                                 </Button>
+                                {subscriptionUserId && ['active', 'reserved'].includes(lifecycleStatus ?? '') ? (
+                                  <Button onClick={() => {
+                                    setSuspendAssignmentId(subscriptionUserId);
+                                    setSuspendReason('');
+                                    setSuspendResumeAt('');
+                                  }} disabled={lifecycleSavingId === subscriptionUserId}>
+                                    {t('subscriptions.suspend')}
+                                  </Button>
+                                ) : null}
+                                {subscriptionUserId && lifecycleStatus === 'suspended' ? (
+                                  <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'resume')} disabled={lifecycleSavingId === subscriptionUserId}>
+                                    {t('subscriptions.resume')}
+                                  </Button>
+                                ) : null}
+                                {subscriptionUserId && lifecycleStatus === 'active' && maxAccesses ? (
+                                  <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'consume')} disabled={lifecycleSavingId === subscriptionUserId}>
+                                    {t('subscriptions.consume')}
+                                  </Button>
+                                ) : null}
                                 <Button onClick={() => removeSubscriptionAssignment(assignment.id)} disabled={subscriptionSaving} variant="danger">
                                   <Trash2 className="h-4 w-4" />{t('common.delete')}
                                 </Button>
                               </div>
+                              {subscriptionUserId && suspendAssignmentId === subscriptionUserId ? (
+                                <div className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
+                                  <Textarea label={t('subscriptions.suspendReason')} value={suspendReason} onChange={(event) => setSuspendReason(event.target.value)} />
+                                  <Input label={t('subscriptions.resumeAtOptional')} type="datetime-local" value={suspendResumeAt} onChange={(event) => setSuspendResumeAt(event.target.value)} />
+                                  <div className="flex justify-end gap-2">
+                                    <Button onClick={() => setSuspendAssignmentId(null)}>{t('common.cancel')}</Button>
+                                    <Button onClick={() => void suspendAssignment(subscriptionUserId)} disabled={lifecycleSavingId === subscriptionUserId} variant="primary">{t('subscriptions.suspend')}</Button>
+                                  </div>
+                                </div>
+                              ) : null}
                             </td>
                           </tr>
                         );

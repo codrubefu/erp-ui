@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
-import { erpApiService, type ApiSubscription, type ApiSubscriptionUser } from '../../../services/ErpApiService';
+import { erpApiService, type ApiSubscription, type ApiSubscriptionUser, type SubscriptionExpirationRule, type SubscriptionType } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { Can } from '../../Can';
 import { useAuth } from '../../../context/useAuth';
@@ -12,9 +12,14 @@ import { apiClient } from '../../../api/apiClient';
 type SubscriptionForm = {
   name: string;
   description: string;
+  type: SubscriptionType;
   price: string;
   currency: string;
   duration_days: string;
+  expiration_rule: SubscriptionExpirationRule;
+  fixed_expires_at: string;
+  grace_period_days: string;
+  max_accesses: string;
   max_users: string;
   is_active: boolean;
 };
@@ -26,9 +31,14 @@ type SubscriptionsViewProps = {
 const emptyForm: SubscriptionForm = {
   name: '',
   description: '',
+  type: 'membership',
   price: '',
   currency: 'EUR',
   duration_days: '',
+  expiration_rule: 'duration',
+  fixed_expires_at: '',
+  grace_period_days: '0',
+  max_accesses: '',
   max_users: '',
   is_active: true,
 };
@@ -42,9 +52,14 @@ function buildPayload(form: SubscriptionForm) {
   return {
     name: form.name,
     description: form.description || null,
+    type: form.type,
     price: Number(form.price) || 0,
     currency: form.currency.trim().toUpperCase() || 'EUR',
     duration_days: optionalNumber(form.duration_days),
+    expiration_rule: form.expiration_rule,
+    fixed_expires_at: form.expiration_rule === 'fixed_date' ? form.fixed_expires_at || null : null,
+    grace_period_days: Number(form.grace_period_days) || 0,
+    max_accesses: optionalNumber(form.max_accesses),
     max_users: optionalNumber(form.max_users),
     is_active: form.is_active,
   };
@@ -54,9 +69,14 @@ function formFromSubscription(subscription: ApiSubscription): SubscriptionForm {
   return {
     name: subscription.name ?? '',
     description: subscription.description ?? '',
+    type: subscription.type ?? 'membership',
     price: String(subscription.price ?? ''),
     currency: subscription.currency ?? 'EUR',
     duration_days: subscription.duration_days ? String(subscription.duration_days) : '',
+    expiration_rule: subscription.expiration_rule ?? 'duration',
+    fixed_expires_at: subscription.fixed_expires_at ? subscription.fixed_expires_at.slice(0, 16) : '',
+    grace_period_days: String(subscription.grace_period_days ?? 0),
+    max_accesses: subscription.max_accesses ? String(subscription.max_accesses) : '',
     max_users: subscription.max_users ? String(subscription.max_users) : '',
     is_active: Boolean(subscription.is_active),
   };
@@ -69,6 +89,14 @@ function formatDate(value?: string | null) {
 
 function userName(user: ApiSubscriptionUser) {
   return `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || user.email;
+}
+
+function subscriptionTypeLabel(type: SubscriptionType | undefined, t: ReturnType<typeof useTranslation>['t']) {
+  return t(`subscriptions.types.${type ?? 'membership'}`);
+}
+
+function expirationRuleLabel(rule: SubscriptionExpirationRule | undefined, t: ReturnType<typeof useTranslation>['t']) {
+  return t(`subscriptions.expirationRules.${rule ?? 'duration'}`);
 }
 
 export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProps = {}) {
@@ -282,9 +310,27 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
         >
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Input label={t('subscriptions.name')} value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">{t('subscriptions.type')}</span>
+              <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value as SubscriptionType }))} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
+                <option value="membership">{t('subscriptions.types.membership')}</option>
+                <option value="access_pass">{t('subscriptions.types.access_pass')}</option>
+              </select>
+            </label>
             <Input label={t('subscriptions.price')} type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
             <Input label={t('subscriptions.currency')} maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">{t('subscriptions.expirationRule')}</span>
+              <select value={form.expiration_rule} onChange={(event) => setForm((prev) => ({ ...prev, expiration_rule: event.target.value as SubscriptionExpirationRule }))} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
+                <option value="duration">{t('subscriptions.expirationRules.duration')}</option>
+                <option value="fixed_date">{t('subscriptions.expirationRules.fixed_date')}</option>
+                <option value="none">{t('subscriptions.expirationRules.none')}</option>
+              </select>
+            </label>
             <Input label={t('subscriptions.durationDays')} type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
+            {form.expiration_rule === 'fixed_date' ? <Input label={t('subscriptions.fixedExpiresAt')} type="datetime-local" value={form.fixed_expires_at} onChange={(event) => setForm((prev) => ({ ...prev, fixed_expires_at: event.target.value }))} /> : null}
+            <Input label={t('subscriptions.gracePeriodDays')} type="number" min="0" value={form.grace_period_days} onChange={(event) => setForm((prev) => ({ ...prev, grace_period_days: event.target.value }))} placeholder="0" />
+            <Input label={t('subscriptions.maxAccesses')} type="number" min="1" value={form.max_accesses} onChange={(event) => setForm((prev) => ({ ...prev, max_accesses: event.target.value }))} placeholder="30" />
             <Input label={t('subscriptions.maxUsers')} type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
             <label className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
               <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
@@ -437,11 +483,15 @@ export function SubscriptionsView({ openOnMount = false }: SubscriptionsViewProp
                   <td className="max-w-[320px] px-4 py-3">
                     <p className="font-semibold text-slate-900">{subscription.name}</p>
                     <p className="text-xs text-slate-500">#{subscription.id} - {t('branches.updated')} {formatDate(subscription.updated_at)}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">{subscriptionTypeLabel(subscription.type, t)} - {expirationRuleLabel(subscription.expiration_rule, t)}</p>
                     <p className="mt-1 text-sm text-slate-600">{subscription.description || '-'}</p>
                   </td>
                   <td className="px-4 py-3 font-semibold text-slate-900">{subscription.price} {subscription.currency}</td>
                   <td className="px-4 py-3 text-slate-600">
                     <p>{t('subscriptions.duration')}: {subscription.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</p>
+                    {subscription.expiration_rule === 'fixed_date' ? <p>{t('subscriptions.fixedExpiresAt')}: {formatDate(subscription.fixed_expires_at)}</p> : null}
+                    <p>{t('subscriptions.gracePeriodDays')}: {subscription.grace_period_days ?? 0}</p>
+                    <p>{t('subscriptions.maxAccesses')}: {subscription.max_accesses ?? '-'}</p>
                     <p>{t('branches.users')}: {subscription.max_users ?? '-'}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{subscription.users_count ?? subscription.users?.length ?? '-'}</td>
