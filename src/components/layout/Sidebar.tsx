@@ -81,13 +81,13 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
   const { t } = useTranslation();
 
   return (
-    <aside className={cn('fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200 bg-white p-3 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
+    <aside className={cn('fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200/70 bg-white/95 p-3.5 shadow-[8px_0_30px_rgba(15,23,42,0.025)] backdrop-blur-xl transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
       <div className="flex h-full flex-col">
-        <div className="border-b border-slate-100 px-2 pb-3 pt-1">
-          <p className="text-xs font-semibold uppercase text-slate-400">ERP Console</p>
+        <div className="border-b border-slate-100 px-2 pb-4 pt-2">
+          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-indigo-500">ERP Console</p>
         </div>
 
-        <nav className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
+        <nav className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
           {navGroups.map((group) => {
             const visibleItems = group.items.filter((item) => !item.rights || hasAnyRight(item.rights));
             if (visibleItems.length === 0) return null;
@@ -101,10 +101,10 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                 {isGrouped ? (
                   <button
                     onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-                    className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50"
+                    className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
                   >
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="rounded-lg bg-slate-100 p-1.5 text-slate-600">
+                      <span className="rounded-lg bg-slate-100/80 p-1.5 text-slate-600 ring-1 ring-slate-200/60">
                         <GroupIcon className="h-4 w-4" />
                       </span>
                       <span className="truncate">{groupLabel}</span>
@@ -114,7 +114,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                 ) : null}
 
                 {(!isGrouped || isOpen) && (
-                  <div className={cn('space-y-1', isGrouped && 'ml-3 border-l border-slate-100 pl-2')}>
+                  <div className={cn('space-y-1.5', isGrouped && 'ml-3 border-l border-slate-200/70 pl-2')}>
                     {visibleItems.map((item) => {
                       const Icon = item.icon;
                       const active = current === item.id;
@@ -123,12 +123,12 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
                           key={item.id}
                           onClick={() => setCurrent(item.id as SectionId)}
                           className={cn(
-                            'flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-sm transition',
-                            active ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                            'flex w-full items-center justify-between rounded-xl px-2.5 py-2.5 text-left text-sm transition-all duration-200',
+                            active ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:translate-x-0.5 hover:bg-slate-100/80 hover:text-slate-950'
                           )}
                         >
                           <span className="flex min-w-0 items-center gap-2.5 font-medium">
-                            <span className={cn('rounded-lg p-1.5', active ? 'bg-white text-indigo-700' : 'bg-slate-100 text-slate-500')}>
+                            <span className={cn('rounded-lg p-1.5 transition', active ? 'bg-white/15 text-white ring-1 ring-white/20' : 'bg-slate-100 text-slate-500')}>
                               <Icon className="h-4 w-4" />
                             </span>
                             <span className="truncate">{t(item.labelKey)}</span>
