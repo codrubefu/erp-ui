@@ -43,7 +43,7 @@ export function apiHeaders(options: RequestInit = {}) {
   const token = window.localStorage.getItem(TOKEN_KEY);
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
-  if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);
   return headers;
 }

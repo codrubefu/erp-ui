@@ -276,6 +276,49 @@ export type ApiActivity = {
   created_at?: string | null;
 };
 
+export type ApiUserDocumentCategory =
+  | 'membership_request'
+  | 'identity_document'
+  | 'gdpr_agreement'
+  | 'certificate'
+  | 'contract'
+  | 'photo'
+  | 'other';
+
+export type ApiUserDocument = {
+  id: number;
+  user_id: number;
+  organization_id: number;
+  location_id?: number | null;
+  category: ApiUserDocumentCategory;
+  title: string;
+  description?: string | null;
+  expires_at?: string | null;
+  original_name: string;
+  mime_type: string;
+  extension: string;
+  size: number;
+  checksum: string;
+  status: 'active' | 'replaced' | 'deleted';
+  uploaded_by?: number | null;
+  uploader?: ApiUser | null;
+  location?: ApiLocation | null;
+  replaces_document_id?: number | null;
+  versions?: ApiUserDocument[];
+  scanned_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ApiUserDocumentPayload = {
+  file: File;
+  category: ApiUserDocumentCategory;
+  title: string;
+  description?: string;
+  expires_at?: string;
+  location_id?: string | number;
+};
+
 export type AuthenticatedUser = ApiUser | {
   id?: number;
   name?: string;
@@ -453,6 +496,63 @@ export class ErpApiService {
     }
 
     return response.blob();
+  }
+
+  async listUserDocuments(userId: number, page = 1, perPage = 15) {
+    const payload = await this.requestRaw<ApiPaginated<ApiUserDocument> | ApiUserDocument[]>(`/users/${userId}/documents?page=${page}&per_page=${perPage}`);
+    return Array.isArray(payload)
+      ? { data: payload, current_page: 1, last_page: 1, per_page: payload.length, total: payload.length }
+      : payload;
+  }
+
+  async uploadUserDocument(userId: number, data: ApiUserDocumentPayload) {
+    const formData = new FormData();
+    formData.append('file', data.file);
+    formData.append('category', data.category);
+    formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    if (data.expires_at) formData.append('expires_at', data.expires_at);
+    if (data.location_id) formData.append('location_id', String(data.location_id));
+
+    return this.request<ApiUserDocument>(`/users/${userId}/documents`, {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async replaceUserDocument(userId: number, documentId: number, data: ApiUserDocumentPayload) {
+    const formData = new FormData();
+    formData.append('file', data.file);
+    formData.append('category', data.category);
+    formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    if (data.expires_at) formData.append('expires_at', data.expires_at);
+    if (data.location_id) formData.append('location_id', String(data.location_id));
+
+    return this.request<ApiUserDocument>(`/users/${userId}/documents/${documentId}/replace`, {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async getUserDocumentDownloadUrl(userId: number, documentId: number) {
+    return this.request<{ download_url: string; expires_at: string }>(`/users/${userId}/documents/${documentId}/download-url`, {
+      method: 'POST',
+    });
+  }
+
+  async downloadUserDocument(userId: number, documentId: number) {
+    const { download_url } = await this.getUserDocumentDownloadUrl(userId, documentId);
+    const response = await fetch(download_url, { headers: apiHeaders() });
+    if (!response.ok) {
+      const payload = await parseJsonResponse(response);
+      throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+    }
+    return response.blob();
+  }
+
+  async deleteUserDocument(userId: number, documentId: number) {
+    await this.request(`/users/${userId}/documents/${documentId}`, { method: 'DELETE' });
   }
 
   async userActivity(userId: number, params: Record<string, string | number | undefined> = {}) {

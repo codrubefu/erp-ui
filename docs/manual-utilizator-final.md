@@ -148,6 +148,7 @@ Functii:
 Exemple de drepturi:
 
 - `users.view`, `users.manage`
+- `user-documents.view`, `user-documents.upload`, `user-documents.delete`
 - `subscriptions.view`, `subscriptions.manage`
 - `payments.view`, `payments.manage`
 - `reports.view`, `reports.export`
@@ -248,6 +249,31 @@ Statusuri posibile:
 - `expired`
 - `suspended`
 - `consumed`
+
+### Documentele unui membru
+
+Tabul Documente apare in profilul membrului pentru operatorii cu drepturi dedicate.
+
+Functii:
+
+- incarcare document in storage privat;
+- setare categorie, titlu, descriere, data de expirare si filiala;
+- descarcare securizata prin URL temporar semnat;
+- inlocuire document, cu pastrarea legaturii la versiunea veche;
+- stergere document;
+- audit pentru upload, download, inlocuire si stergere.
+
+Categorii disponibile:
+
+- cerere de inscriere;
+- act de identitate;
+- acord GDPR;
+- adeverinta;
+- contract;
+- fotografie;
+- alte documente.
+
+Fisierele acceptate sunt PDF, JPG, PNG, DOC si DOCX, cu limita de 10 MB. Serverul valideaza extensia si MIME-ul si poate rula scanare antivirus daca este configurat.
 
 ### Activitate utilizator
 
@@ -600,6 +626,7 @@ Regula generala:
 Exemple:
 
 - pentru membri: `users.view`, `users.manage`;
+- pentru documentele membrilor: `user-documents.view`, `user-documents.upload`, `user-documents.delete`;
 - pentru abonamente: `subscriptions.view`, `subscriptions.manage`;
 - pentru articole: `articles.view`, `articles.manage`;
 - pentru plati: `payments.view`, `payments.manage`;

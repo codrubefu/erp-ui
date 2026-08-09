@@ -150,12 +150,15 @@ The dashboard is API-driven and calls `GET /api/dashboard` through `/dashboard` 
 Main files:
 
 - `src/components/erp/members/MembersView.tsx`
+- `src/components/erp/members/UserDocumentsPanel.tsx`
 - `src/components/erp/members/MemberFormPage.tsx`
 - `src/services/ErpApiService.ts`
 - `src/services/paymentService.ts`
 - `src/services/subscriptionLifecycleService.ts`
 
-The members module manages users, profile fields, locations, subscription assignments, assignment lifecycle actions, and related payments. Subscription assignment status should come from the API payload (`subscription.status` or `subscription.pivot.status`) and not be recalculated only from dates.
+The members module manages users, profile fields, locations, subscription assignments, assignment lifecycle actions, related payments, and private member documents. Subscription assignment status should come from the API payload (`subscription.status` or `subscription.pivot.status`) and not be recalculated only from dates.
+
+Member documents are shown in a dedicated edit tab when the authenticated operator has `user-documents.view`, `user-documents.upload`, `user-documents.delete`, or `users.manage`. Upload and replace use `multipart/form-data`; download first requests a temporary signed URL and then fetches the blob with the bearer token. The UI supports the backend categories `membership_request`, `identity_document`, `gdpr_agreement`, `certificate`, `contract`, `photo`, and `other`.
 
 Free subscriptions can be activated without a payment. Paid subscriptions still activate through a confirmed payment linked to the `subscription_user` assignment. When editing a user's subscriptions, the UI should preserve existing assignment ids/status/payment links by sending the current assignment list rather than forcing a detach/recreate flow.
 

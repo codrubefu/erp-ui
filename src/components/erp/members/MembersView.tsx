@@ -8,8 +8,9 @@ import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup'
 import { subscriptionLifecycleService } from '../../../services/subscriptionLifecycleService';
 import { useAuth } from '../../../context/useAuth';
 import { PrivacyPanel } from '../profile/PrivacyPanel';
+import { UserDocumentsPanel } from './UserDocumentsPanel';
 
-type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'privacy' | 'activity';
+type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'documents' | 'privacy' | 'activity';
 
 type UserForm = {
   user_code: string;
@@ -524,6 +525,9 @@ export function UserManagementView({
   const canUseGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
   const canExportGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
   const canProcessGdpr = hasAnyRight(['gdpr.process']);
+  const canViewDocuments = hasAnyRight(['user-documents.view', 'user-documents.upload', 'user-documents.delete', 'users.manage']);
+  const canUploadDocuments = hasAnyRight(['user-documents.upload', 'users.manage']);
+  const canDeleteDocuments = hasAnyRight(['user-documents.delete', 'users.manage']);
   const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
     const tabs: Array<[UserFormTab, string]> = [
       ['details', 'Date utilizator'],
@@ -536,10 +540,11 @@ export function UserManagementView({
     }
 
     tabs.push(['subscriptions', t('users.subscriptions')]);
+    if (editing && canViewDocuments) tabs.push(['documents', 'Documente']);
     if (editing && canUseGdpr) tabs.push(['privacy', 'GDPR']);
     if (editing) tabs.push(['activity', 'Activity']);
     return tabs;
-  }, [canUseGdpr, editing, t, useRelationTabs]);
+  }, [canUseGdpr, canViewDocuments, editing, t, useRelationTabs]);
 
   useEffect(() => {
     if (!scanningCode || activeFormTab !== 'code') return undefined;
@@ -1309,6 +1314,8 @@ export function UserManagementView({
             renderLocationCheckboxes()
           ) : activeFormTab === 'privacy' && editing ? (
             <PrivacyPanel userId={editing.id} administrative canExport={canExportGdpr} canProcess={canProcessGdpr} />
+          ) : activeFormTab === 'documents' && editing ? (
+            <UserDocumentsPanel userId={editing.id} locations={locations} canUpload={canUploadDocuments} canDelete={canDeleteDocuments} />
           ) : activeFormTab === 'activity' ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
@@ -1545,10 +1552,10 @@ export function UserManagementView({
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <Button onClick={closeForm}>{t('common.cancel')}</Button>
-            {!['subscriptions', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
+            {!['subscriptions', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
             </Button> : null}
-            {!['subscriptions', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
+            {!['subscriptions', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.saveAndClose')}
             </Button> : null}
           </div>
