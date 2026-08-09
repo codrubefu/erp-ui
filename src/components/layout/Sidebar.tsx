@@ -78,7 +78,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 export function Sidebar({ current, setCurrent, open }: SidebarProps) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: false });
   const { hasAnyRight } = useAuth();
   const { t } = useTranslation();
 
