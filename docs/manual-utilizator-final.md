@@ -56,7 +56,7 @@ In partea de sus exista meniul profilului, cu acces la:
 
 Dashboard-ul este pagina principala dupa autentificare.
 
-Utilizatorul poate vedea:
+Utilizatorul poate vedea anunturile publicate pentru el direct pe dashboard. Daca are drepturi de dashboard sau rapoarte, vede si indicatorii operationali:
 
 - numarul de membri activi;
 - abonamente expirate, suspendate sau care necesita verificare;
@@ -65,10 +65,9 @@ Utilizatorul poate vedea:
 - grafic venituri pe perioada;
 - distributia statusurilor membrilor;
 - activitate recenta;
-- feed cu anunturile vizibile pentru utilizator;
 - starea automatizarilor, cum ar fi notificari de expirare abonamente.
 
-Dashboard-ul permite si marcarea anunturilor ca citite. Butoanele `Refresh` reincarca datele din API pentru grafice sau pentru feed.
+Dashboard-ul permite marcarea anunturilor ca citite. Butoanele `Refresh` reincarca datele din API pentru grafice sau pentru feed.
 
 ## 5. Organizatii, locatii si filiale
 

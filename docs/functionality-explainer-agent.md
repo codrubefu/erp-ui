@@ -143,7 +143,7 @@ Main files:
 - `src/components/erp/dashboard/DashboardView.tsx`
 - `src/services/dashboardService.ts`
 
-The dashboard is API-driven and calls `GET /api/dashboard` through `/dashboard` in `dashboardService`. It displays KPI cards, revenue by period, member status, activity, and automation indicators. UI access allows `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. The screen is read-only and only refreshes data.
+The dashboard is API-driven and calls `GET /api/dashboard` through `/dashboard` in `dashboardService` for KPI cards, revenue by period, member status, activity, and automation indicators. Those operational widgets require `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. The announcements feed is loaded separately from `articlesService.feed()` and remains visible to authenticated users even when they do not have dashboard/reporting rights.
 
 ### Members
 

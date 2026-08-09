@@ -121,11 +121,43 @@ export function DashboardView(props: DashboardViewProps) {
     return (dashboard?.activity ?? []).map((item) => ({ period: item.period, active: item.active, messages: item.messages }));
   }, [dashboard]);
 
+  const announcementsPanel = (
+    <SectionCard title={t('profile.announcementsTitle', 'Anunturile mele')} action={<Button type="button" size="sm" onClick={() => void loadAnnouncements()} disabled={announcementsLoading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
+      {announcementsError ? <Alert tone="error" className="mb-3">{announcementsError}</Alert> : null}
+      <div className="space-y-3">
+        {announcements.length ? announcements.map((article) => (
+          <div key={article.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+            <div className="flex items-start gap-2">
+              <Bell className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">{article.title}</p>
+                  <span className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${article.viewed_at ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                    {article.viewed_at ? t('profile.announcementRead', 'Citit') : t('profile.announcementUnread', 'Necitit')}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{shortText(article.description)}</p>
+                {!article.viewed_at ? (
+                  <Button type="button" size="sm" variant="ghost" className="mt-2 h-8 px-2" onClick={() => void markAnnouncementViewed(article)} disabled={markingAnnouncementId === article.id}>
+                    <Check className="h-4 w-4" />
+                    {t('profile.markAnnouncementRead', 'Marcheaza citit')}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )) : (
+          <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">{announcementsLoading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}</div>
+        )}
+      </div>
+    </SectionCard>
+  );
+
   if (!canViewDashboard) {
     return (
-      <SectionCard title={t('nav.dashboard')}>
-        <Alert tone="warning">{t('dashboard.missingViewRight')}</Alert>
-      </SectionCard>
+      <div className="space-y-5">
+        {announcementsPanel}
+      </div>
     );
   }
 
@@ -222,35 +254,7 @@ export function DashboardView(props: DashboardViewProps) {
           </SectionCard>
         </div>
         <div>
-          <SectionCard title={t('profile.announcementsTitle', 'Anunturile mele')} action={<Button type="button" size="sm" onClick={() => void loadAnnouncements()} disabled={announcementsLoading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
-            {announcementsError ? <Alert tone="error" className="mb-3">{announcementsError}</Alert> : null}
-            <div className="space-y-3">
-              {announcements.length ? announcements.map((article) => (
-                <div key={article.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                  <div className="flex items-start gap-2">
-                    <Bell className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold text-slate-900">{article.title}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${article.viewed_at ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                          {article.viewed_at ? t('profile.announcementRead', 'Citit') : t('profile.announcementUnread', 'Necitit')}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs leading-5 text-slate-600">{shortText(article.description)}</p>
-                      {!article.viewed_at ? (
-                        <Button type="button" size="sm" variant="ghost" className="mt-2 h-8 px-2" onClick={() => void markAnnouncementViewed(article)} disabled={markingAnnouncementId === article.id}>
-                          <Check className="h-4 w-4" />
-                          {t('profile.markAnnouncementRead', 'Marcheaza citit')}
-                        </Button>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              )) : (
-                <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">{announcementsLoading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}</div>
-              )}
-            </div>
-          </SectionCard>
+          {announcementsPanel}
         </div>
       </div>
 
