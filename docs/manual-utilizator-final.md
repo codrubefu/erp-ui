@@ -2,7 +2,7 @@
 
 ## 1. Scopul aplicatiei
 
-Master ERP este o aplicatie pentru administrarea membrilor, abonamentelor, evenimentelor, anunturilor, platilor, notificarilor si rapoartelor unei organizatii. Aplicatia este impartita pe module, iar accesul la fiecare functie depinde de drepturile primite de utilizatorul autentificat.
+Master ERP este o aplicatie pentru administrarea membrilor, abonamentelor, anunturilor, platilor, notificarilor si rapoartelor unei organizatii. Aplicatia este impartita pe module, iar accesul la fiecare functie depinde de drepturile primite de utilizatorul autentificat.
 
 Manualul descrie functiile disponibile in interfata `erp-ui` si fluxurile sustinute de API-ul `erp-laravel`.
 
@@ -38,7 +38,6 @@ Meniul principal contine modulele operationale:
 - Campuri custom
 - Utilizatori / membri
 - Abonamente
-- Evenimente
 - Anunturi / articole
 - Campanii
 - SMS si notificari
@@ -50,7 +49,6 @@ In partea de sus exista meniul profilului, cu acces la:
 - informatii cont;
 - securitate;
 - confidentialitate / GDPR;
-- evenimentele mele;
 - abonamentele mele.
 
 ## 4. Dashboard
@@ -149,7 +147,6 @@ Exemple de drepturi:
 
 - `users.view`, `users.manage`
 - `subscriptions.view`, `subscriptions.manage`
-- `events.view`, `events.manage`
 - `payments.view`, `payments.manage`
 - `reports.view`, `reports.export`
 - `gdpr.export`, `gdpr.process`
@@ -212,8 +209,7 @@ In formularul de membru se pot administra:
 - status activ/inactiv;
 - grupuri;
 - locatii;
-- consimtamant notificari SMS, e-mail si push;
-- token push, daca este folosit;
+- consimtamant notificari SMS si e-mail;
 - campuri custom.
 
 ### Cod utilizator
@@ -253,7 +249,7 @@ Statusuri posibile:
 
 ### Activitate utilizator
 
-Tabul de activitate afiseaza evenimente de business si audit, cum ar fi:
+Tabul de activitate afiseaza actiuni de business si audit, cum ar fi:
 
 - user creat sau actualizat;
 - abonament atribuit;
@@ -318,75 +314,7 @@ Reguli importante:
 - abonamentele platite raman in asteptare pana la o plata confirmata;
 - activarea este facuta de backend si seteaza automat datele lifecycle.
 
-## 11. Evenimente
-
-Modulul Evenimente gestioneaza evenimente, recurente, aparitii si participanti.
-
-### Lista evenimente
-
-Utilizatorul poate:
-
-- lista evenimente;
-- cauta dupa titlu;
-- filtra dupa status;
-- filtra dupa recurenta;
-- filtra evenimente care cer abonament activ;
-- filtra evenimente platite;
-- sorta dupa data creare, data start sau titlu;
-- vedea detalii;
-- edita eveniment;
-- vedea aparitiile;
-- sterge eveniment.
-
-### Creare si editare eveniment
-
-Campuri disponibile:
-
-- titlu;
-- descriere;
-- locatie;
-- ora inceput;
-- ora sfarsit;
-- data start;
-- data final;
-- tip recurenta: o singura data, saptamanal, lunar;
-- zile de recurenta pentru evenimente saptamanale;
-- zi lunara pentru evenimente lunare;
-- abonament activ obligatoriu;
-- abonament specific obligatoriu;
-- eveniment platit;
-- suma si moneda pentru plata;
-- numar maxim de participanti;
-- status: activ, inactiv sau anulat.
-
-### Aparitii eveniment
-
-Pentru fiecare eveniment, sistemul genereaza aparitii.
-
-Utilizatorul poate:
-
-- vedea lista aparitiilor;
-- vedea statusul aparitiei;
-- deschide lista de participanti pentru o aparitie.
-
-### Participanti
-
-Pentru o aparitie, utilizatorul poate:
-
-- lista participantii;
-- adauga participant;
-- actualiza status participant;
-- sterge participant;
-- inregistra plata participantului, daca evenimentul este platit.
-
-Statusuri participant:
-
-- registered;
-- attended;
-- cancelled;
-- no_show.
-
-## 12. Anunturi / articole
+## 11. Anunturi / articole
 
 Modulul Articole/Anunturi gestioneaza comunicarile publicate in feed.
 
@@ -431,16 +359,16 @@ Audiente posibile:
 
 Backend-ul poate livra feed personalizat pentru utilizator si poate marca articolul ca vizualizat. Vizibilitatea depinde de status, perioada, organizatie, grupuri, locatii, abonamente si segment.
 
-## 13. Campanii
+## 12. Campanii
 
-Modulul Campanii gestioneaza campanii e-mail sau push.
+Modulul Campanii gestioneaza campanii e-mail sau SMS.
 
 ### Lista campanii
 
 Utilizatorul poate:
 
 - lista campanii;
-- vedea canalul: mail sau push;
+- vedea canalul: mail sau SMS;
 - vedea statusul;
 - vedea data programarii;
 - edita campanii draft;
@@ -453,7 +381,7 @@ Utilizatorul poate:
 Campuri disponibile:
 
 - nume;
-- canal: mail sau push;
+- canal: mail sau SMS;
 - subiect;
 - continut;
 - segment tinta.
@@ -483,7 +411,7 @@ Statisticile includ:
 - failed;
 - skipped, de obicei pentru destinatari fara consimtamant valid.
 
-## 14. SMS si notificari
+## 13. SMS si notificari
 
 Modulul SMS afiseaza istoricul mesajelor SMS.
 
@@ -501,11 +429,10 @@ Sistemul de notificari poate trimite mesaje prin:
 
 - SMS;
 - e-mail;
-- push.
 
 Utilizatorii pot avea preferinte si consimtaminte pe canal. Daca un consimtamant este retras, livrarea poate fi marcata ca `skipped`.
 
-## 15. Plati si facturare
+## 14. Plati si facturare
 
 Modulul Plati gestioneaza tranzactiile si chitantelor.
 
@@ -518,7 +445,7 @@ Utilizatorul poate:
 - vedea metoda de plata;
 - vedea providerul si referinta externa;
 - vedea numarul chitantei;
-- vedea modelul atasat: abonament sau participant la eveniment;
+- vedea modelul atasat;
 - vedea suma;
 - vedea datele de plata, confirmare sau eroare;
 - descarca chitanta, daca plata este confirmata;
@@ -529,7 +456,7 @@ Utilizatorul poate:
 O plata poate fi asociata cu:
 
 - assignment de abonament (`subscription_user`);
-- participant la aparitie de eveniment (`event_occurrence_user`).
+- model operational asociat, daca este disponibil in sistem.
 
 Campuri uzuale:
 
@@ -547,7 +474,7 @@ Reguli importante:
 - o plata confirmata pentru abonament poate activa abonamentul asociat;
 - chitanta este disponibila doar pentru plati confirmate cu numar de chitanta.
 
-## 16. Rapoarte si segmente
+## 15. Rapoarte si segmente
 
 Modulul Rapoarte ofera analiza financiara si administrarea segmentelor dinamice.
 
@@ -609,7 +536,7 @@ Functii:
 
 Segmentele sunt reutilizate pentru rapoarte, articole si campanii.
 
-## 17. Profilul meu
+## 16. Profilul meu
 
 ### Informatii cont
 
@@ -621,10 +548,6 @@ Pagina afiseaza:
 - grupuri;
 - locatii;
 - campuri custom.
-
-### Evenimentele mele
-
-Pagina arata evenimentele asociate utilizatorului autentificat, cu date de inceput, final si status.
 
 ### Abonamentele mele
 
@@ -652,7 +575,7 @@ Utilizatorul isi poate gestiona drepturile personale:
 - descarcare export;
 - creare cerere de stergere.
 
-## 18. Drepturi si acces
+## 17. Drepturi si acces
 
 Daca un modul sau buton lipseste, cel mai probabil utilizatorul nu are dreptul necesar.
 
@@ -666,15 +589,13 @@ Exemple:
 
 - pentru membri: `users.view`, `users.manage`;
 - pentru abonamente: `subscriptions.view`, `subscriptions.manage`;
-- pentru evenimente: `events.view`, `events.manage`;
-- pentru participanti: `event_participants.view`, `event_participants.manage`;
 - pentru articole: `articles.view`, `articles.manage`;
 - pentru plati: `payments.view`, `payments.manage`;
 - pentru rapoarte: `reports.view`, `reports.export`;
 - pentru segmente: `segments.view`, `segments.manage`;
 - pentru GDPR: `gdpr.export`, `gdpr.process`.
 
-## 19. Mesaje, erori si stari
+## 18. Mesaje, erori si stari
 
 Aplicatia afiseaza mesaje pentru:
 
@@ -695,7 +616,7 @@ Pentru erorile de validare, mesajele serverului sunt prioritare. Exemple:
 - campanie non-draft nu poate fi editata;
 - acces interzis.
 
-## 20. Procese automate
+## 19. Procese automate
 
 Unele actiuni sunt procesate automat de backend:
 
@@ -710,7 +631,7 @@ Unele actiuni sunt procesate automat de backend:
 
 Utilizatorul vede rezultatul in UI prin statusuri, refresh sau descarcarea fisierelor generate.
 
-## 21. Recomandari de utilizare
+## 20. Recomandari de utilizare
 
 - Verificati drepturile utilizatorului daca un modul nu apare in meniu.
 - Folositi `Refresh` dupa operatii asincrone, cum ar fi exporturile.
@@ -718,4 +639,3 @@ Utilizatorul vede rezultatul in UI prin statusuri, refresh sau descarcarea fisie
 - Pentru abonamente platite, verificati ca plata este confirmata si legata de assignment-ul corect.
 - Pentru cereri GDPR, folositi exportul inainte de stergere daca utilizatorul solicita o copie a datelor.
 - Pentru segmente, testati cu `Preview membri` inainte de folosirea lor in rapoarte sau campanii.
-

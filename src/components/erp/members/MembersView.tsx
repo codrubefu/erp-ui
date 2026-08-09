@@ -21,9 +21,7 @@ type UserForm = {
   notification_consents: {
     sms: boolean;
     mail: boolean;
-    push: boolean;
   };
-  push_token: string;
   group_ids: string;
   location_ids: string;
   subscriptions: ApiUserSubscriptionAssignment[];
@@ -63,8 +61,7 @@ const emptyForm: UserForm = {
   email: '',
   phone: '',
   active: true,
-  notification_consents: { sms: false, mail: false, push: false },
-  push_token: '',
+  notification_consents: { sms: false, mail: false },
   group_ids: '',
   location_ids: '',
   subscriptions: [],
@@ -349,7 +346,6 @@ function buildPayload(form: UserForm) {
     email: form.email,
     phone: form.phone || null,
     notification_consents: form.notification_consents,
-    push_token: form.push_token.trim() || null,
     active: form.active,
     group_ids: toIdList(form.group_ids),
     location_ids: toIdList(form.location_ids),
@@ -405,9 +401,7 @@ function formFromUser(user: ApiUser): UserForm {
     notification_consents: {
       sms: Boolean(user.notification_consents?.sms),
       mail: Boolean(user.notification_consents?.mail),
-      push: Boolean(user.notification_consents?.push),
     },
-    push_token: user.push_token ?? '',
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
     subscriptions: subscriptionAssignmentsFromUser(user),
@@ -1223,9 +1217,8 @@ export function UserManagementView({
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
               </label>
-              <Input label="Push token" value={form.push_token} onChange={(event) => setForm((prev) => ({ ...prev, push_token: event.target.value }))} placeholder="device-token-abc123" />
               <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-2 sm:grid-cols-3">
-                {(['sms', 'mail', 'push'] as const).map((channel) => (
+                {(['sms', 'mail'] as const).map((channel) => (
                   <label key={channel} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
                     <input
                       type="checkbox"

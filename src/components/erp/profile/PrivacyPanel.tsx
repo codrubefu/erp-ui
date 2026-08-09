@@ -11,7 +11,7 @@ type PrivacyPanelProps = {
   canProcess?: boolean;
 };
 
-const channels: NotificationChannel[] = ['sms', 'mail', 'push'];
+const channels: NotificationChannel[] = ['sms', 'mail'];
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = window.URL.createObjectURL(blob);

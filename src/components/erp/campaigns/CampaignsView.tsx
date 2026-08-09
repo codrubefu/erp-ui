@@ -223,7 +223,7 @@ export function CampaignsView() {
                 <Input label="Nume" value={form.name} disabled={!isDraft} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
                 <Select label="Canal" value={form.channel} disabled={!isDraft} onChange={(event) => setForm((prev) => ({ ...prev, channel: event.target.value as CampaignChannel }))}>
                   <option value="mail">Mail</option>
-                  <option value="push">Push</option>
+                  <option value="sms">SMS</option>
                 </Select>
                 <Input label="Subiect" value={form.subject ?? ''} disabled={!isDraft} onChange={(event) => setForm((prev) => ({ ...prev, subject: event.target.value }))} />
                 <Select label="Segment" value={form.segment_id ?? ''} disabled={!isDraft} onChange={(event) => setForm((prev) => ({ ...prev, segment_id: Number(event.target.value) || null }))}>
@@ -252,7 +252,7 @@ export function CampaignsView() {
       {preview ? (
         <SectionCard title={`Preview destinatari (${preview.count})`}>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
-            {preview.data.map((user) => <div key={user.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm"><p className="font-medium text-slate-900">{recipientName(user)}</p><p className="text-xs text-slate-500">{user.email}</p></div>)}
+            {preview.data.map((user) => <div key={user.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm"><p className="font-medium text-slate-900">{recipientName(user)}</p><p className="text-xs text-slate-500">{user.email}</p><p className="text-xs text-slate-500">{user.phone || '-'}</p></div>)}
           </div>
         </SectionCard>
       ) : null}

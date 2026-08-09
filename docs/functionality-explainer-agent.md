@@ -218,6 +218,15 @@ Main files:
 
 Articles are API-driven and include audience/receipt behavior where exposed by the backend. Announcements are still represented by the ERP shared data shape and should be explained separately from articles when behavior differs.
 
+### Campaigns
+
+Main files:
+
+- `src/components/erp/campaigns/CampaignsView.tsx`
+- `src/services/campaignsService.ts`
+
+Campaigns are API-driven and support the `mail` and `sms` channels. They can reference saved dynamic segments, show recipient preview, be scheduled or cancelled, and display delivery statistics.
+
 ### Organization And Access
 
 Main files:

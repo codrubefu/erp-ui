@@ -1,7 +1,7 @@
 import { apiClient } from '../api/apiClient';
 import type { ApiUser } from './ErpApiService';
 
-export type CampaignChannel = 'mail' | 'push';
+export type CampaignChannel = 'mail' | 'sms';
 export type CampaignStatus = 'draft' | 'scheduled' | 'sent' | 'cancelled';
 
 export type Campaign = {
@@ -31,7 +31,7 @@ export type CampaignPayload = {
 
 export type CampaignPreview = {
   count: number;
-  data: Pick<ApiUser, 'id' | 'first_name' | 'last_name' | 'email'>[];
+  data: Pick<ApiUser, 'id' | 'first_name' | 'last_name' | 'email' | 'phone'>[];
 };
 
 export type CampaignStatistics = {

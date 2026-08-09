@@ -7,7 +7,6 @@ export type ApiUser = {
   last_name: string;
   phone: string | null;
   notification_consents?: ApiNotificationConsents;
-  push_token?: string | null;
   active: boolean;
   email: string;
   email_verified_at?: string | null;
@@ -26,7 +25,6 @@ export type ApiUser = {
 export type ApiNotificationConsents = {
   sms?: boolean;
   mail?: boolean;
-  push?: boolean;
 };
 
 export type ApiCustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'email' | 'phone' | 'select' | 'multi_select' | 'checkbox' | 'boolean' | 'file';
