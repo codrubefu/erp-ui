@@ -1,8 +1,9 @@
-import { BadgeEuro, Building2, CalendarClock, RefreshCw, UserCheck } from 'lucide-react';
+import { BadgeEuro, Bell, Building2, CalendarClock, Check, RefreshCw, UserCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { dashboardService, type DashboardAutomation, type DashboardPayload } from '../../../services/dashboardService';
+import { articlesService, type Article } from '../../../services/articlesService';
 import { Alert, Button, SectionCard, StatCard } from '../../primitives';
 import { useAuth } from '../../../context/useAuth';
 import type { DashboardViewProps } from '../shared/types';
@@ -38,14 +39,22 @@ function statusLabel(status: string, t: ReturnType<typeof useTranslation>['t']) 
   return translated === key ? status : translated;
 }
 
+function shortText(value: string, max = 180) {
+  return value.length > max ? `${value.slice(0, max).trim()}...` : value;
+}
+
 export function DashboardView(props: DashboardViewProps) {
   void props;
   const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const canViewDashboard = hasAnyRight(['dashboard.view', 'dashboard.manage', 'reports.view', 'reports.manage']);
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  const [announcements, setAnnouncements] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [markingAnnouncementId, setMarkingAnnouncementId] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [announcementsError, setAnnouncementsError] = useState('');
 
   const loadDashboard = useCallback(async () => {
     if (!canViewDashboard) return;
@@ -63,6 +72,37 @@ export function DashboardView(props: DashboardViewProps) {
   useEffect(() => {
     void loadDashboard();
   }, [loadDashboard]);
+
+  const loadAnnouncements = useCallback(async () => {
+    setAnnouncementsLoading(true);
+    setAnnouncementsError('');
+    try {
+      const payload = await articlesService.feed({ per_page: 5 });
+      setAnnouncements(Array.isArray(payload) ? payload : payload.data ?? []);
+    } catch (err) {
+      setAnnouncements([]);
+      setAnnouncementsError(err instanceof Error ? err.message : t('profile.announcementsLoadError', 'Nu am putut incarca anunturile.'));
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void loadAnnouncements();
+  }, [loadAnnouncements]);
+
+  const markAnnouncementViewed = async (article: Article) => {
+    setMarkingAnnouncementId(article.id);
+    setAnnouncementsError('');
+    try {
+      const viewed = await articlesService.markViewed(article.id);
+      setAnnouncements((prev) => prev.map((item) => (item.id === article.id ? { ...item, viewed_at: viewed.viewed_at ?? new Date().toISOString() } : item)));
+    } catch (err) {
+      setAnnouncementsError(err instanceof Error ? err.message : t('profile.announcementViewError', 'Nu am putut marca anuntul ca citit.'));
+    } finally {
+      setMarkingAnnouncementId(null);
+    }
+  };
 
   const statusCounts = useMemo(() => {
     const points = dashboard?.member_status ?? [];
@@ -181,6 +221,40 @@ export function DashboardView(props: DashboardViewProps) {
             </div>
           </SectionCard>
         </div>
+        <div>
+          <SectionCard title={t('profile.announcementsTitle', 'Anunturile mele')} action={<Button type="button" size="sm" onClick={() => void loadAnnouncements()} disabled={announcementsLoading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
+            {announcementsError ? <Alert tone="error" className="mb-3">{announcementsError}</Alert> : null}
+            <div className="space-y-3">
+              {announcements.length ? announcements.map((article) => (
+                <div key={article.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <div className="flex items-start gap-2">
+                    <Bell className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-slate-900">{article.title}</p>
+                        <span className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${article.viewed_at ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                          {article.viewed_at ? t('profile.announcementRead', 'Citit') : t('profile.announcementUnread', 'Necitit')}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">{shortText(article.description)}</p>
+                      {!article.viewed_at ? (
+                        <Button type="button" size="sm" variant="ghost" className="mt-2 h-8 px-2" onClick={() => void markAnnouncementViewed(article)} disabled={markingAnnouncementId === article.id}>
+                          <Check className="h-4 w-4" />
+                          {t('profile.markAnnouncementRead', 'Marcheaza citit')}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">{announcementsLoading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}</div>
+              )}
+            </div>
+          </SectionCard>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <div>
           <SectionCard title={t('dashboard.activeAutomations')}>
             <div className="space-y-3">

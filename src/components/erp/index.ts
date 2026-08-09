@@ -12,7 +12,7 @@ export { MembersView } from './members/MembersView';
 export { UsersView } from './users/UsersView';
 export { PaymentFormPage } from './payments/PaymentFormPage';
 export { PaymentsView } from './payments/PaymentsView';
-export { ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
+export { ProfileAnnouncementsPage, ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
 export { ReportsView } from './reports/ReportsView';
 export { CampaignsView } from './campaigns/CampaignsView';
 export { QuickCreateMenu } from './shared/QuickCreateMenu';

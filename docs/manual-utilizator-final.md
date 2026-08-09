@@ -49,6 +49,7 @@ In partea de sus exista meniul profilului, cu acces la:
 - informatii cont;
 - securitate;
 - confidentialitate / GDPR;
+- anunturile mele;
 - abonamentele mele.
 
 ## 4. Dashboard
@@ -64,9 +65,10 @@ Utilizatorul poate vedea:
 - grafic venituri pe perioada;
 - distributia statusurilor membrilor;
 - activitate recenta;
+- feed cu anunturile vizibile pentru utilizator;
 - starea automatizarilor, cum ar fi notificari de expirare abonamente.
 
-Dashboard-ul este read-only. Butonul `Refresh` reincarca datele din API.
+Dashboard-ul permite si marcarea anunturilor ca citite. Butoanele `Refresh` reincarca datele din API pentru grafice sau pentru feed.
 
 ## 5. Organizatii, locatii si filiale
 
@@ -562,6 +564,16 @@ Pagina arata abonamentele utilizatorului autentificat:
 - data reluare;
 - status;
 - motiv status, daca exista.
+
+### Anunturile mele
+
+Pagina arata anunturile vizibile pentru utilizatorul autentificat. Utilizatorul poate:
+
+- vedea titlul si continutul anuntului;
+- vedea data publicarii si data expirarii, daca exista;
+- vedea prioritatea;
+- vedea daca anuntul este citit sau necitit;
+- marca anuntul ca citit.
 
 ### Confidentialitate / GDPR
 

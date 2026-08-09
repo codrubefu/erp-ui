@@ -12,7 +12,7 @@ import { EventsModuleRoutes } from './events/EventsModule';
 import { LocationGroupsView } from './location-groups/LocationGroupsView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
-import { ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
+import { ProfileAnnouncementsPage, ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
 import { ReportsView } from './reports/ReportsView';
 import { CampaignsView } from './campaigns/CampaignsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
@@ -43,6 +43,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <ProfileSecurityPage />;
       case 'profile-privacy':
         return <ProfilePrivacyPage />;
+      case 'profile-announcements':
+        return <ProfileAnnouncementsPage />;
       case 'profile-events':
         return <ProfileEventsPage />;
       case 'profile-subscriptions':

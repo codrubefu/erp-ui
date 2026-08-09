@@ -9,6 +9,7 @@ export type SectionId =
   | 'profile-info'
   | 'profile-security'
   | 'profile-privacy'
+  | 'profile-announcements'
   | 'profile-events'
   | 'profile-subscriptions'
   | 'branches'

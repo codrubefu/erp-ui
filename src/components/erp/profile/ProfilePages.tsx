@@ -1,4 +1,4 @@
-import { CalendarDays, KeyRound, Mail, Phone, UserCircle } from 'lucide-react';
+import { Bell, CalendarDays, Check, KeyRound, Mail, Phone, UserCircle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiClientError } from '../../../api/apiClient';
@@ -11,7 +11,8 @@ import {
 } from '../../../api/authApi';
 import { useAuth } from '../../../context/useAuth';
 import type { ApiCustomFieldValue, ApiPaginated, ApiSubscription } from '../../../services/ErpApiService';
-import { Alert, Input, SectionCard, StatusBadge } from '../../primitives';
+import { articlesService, type Article } from '../../../services/articlesService';
+import { Alert, Button, Input, SectionCard, StatusBadge } from '../../primitives';
 import { PrivacyPanel } from './PrivacyPanel';
 
 type PasswordForm = {
@@ -238,6 +239,81 @@ export function ProfileSecurityPage() {
 
 export function ProfilePrivacyPage() {
   return <PrivacyPanel />;
+}
+
+export function ProfileAnnouncementsPage() {
+  const { t } = useTranslation();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [markingId, setMarkingId] = useState<number | null>(null);
+  const [error, setError] = useState('');
+
+  const loadArticles = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setArticles(unwrapList(await articlesService.feed({ per_page: 50 })));
+    } catch (err) {
+      setArticles([]);
+      setError(err instanceof Error ? err.message : t('profile.announcementsLoadError', 'Nu am putut incarca anunturile.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void loadArticles();
+  }, [loadArticles]);
+
+  const markViewed = async (article: Article) => {
+    setMarkingId(article.id);
+    setError('');
+    try {
+      const viewed = await articlesService.markViewed(article.id);
+      setArticles((prev) => prev.map((item) => (item.id === article.id ? { ...item, viewed_at: viewed.viewed_at ?? new Date().toISOString() } : item)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('profile.announcementViewError', 'Nu am putut marca anuntul ca citit.'));
+    } finally {
+      setMarkingId(null);
+    }
+  };
+
+  return (
+    <SectionCard title={t('profile.announcementsTitle', 'Anunturile mele')} action={<Button type="button" onClick={() => void loadArticles()} disabled={loading}>{t('common.refresh')}</Button>}>
+      {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
+      <div className="space-y-3">
+        {articles.length ? articles.map((article) => (
+          <article key={article.id} className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Bell className="h-4 w-4 text-indigo-600" />
+                  <h3 className="text-base font-semibold text-slate-950">{article.title}</h3>
+                  {article.viewed_at ? <StatusBadge status={t('profile.announcementRead', 'Citit')} /> : <StatusBadge status={t('profile.announcementUnread', 'Necitit')} />}
+                </div>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{article.description}</p>
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                  <span>{t('articles.publishAt', 'Publicat')}: {formatDate(article.publish_at)}</span>
+                  {article.expires_at ? <span>{t('articles.expiresAt', 'Expira')}: {formatDate(article.expires_at)}</span> : null}
+                  <span>{t('articles.priority', 'Prioritate')}: {article.priority ?? 0}</span>
+                </div>
+              </div>
+              {!article.viewed_at ? (
+                <Button type="button" onClick={() => void markViewed(article)} disabled={markingId === article.id} size="sm" variant="primary">
+                  <Check className="h-4 w-4" />
+                  {t('profile.markAnnouncementRead', 'Marcheaza citit')}
+                </Button>
+              ) : null}
+            </div>
+          </article>
+        )) : (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+            {loading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}
+          </div>
+        )}
+      </div>
+    </SectionCard>
+  );
 }
 
 export function ProfileEventsPage() {

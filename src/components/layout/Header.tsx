@@ -1,4 +1,4 @@
-import { BadgeEuro, CalendarDays, ChevronDown, Info, KeyRound, LogOut, Menu, Search, ShieldCheck, UserCircle } from 'lucide-react';
+import { BadgeEuro, Bell, CalendarDays, ChevronDown, Info, KeyRound, LogOut, Menu, Search, ShieldCheck, UserCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -20,6 +20,7 @@ export function Header({ onToggleSidebar, onLogout, currentUser, organizationNam
     { to: '/erp/profile-info', label: t('profile.info'), icon: Info },
     { to: '/erp/profile-security', label: t('profile.security'), icon: KeyRound },
     { to: '/erp/profile-privacy', label: t('profile.privacy', 'Privacy'), icon: ShieldCheck },
+    { to: '/erp/profile-announcements', label: t('profile.announcements', 'Anunturi'), icon: Bell },
     ...(hasAnyRight(['events.view', 'events.manage']) ? [{ to: '/erp/profile-events', label: t('profile.events'), icon: CalendarDays }] : []),
     { to: '/erp/profile-subscriptions', label: t('profile.subscriptions'), icon: BadgeEuro },
   ];
