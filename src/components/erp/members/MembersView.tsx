@@ -6,8 +6,10 @@ import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFie
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 import { subscriptionLifecycleService } from '../../../services/subscriptionLifecycleService';
+import { useAuth } from '../../../context/useAuth';
+import { PrivacyPanel } from '../profile/PrivacyPanel';
 
-type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'activity';
+type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'privacy' | 'activity';
 
 type UserForm = {
   user_code: string;
@@ -16,6 +18,12 @@ type UserForm = {
   email: string;
   phone: string;
   active: boolean;
+  notification_consents: {
+    sms: boolean;
+    mail: boolean;
+    push: boolean;
+  };
+  push_token: string;
   group_ids: string;
   location_ids: string;
   subscriptions: ApiUserSubscriptionAssignment[];
@@ -55,6 +63,8 @@ const emptyForm: UserForm = {
   email: '',
   phone: '',
   active: true,
+  notification_consents: { sms: false, mail: false, push: false },
+  push_token: '',
   group_ids: '',
   location_ids: '',
   subscriptions: [],
@@ -338,6 +348,8 @@ function buildPayload(form: UserForm) {
     last_name: form.last_name,
     email: form.email,
     phone: form.phone || null,
+    notification_consents: form.notification_consents,
+    push_token: form.push_token.trim() || null,
     active: form.active,
     group_ids: toIdList(form.group_ids),
     location_ids: toIdList(form.location_ids),
@@ -390,6 +402,12 @@ function formFromUser(user: ApiUser): UserForm {
     email: user.email ?? '',
     phone: user.phone ?? '',
     active: Boolean(user.active),
+    notification_consents: {
+      sms: Boolean(user.notification_consents?.sms),
+      mail: Boolean(user.notification_consents?.mail),
+      push: Boolean(user.notification_consents?.push),
+    },
+    push_token: user.push_token ?? '',
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
     subscriptions: subscriptionAssignmentsFromUser(user),
@@ -449,6 +467,7 @@ export function UserManagementView({
   useRelationTabs = false,
 }: UserManagementViewProps) {
   const { t } = useTranslation();
+  const { hasAnyRight } = useAuth();
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
@@ -508,6 +527,9 @@ export function UserManagementView({
   }, [editing, paymentSubscriptionId, subscriptions]);
 
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
+  const canUseGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
+  const canExportGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
+  const canProcessGdpr = hasAnyRight(['gdpr.process']);
   const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
     const tabs: Array<[UserFormTab, string]> = [
       ['details', 'Date utilizator'],
@@ -520,9 +542,10 @@ export function UserManagementView({
     }
 
     tabs.push(['subscriptions', t('users.subscriptions')]);
+    if (editing && canUseGdpr) tabs.push(['privacy', 'GDPR']);
     if (editing) tabs.push(['activity', 'Activity']);
     return tabs;
-  }, [editing, t, useRelationTabs]);
+  }, [canUseGdpr, editing, t, useRelationTabs]);
 
   useEffect(() => {
     if (!scanningCode || activeFormTab !== 'code') return undefined;
@@ -1200,6 +1223,23 @@ export function UserManagementView({
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
                 {t('users.activeUser')}
               </label>
+              <Input label="Push token" value={form.push_token} onChange={(event) => setForm((prev) => ({ ...prev, push_token: event.target.value }))} placeholder="device-token-abc123" />
+              <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-2 sm:grid-cols-3">
+                {(['sms', 'mail', 'push'] as const).map((channel) => (
+                  <label key={channel} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={form.notification_consents[channel]}
+                      onChange={(event) => setForm((prev) => ({
+                        ...prev,
+                        notification_consents: { ...prev.notification_consents, [channel]: event.target.checked },
+                      }))}
+                      className="h-4 w-4 accent-violet-600"
+                    />
+                    Consent {channel}
+                  </label>
+                ))}
+              </div>
               {!useRelationTabs ? (
                 <>
                   <label className="block">
@@ -1274,6 +1314,8 @@ export function UserManagementView({
             renderGroupCheckboxes()
           ) : activeFormTab === 'locations' ? (
             renderLocationCheckboxes()
+          ) : activeFormTab === 'privacy' && editing ? (
+            <PrivacyPanel userId={editing.id} administrative canExport={canExportGdpr} canProcess={canProcessGdpr} />
           ) : activeFormTab === 'activity' ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
@@ -1510,10 +1552,10 @@ export function UserManagementView({
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <Button onClick={closeForm}>{t('common.cancel')}</Button>
-            {!['subscriptions', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
+            {!['subscriptions', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
             </Button> : null}
-            {!['subscriptions', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
+            {!['subscriptions', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.saveAndClose')}
             </Button> : null}
           </div>

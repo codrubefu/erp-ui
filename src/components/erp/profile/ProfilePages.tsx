@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../../../context/useAuth';
 import type { ApiCustomFieldValue, ApiPaginated, ApiSubscription } from '../../../services/ErpApiService';
 import { Alert, Input, SectionCard, StatusBadge } from '../../primitives';
+import { PrivacyPanel } from './PrivacyPanel';
 
 type PasswordForm = {
   current_password: string;
@@ -193,10 +194,6 @@ export function ProfileSecurityPage() {
       setError(t('profile.passwordRequired'));
       return;
     }
-    if (form.password.length < 8) {
-      setError(t('profile.passwordMinLength'));
-      return;
-    }
     if (form.password !== form.password_confirmation) {
       setError(t('profile.passwordMismatch'));
       return;
@@ -237,6 +234,10 @@ export function ProfileSecurityPage() {
       </form>
     </SectionCard>
   );
+}
+
+export function ProfilePrivacyPage() {
+  return <PrivacyPanel />;
 }
 
 export function ProfileEventsPage() {

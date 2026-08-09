@@ -12,8 +12,9 @@ import { EventsModuleRoutes } from './events/EventsModule';
 import { LocationGroupsView } from './location-groups/LocationGroupsView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
-import { ProfileEventsPage, ProfileInfoPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
+import { ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
 import { ReportsView } from './reports/ReportsView';
+import { CampaignsView } from './campaigns/CampaignsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
 import type { ContentProps } from './shared/types';
 import { SmsView } from './sms/SmsView';
@@ -40,6 +41,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <ProfileInfoPage />;
       case 'profile-security':
         return <ProfileSecurityPage />;
+      case 'profile-privacy':
+        return <ProfilePrivacyPage />;
       case 'profile-events':
         return <ProfileEventsPage />;
       case 'profile-subscriptions':
@@ -62,6 +65,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <EventsModuleRoutes />;
       case 'articles':
         return <ArticlesModuleRoutes />;
+      case 'campaigns':
+        return <CampaignsView />;
       case 'announcements':
         return <AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item: Announcement) => navigateToForm('announcement', 'edit', item)} />;
       case 'sms':

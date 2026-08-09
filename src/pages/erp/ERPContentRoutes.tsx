@@ -10,12 +10,14 @@ import {
   CustomFieldsView,
   DashboardView,
   EventsModuleRoutes,
+  CampaignsView,
   GroupsRightsView,
   LocationGroupsView,
   PaymentFormPage,
   PaymentsView,
   ProfileEventsPage,
   ProfileInfoPage,
+  ProfilePrivacyPage,
   ProfileSecurityPage,
   ProfileSubscriptionsPage,
   QuickCreateMenu,
@@ -91,11 +93,13 @@ export default function ERPContentRoutes({
       <Route path="location-groups" element={<ProtectedRoute requiredRights={['location_groups.view', 'location_groups.manage']}><LocationGroupsView /></ProtectedRoute>} />
       <Route path="profile-info" element={<ProfileInfoPage />} />
       <Route path="profile-security" element={<ProtectedRoute><ProfileSecurityPage /></ProtectedRoute>} />
+      <Route path="profile-privacy" element={<ProtectedRoute><ProfilePrivacyPage /></ProtectedRoute>} />
       <Route path="profile-events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><ProfileEventsPage /></ProtectedRoute>} />
       <Route path="profile-subscriptions" element={<ProfileSubscriptionsPage />} />
 
       <Route path="profile/info" element={<ProfileInfoPage />} />
       <Route path="profile/security" element={<ProtectedRoute><ProfileSecurityPage /></ProtectedRoute>} />
+      <Route path="profile/privacy" element={<ProtectedRoute><ProfilePrivacyPage /></ProtectedRoute>} />
       <Route path="profile/events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><ProfileEventsPage /></ProtectedRoute>} />
       <Route path="profile/subscriptions" element={<ProfileSubscriptionsPage />} />
 
@@ -113,6 +117,7 @@ export default function ERPContentRoutes({
 
       <Route path="events/*" element={<EventsModuleRoutes />} />
       <Route path="articles/*" element={<ArticlesModuleRoutes />} />
+      <Route path="campaigns" element={<ProtectedRoute requiredRights={['campaigns.view', 'campaigns.manage', 'reports.manage', 'users.manage']}><CampaignsView /></ProtectedRoute>} />
 
       <Route path="announcements" element={<AnnouncementsView items={announcementsData} onCreate={() => navigateToForm('announcement', 'create')} onEdit={(item) => navigateToForm('announcement', 'edit', item)} />} />
       <Route path="announcements/new" element={<AnnouncementFormPage mode="create" data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} successMessage={formSuccess} />} />

@@ -81,8 +81,10 @@ export const reportingService = {
     return apiClient<FinancialReportAggregate>(`/reports/financial${query ? `?${query}` : ''}`);
   },
   createExport: (filters: FinancialReportFilters, format: ReportExportFormat) => {
-    const query = queryFrom({ ...filters, format });
-    return apiClient<ReportExport>(`/reports/financial/exports${query ? `?${query}` : ''}`, { method: 'POST' });
+    return apiClient<ReportExport>('/reports/financial/exports', {
+      method: 'POST',
+      body: JSON.stringify({ ...filters, format }),
+    });
   },
   getExport: (exportId: string) => apiClient<ReportExport>(`/reports/exports/${exportId}`),
   downloadExport,

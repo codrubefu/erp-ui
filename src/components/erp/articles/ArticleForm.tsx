@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Input, SectionCard, Select, SuccessMessage } from '../../primitives';
 import { articlesService, type Article, type ArticleAudienceSegment, type ArticlePayload, type ArticleRelation, type ArticleStatus } from '../../../services/articlesService';
 
-const emptyForm: ArticlePayload = { title: '', description: '', publish_at: '', expires_at: '', priority: 0, status: 'draft', audience_segment: 'all_users', groups: [], locations: [] };
+const emptyForm: ArticlePayload = { title: '', description: '', publish_at: '', expires_at: '', priority: 0, status: 'draft', audience_segment: 'all_users', segment_id: null, groups: [], locations: [] };
 const statuses: ArticleStatus[] = ['draft', 'scheduled', 'published', 'expired'];
 const segments: ArticleAudienceSegment[] = ['all_users', 'active_subscribers', 'expired_users', 'groups', 'locations'];
 
@@ -40,6 +40,7 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
   const [form, setForm] = useState<ArticlePayload>(emptyForm);
   const [groups, setGroups] = useState<ArticleRelation[]>([]);
   const [locations, setLocations] = useState<ArticleRelation[]>([]);
+  const [savedSegments, setSavedSegments] = useState<ArticleRelation[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError, setOptionsError] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +54,7 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
       priority: initialData?.priority ?? 0,
       status: initialData?.status ?? 'draft',
       audience_segment: initialData?.audience_segment ?? 'all_users',
+      segment_id: initialData?.segment_id ?? null,
       groups: fieldIds(initialData?.groups),
       locations: fieldIds(initialData?.locations),
     });
@@ -64,10 +66,11 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
       setLoadingOptions(true);
       setOptionsError('');
       try {
-        const [nextGroups, nextLocations] = await Promise.all([articlesService.groups(), articlesService.locations()]);
+        const [nextGroups, nextLocations, nextSegments] = await Promise.all([articlesService.groups(), articlesService.locations(), articlesService.segments().catch(() => [])]);
         if (disposed) return;
         setGroups(nextGroups);
         setLocations(nextLocations);
+        setSavedSegments(nextSegments);
       } catch (error) {
         if (!disposed) setOptionsError(error instanceof Error ? error.message : t('articles.optionsError'));
       } finally {
@@ -118,6 +121,10 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
           </Select>
           <Select label="audience_segment" value={form.audience_segment} onChange={(event) => setForm((prev) => ({ ...prev, audience_segment: event.target.value as ArticleAudienceSegment }))}>
             {segments.map((segment) => <option key={segment} value={segment}>{segment}</option>)}
+          </Select>
+          <Select label="segment_id" value={form.segment_id ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, segment_id: Number(event.target.value) || null }))}>
+            <option value="">Fara segment salvat</option>
+            {savedSegments.map((segment) => <option key={segment.id} value={segment.id}>{labelFor(segment)}</option>)}
           </Select>
           <Input label="priority" type="number" min={0} value={String(form.priority ?? 0)} onChange={(event) => setForm((prev) => ({ ...prev, priority: Number(event.target.value) }))} />
           <Input label="publish_at" type="datetime-local" value={form.publish_at ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, publish_at: event.target.value }))} />

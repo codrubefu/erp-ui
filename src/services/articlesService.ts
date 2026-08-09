@@ -16,6 +16,7 @@ export type Article = {
   priority?: number | null;
   status?: ArticleStatus;
   audience_segment?: ArticleAudienceSegment;
+  segment_id?: number | null;
   groups?: ArticleRelation[] | number[];
   locations?: ArticleRelation[] | number[];
   delivered_at?: string | null;
@@ -33,6 +34,7 @@ export type ArticlePayload = {
   priority?: number;
   status?: ArticleStatus;
   audience_segment?: ArticleAudienceSegment;
+  segment_id?: number | null;
   groups: number[];
   locations: number[];
 };
@@ -60,6 +62,7 @@ function articlePayload(data: ArticlePayload): ArticlePayload {
     priority: Number(data.priority ?? 0),
     status: data.status ?? 'draft',
     audience_segment: data.audience_segment ?? 'all_users',
+    segment_id: data.segment_id || null,
     groups: ids(data.groups),
     locations: ids(data.locations),
   };
@@ -92,5 +95,8 @@ export const articlesService = {
   },
   async locations() {
     return normalizeCollection(await erpApiService.list<ArticleRelation>('locations'));
+  },
+  async segments() {
+    return normalizeCollection(await erpApiService.list<ArticleRelation>('segments'));
   },
 };
