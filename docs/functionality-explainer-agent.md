@@ -198,7 +198,7 @@ Main files:
 - `src/services/reportingService.ts`
 - `src/services/segmentsService.ts`
 
-Reports call financial reporting endpoints and display filters, KPI aggregates, revenue by period, receivables, renewals, bank reconciliation, export status, and segment management. The Payments submenu filters by period and lists invoices, payment notes, and receipts from `GET /api/reports/financial-documents`; users with export rights can download one document or a ZIP with all filtered documents. Export and document downloads use blob requests rather than normal JSON unwrapping.
+Reports call financial reporting endpoints and display filters, KPI aggregates, revenue by period, receivables, renewals, bank reconciliation, export status, and segment management. The Payments submenu filters by period and lists invoices, payment notes, and receipts from `GET /api/reports/financial-documents`; users with export rights can download one document or a ZIP with all filtered documents. Generated invoices expose both PDF and XML e-Factura downloads. Export and document downloads use blob requests rather than normal JSON unwrapping.
 
 ### Events
 

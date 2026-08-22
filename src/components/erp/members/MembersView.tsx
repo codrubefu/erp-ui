@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filter, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
@@ -562,6 +563,8 @@ export function UserManagementView({
   useRelationTabs = false,
 }: UserManagementViewProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { id: routeUserId } = useParams();
   const { hasAnyRight } = useAuth();
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
@@ -593,6 +596,7 @@ export function UserManagementView({
   const [lifecycleSavingId, setLifecycleSavingId] = useState<number | null>(null);
   const [paymentNoteLoadingId, setPaymentNoteLoadingId] = useState<number | null>(null);
   const [invoiceLoadingId, setInvoiceLoadingId] = useState<number | null>(null);
+  const [invoiceDownloadKey, setInvoiceDownloadKey] = useState<string | null>(null);
   const [suspendAssignmentId, setSuspendAssignmentId] = useState<number | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendResumeAt, setSuspendResumeAt] = useState('');
@@ -852,6 +856,7 @@ export function UserManagementView({
   };
 
   const startCreate = () => {
+    if (resource === 'clients') navigate('/erp/members');
     setEditing(null);
     setForm(emptyForm);
     setSuccess('');
@@ -870,10 +875,14 @@ export function UserManagementView({
     setSuspendReason('');
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
+    setInvoiceDownloadKey(null);
     setFormOpen(true);
   };
 
-  const startEdit = async (user: ApiUser) => {
+  const startEdit = useCallback(async (user: ApiUser, updateUrl = true) => {
+    if (updateUrl && resource === 'clients') {
+      navigate(`/erp/members/${user.id}`);
+    }
     let selectedUser = user;
     try {
       selectedUser = await erpApiService.get<ApiUser>('users', user.id);
@@ -899,11 +908,13 @@ export function UserManagementView({
     setSuspendReason('');
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
+    setInvoiceDownloadKey(null);
     setFormOpen(true);
     void loadServicePayments(selectedUser, serviceAssignmentsFromUser(selectedUser));
-  };
+  }, [loadServicePayments, navigate, resource]);
 
   const closeForm = () => {
+    if (resource === 'clients') navigate('/erp/members');
     setFormOpen(false);
     setEditing(null);
     setForm(emptyForm);
@@ -922,7 +933,37 @@ export function UserManagementView({
     setSuspendReason('');
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
+    setInvoiceDownloadKey(null);
   };
+
+  useEffect(() => {
+    if (resource !== 'clients' || !routeUserId) return;
+    const userId = Number(routeUserId);
+    if (!Number.isFinite(userId) || userId <= 0) {
+      navigate('/erp/members', { replace: true });
+      return;
+    }
+    if (editing?.id === userId && formOpen) return;
+
+    let disposed = false;
+    const openUserFromRoute = async () => {
+      try {
+        const selectedUser = await erpApiService.get<ApiUser>('users', userId);
+        if (disposed) return;
+        await startEdit(selectedUser, false);
+      } catch (err) {
+        if (!disposed) {
+          setError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedSingularLabel }));
+          navigate('/erp/members', { replace: true });
+        }
+      }
+    };
+
+    void openUserFromRoute();
+    return () => {
+      disposed = true;
+    };
+  }, [editing?.id, formOpen, navigate, resolvedSingularLabel, resource, routeUserId, startEdit, t]);
 
   const persistServiceAssignments = async (nextServices: ApiUserServiceAssignment[]) => {
     if (!editing) return;
@@ -1157,6 +1198,28 @@ export function UserManagementView({
     }
   };
 
+  const downloadServiceInvoice = async (assignmentId: number, invoiceNumber: string | null | undefined, format: 'pdf' | 'xml') => {
+    const key = `${assignmentId}-${format}`;
+    setInvoiceDownloadKey(key);
+    setError('');
+    setSuccess('');
+    try {
+      const blob = await erpApiService.downloadServiceInvoice(assignmentId, format);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${format === 'xml' ? 'efactura' : 'factura'}-${invoiceNumber ?? assignmentId}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('services.invoiceDownloadError'));
+    } finally {
+      setInvoiceDownloadKey(null);
+    }
+  };
+
   const downloadReceipt = async (payment: ApiPayment) => {
     setReceiptLoadingId(payment.id);
     setError('');
@@ -1376,12 +1439,7 @@ export function UserManagementView({
 
   if (formOpen) {
     return (
-      <PageShell
-        title={editing ? t('users.editTitle', { label: editEntityLabel }) : resolvedAddLabel}
-        subtitle={t('users.formSubtitle', { target: editing ? resolvedEntityLabel : resolvedNewEntityLabel })}
-        backLabel={t('common.backToList', { list: resolvedCountLabel })}
-        onBack={closeForm}
-      >
+      <PageShell>
         {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
@@ -1690,6 +1748,16 @@ export function UserManagementView({
                                   <Button onClick={() => void generateInvoice(serviceUserId)} disabled={invoiceLoadingId === serviceUserId} variant="primary">
                                     <FileText className="h-4 w-4" />{invoiceLoadingId === serviceUserId ? t('services.generatingInvoice') : t('services.generateInvoice')}
                                   </Button>
+                                ) : null}
+                                {serviceUserId && assignment.invoice_number ? (
+                                  <>
+                                    <Button onClick={() => void downloadServiceInvoice(serviceUserId, assignment.invoice_number, 'pdf')} disabled={invoiceDownloadKey === `${serviceUserId}-pdf`}>
+                                      <Download className="h-4 w-4" />{t('services.invoicePdf')}
+                                    </Button>
+                                    <Button onClick={() => void downloadServiceInvoice(serviceUserId, assignment.invoice_number, 'xml')} disabled={invoiceDownloadKey === `${serviceUserId}-xml`}>
+                                      <Download className="h-4 w-4" />{t('services.invoiceXml')}
+                                    </Button>
+                                  </>
                                 ) : null}
                                 {serviceUserId && service && Number(service.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
                                   <Button onClick={() => void runLifecycleAction(serviceUserId, 'activate')} disabled={lifecycleSavingId === serviceUserId} variant="primary">

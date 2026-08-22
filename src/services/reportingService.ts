@@ -69,6 +69,7 @@ export type FinancialDocument = {
   amount: number;
   currency?: string | null;
   filename: string;
+  xml_filename?: string | null;
 };
 
 function queryFrom(filters: object) {
@@ -90,8 +91,8 @@ async function downloadExport(exportId: string) {
   return response.blob();
 }
 
-async function downloadFinancialDocument(document: FinancialDocument) {
-  const response = await fetch(endpoint(`/reports/financial-documents/${document.type}/${document.id}/download`), {
+async function downloadFinancialDocument(document: FinancialDocument, format: 'pdf' | 'xml' = 'pdf') {
+  const response = await fetch(endpoint(`/reports/financial-documents/${document.type}/${document.id}/download/${format}`), {
     headers: apiHeaders(),
   });
   if (!response.ok) {

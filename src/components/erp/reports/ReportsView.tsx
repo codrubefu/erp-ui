@@ -269,12 +269,15 @@ export function ReportsView(props: ReportsViewProps) {
     }
   };
 
-  const downloadDocument = async (document: FinancialDocument) => {
-    const key = `${document.type}-${document.id}`;
+  const downloadDocument = async (document: FinancialDocument, format: 'pdf' | 'xml' = 'pdf') => {
+    const key = `${document.type}-${document.id}-${format}`;
     setDocumentDownloadKey(key);
     setDocumentsError('');
     try {
-      downloadBlob(await reportingService.downloadFinancialDocument(document), document.filename);
+      downloadBlob(
+        await reportingService.downloadFinancialDocument(document, format),
+        format === 'xml' ? document.xml_filename ?? document.filename.replace(/\.pdf$/i, '.xml') : document.filename,
+      );
     } catch (err) {
       setDocumentsError(err instanceof Error ? err.message : t('reports.documentDownloadError'));
     } finally {
@@ -478,9 +481,10 @@ export function ReportsView(props: ReportsViewProps) {
               </thead>
               <tbody>
                 {documents.length ? documents.map((document) => {
-                  const key = `${document.type}-${document.id}`;
+                  const pdfKey = `${document.type}-${document.id}-pdf`;
+                  const xmlKey = `${document.type}-${document.id}-xml`;
                   return (
-                    <tr key={key} className="border-t border-slate-100">
+                    <tr key={`${document.type}-${document.id}`} className="border-t border-slate-100">
                       <td className="px-4 py-3 font-medium text-slate-900">{document.type_label}</td>
                       <td className="px-4 py-3 text-slate-600">{document.number}</td>
                       <td className="px-4 py-3 text-slate-600">{document.date}</td>
@@ -489,8 +493,13 @@ export function ReportsView(props: ReportsViewProps) {
                       <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatCurrency(document.amount, document.currency ?? 'RON')}</td>
                       <td className="px-4 py-3 text-right">
                         {canExportReports ? (
-                          <Button onClick={() => void downloadDocument(document)} disabled={documentDownloadKey === key} size="sm">
-                            <Download className="h-4 w-4" />{t('userDocuments.download')}
+                          <Button onClick={() => void downloadDocument(document, 'pdf')} disabled={documentDownloadKey === pdfKey} size="sm">
+                            <Download className="h-4 w-4" />PDF
+                          </Button>
+                        ) : null}
+                        {canExportReports && document.type === 'invoice' ? (
+                          <Button onClick={() => void downloadDocument(document, 'xml')} disabled={documentDownloadKey === xmlKey} size="sm">
+                            <Download className="h-4 w-4" />XML
                           </Button>
                         ) : null}
                       </td>

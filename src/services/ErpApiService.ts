@@ -521,6 +521,19 @@ export class ErpApiService {
     return response.blob();
   }
 
+  async downloadServiceInvoice(assignmentId: number, format: 'pdf' | 'xml' = 'pdf') {
+    const response = await fetch(endpoint(`/service-assignments/${assignmentId}/invoice/${format}`), {
+      headers: apiHeaders(),
+    });
+
+    if (!response.ok) {
+      const payload = await parseJsonResponse(response);
+      throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+    }
+
+    return response.blob();
+  }
+
   async listUserDocuments(userId: number, page = 1, perPage = 15) {
     const payload = await this.requestRaw<ApiPaginated<ApiUserDocument> | ApiUserDocument[]>(`/users/${userId}/documents?page=${page}&per_page=${perPage}`);
     return Array.isArray(payload)

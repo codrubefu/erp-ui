@@ -111,6 +111,7 @@ export default function ERPContentRoutes({
       <Route path="custom-fields" element={<ProtectedRoute requiredRights={['custom-fields.view', 'custom-fields.manage']}><CustomFieldsView /></ProtectedRoute>} />
 
       <Route path="members" element={<UsersView />} />
+      <Route path="members/:id" element={<UsersView />} />
       <Route path="members/new" element={<UsersView />} />
       <Route path="members/edit" element={<UsersView />} />
 

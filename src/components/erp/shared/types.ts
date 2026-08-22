@@ -55,10 +55,10 @@ export type ReportsViewProps = {
 };
 
 export type PageShellProps = {
-  title: string;
-  subtitle: string;
-  backLabel: string;
-  onBack: () => void;
+  title?: string;
+  subtitle?: string;
+  backLabel?: string;
+  onBack?: () => void;
   children: React.ReactNode;
 };
 
