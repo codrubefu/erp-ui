@@ -56,6 +56,21 @@ export type ReportExport = {
   updated_at?: string | null;
 };
 
+export type FinancialDocumentType = 'invoice' | 'payment_note' | 'receipt';
+
+export type FinancialDocument = {
+  id: number;
+  type: FinancialDocumentType;
+  type_label: string;
+  number: string;
+  date: string;
+  member: string;
+  description: string;
+  amount: number;
+  currency?: string | null;
+  filename: string;
+};
+
 function queryFrom(filters: object) {
   const query = new URLSearchParams();
   Object.entries(filters as Record<string, string | number | undefined>).forEach(([key, value]) => {
@@ -75,10 +90,37 @@ async function downloadExport(exportId: string) {
   return response.blob();
 }
 
+async function downloadFinancialDocument(document: FinancialDocument) {
+  const response = await fetch(endpoint(`/reports/financial-documents/${document.type}/${document.id}/download`), {
+    headers: apiHeaders(),
+  });
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+  }
+  return response.blob();
+}
+
+async function downloadFinancialDocuments(filters: FinancialReportFilters) {
+  const query = queryFrom(filters);
+  const response = await fetch(endpoint(`/reports/financial-documents/download${query ? `?${query}` : ''}`), {
+    headers: apiHeaders(),
+  });
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+  }
+  return response.blob();
+}
+
 export const reportingService = {
   getFinancialReport: (filters: FinancialReportFilters) => {
     const query = queryFrom(filters);
     return apiClient<FinancialReportAggregate>(`/reports/financial${query ? `?${query}` : ''}`);
+  },
+  getFinancialDocuments: (filters: FinancialReportFilters) => {
+    const query = queryFrom(filters);
+    return apiClient<FinancialDocument[]>(`/reports/financial-documents${query ? `?${query}` : ''}`);
   },
   createExport: (filters: FinancialReportFilters, format: ReportExportFormat) => {
     return apiClient<ReportExport>('/reports/financial/exports', {
@@ -88,4 +130,6 @@ export const reportingService = {
   },
   getExport: (exportId: string) => apiClient<ReportExport>(`/reports/exports/${exportId}`),
   downloadExport,
+  downloadFinancialDocument,
+  downloadFinancialDocuments,
 };

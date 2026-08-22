@@ -17,4 +17,5 @@ export const serviceLifecycleService = {
   }),
   resume: (assignmentId: number) => apiClient<ApiServiceAssignment>(`/service-assignments/${assignmentId}/resume`, { method: 'POST' }),
   consume: (assignmentId: number) => apiClient<ApiServiceAssignment>(`/service-assignments/${assignmentId}/consume`, { method: 'POST' }),
+  generateInvoice: (assignmentId: number) => apiClient<ApiServiceAssignment>(`/service-assignments/${assignmentId}/invoice`, { method: 'POST' }),
 };

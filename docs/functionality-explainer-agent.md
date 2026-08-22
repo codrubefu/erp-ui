@@ -162,7 +162,7 @@ Member documents are shown in a dedicated edit tab when the authenticated operat
 
 Free services can be activated without a payment. Paid services still activate through a confirmed payment linked to the `service_user` assignment. When editing a user's services, the UI should preserve existing assignment ids/status/payment links by sending the current assignment list rather than forcing a detach/recreate flow.
 
-Each persisted service assignment in the member services tab can download a payment note PDF through `ErpApiService.downloadServicePaymentNote()`, which calls `GET /api/service-assignments/{assignment}/payment-note` and saves the returned blob locally.
+Each persisted service assignment in the member services tab can download a payment note PDF through `ErpApiService.downloadServicePaymentNote()`, which calls `GET /api/service-assignments/{assignment}/payment-note` and saves the returned blob locally. Assignments without an invoice number show a generate invoice button that calls `serviceLifecycleService.generateInvoice()`, backed by `POST /api/service-assignments/{assignment}/invoice`, and refreshes the member after the database row is updated.
 
 Confirmed payments listed under a member service expose a receipt download action that calls `ErpApiService.downloadPaymentReceipt()` and saves the returned PDF blob.
 
@@ -198,7 +198,7 @@ Main files:
 - `src/services/reportingService.ts`
 - `src/services/segmentsService.ts`
 
-Reports call financial reporting endpoints and display filters, KPI aggregates, revenue by period, receivables, renewals, bank reconciliation, export status, and segment management. Export downloads use a blob request rather than normal JSON unwrapping.
+Reports call financial reporting endpoints and display filters, KPI aggregates, revenue by period, receivables, renewals, bank reconciliation, export status, and segment management. The Payments submenu filters by period and lists invoices, payment notes, and receipts from `GET /api/reports/financial-documents`; users with export rights can download one document or a ZIP with all filtered documents. Export and document downloads use blob requests rather than normal JSON unwrapping.
 
 ### Events
 

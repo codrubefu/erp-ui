@@ -592,6 +592,7 @@ export function UserManagementView({
   const [receiptLoadingId, setReceiptLoadingId] = useState<number | null>(null);
   const [lifecycleSavingId, setLifecycleSavingId] = useState<number | null>(null);
   const [paymentNoteLoadingId, setPaymentNoteLoadingId] = useState<number | null>(null);
+  const [invoiceLoadingId, setInvoiceLoadingId] = useState<number | null>(null);
   const [suspendAssignmentId, setSuspendAssignmentId] = useState<number | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendResumeAt, setSuspendResumeAt] = useState('');
@@ -868,6 +869,7 @@ export function UserManagementView({
     setSuspendAssignmentId(null);
     setSuspendReason('');
     setSuspendResumeAt('');
+    setInvoiceLoadingId(null);
     setFormOpen(true);
   };
 
@@ -896,6 +898,7 @@ export function UserManagementView({
     setSuspendAssignmentId(null);
     setSuspendReason('');
     setSuspendResumeAt('');
+    setInvoiceLoadingId(null);
     setFormOpen(true);
     void loadServicePayments(selectedUser, serviceAssignmentsFromUser(selectedUser));
   };
@@ -918,6 +921,7 @@ export function UserManagementView({
     setSuspendAssignmentId(null);
     setSuspendReason('');
     setSuspendResumeAt('');
+    setInvoiceLoadingId(null);
   };
 
   const persistServiceAssignments = async (nextServices: ApiUserServiceAssignment[]) => {
@@ -1135,6 +1139,21 @@ export function UserManagementView({
       setError(err instanceof Error ? err.message : t('services.paymentNoteError'));
     } finally {
       setPaymentNoteLoadingId(null);
+    }
+  };
+
+  const generateInvoice = async (assignmentId: number) => {
+    setInvoiceLoadingId(assignmentId);
+    setError('');
+    setSuccess('');
+    try {
+      await serviceLifecycleService.generateInvoice(assignmentId);
+      await reloadEditingUserServices();
+      setSuccess(t('services.invoiceGenerated'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('services.invoiceGenerateError'));
+    } finally {
+      setInvoiceLoadingId(null);
     }
   };
 
@@ -1665,6 +1684,11 @@ export function UserManagementView({
                                 {serviceUserId ? (
                                   <Button onClick={() => void downloadPaymentNote(serviceUserId)} disabled={paymentNoteLoadingId === serviceUserId}>
                                     <FileText className="h-4 w-4" />{paymentNoteLoadingId === serviceUserId ? t('services.generatingPaymentNote') : t('services.paymentNote')}
+                                  </Button>
+                                ) : null}
+                                {serviceUserId && !assignment.invoice_number ? (
+                                  <Button onClick={() => void generateInvoice(serviceUserId)} disabled={invoiceLoadingId === serviceUserId} variant="primary">
+                                    <FileText className="h-4 w-4" />{invoiceLoadingId === serviceUserId ? t('services.generatingInvoice') : t('services.generateInvoice')}
                                   </Button>
                                 ) : null}
                                 {serviceUserId && service && Number(service.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (

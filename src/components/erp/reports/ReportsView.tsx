@@ -1,11 +1,11 @@
-import { BarChart3, Download, FileSpreadsheet, RefreshCw, Save, Trash2 } from 'lucide-react';
+import { BarChart3, Download, FileText, FileSpreadsheet, RefreshCw, Save, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Alert, Button, Input, SectionCard, Select } from '../../primitives';
 import { useAuth } from '../../../context/useAuth';
 import { erpApiService, type ApiLocation, type ApiUser } from '../../../services/ErpApiService';
-import { reportingService, type FinancialReportAggregate, type FinancialReportFilters, type ReportExport, type ReportExportFormat } from '../../../services/reportingService';
+import { reportingService, type FinancialDocument, type FinancialReportAggregate, type FinancialReportFilters, type ReportExport, type ReportExportFormat } from '../../../services/reportingService';
 import { segmentsService, type Segment, type SegmentCriteria } from '../../../services/segmentsService';
 import type { ReportsViewProps } from '../shared/types';
 import { formatCurrency } from '../../../utils/erp/formatters';
@@ -31,6 +31,8 @@ type SegmentForm = {
   location_id: string;
   service_type: string;
 };
+
+type ReportSubmenu = 'summary' | 'payments';
 
 const emptyFilters: FilterForm = {
   from: '',
@@ -145,6 +147,11 @@ export function ReportsView(props: ReportsViewProps) {
   const [exportRecord, setExportRecord] = useState<ReportExport | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [activeSubmenu, setActiveSubmenu] = useState<ReportSubmenu>('summary');
+  const [documents, setDocuments] = useState<FinancialDocument[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [documentsError, setDocumentsError] = useState('');
+  const [documentDownloadKey, setDocumentDownloadKey] = useState<string | null>(null);
 
   const chartData = useMemo(() => report?.revenue_by_period ?? [], [report]);
 
@@ -176,10 +183,29 @@ export function ReportsView(props: ReportsViewProps) {
     }
   }, [canViewSegments, t]);
 
+  const loadDocuments = useCallback(async () => {
+    if (!canViewReports) return;
+    setDocumentsLoading(true);
+    setDocumentsError('');
+    try {
+      setDocuments(await reportingService.getFinancialDocuments(buildFilters(filters)));
+    } catch (err) {
+      setDocuments([]);
+      setDocumentsError(err instanceof Error ? err.message : t('reports.documentsLoadError'));
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }, [canViewReports, filters, t]);
+
   useEffect(() => {
     if (!canViewReports) return;
     void loadReport();
   }, [canViewReports, loadReport]);
+
+  useEffect(() => {
+    if (!canViewReports || activeSubmenu !== 'payments') return;
+    void loadDocuments();
+  }, [activeSubmenu, canViewReports, loadDocuments]);
 
   useEffect(() => {
     if (!canViewSegments) return;
@@ -243,6 +269,31 @@ export function ReportsView(props: ReportsViewProps) {
     }
   };
 
+  const downloadDocument = async (document: FinancialDocument) => {
+    const key = `${document.type}-${document.id}`;
+    setDocumentDownloadKey(key);
+    setDocumentsError('');
+    try {
+      downloadBlob(await reportingService.downloadFinancialDocument(document), document.filename);
+    } catch (err) {
+      setDocumentsError(err instanceof Error ? err.message : t('reports.documentDownloadError'));
+    } finally {
+      setDocumentDownloadKey(null);
+    }
+  };
+
+  const downloadAllDocuments = async () => {
+    setDocumentDownloadKey('all');
+    setDocumentsError('');
+    try {
+      downloadBlob(await reportingService.downloadFinancialDocuments(buildFilters(filters)), 'documente-financiare.zip');
+    } catch (err) {
+      setDocumentsError(err instanceof Error ? err.message : t('reports.documentsDownloadError'));
+    } finally {
+      setDocumentDownloadKey(null);
+    }
+  };
+
   const saveSegment = async () => {
     if (!segmentForm.name.trim()) {
       setSegmentError(t('reports.segmentNameRequired'));
@@ -302,8 +353,13 @@ export function ReportsView(props: ReportsViewProps) {
 
   return (
     <div className="space-y-6">
-      {reportError ? <Alert tone="error">{reportError}</Alert> : null}
-      <SectionCard title={t('reports.financialTitle')} action={<Button onClick={() => void loadReport()} disabled={reportLoading}><RefreshCw className="h-4 w-4" />{t('common.refresh')}</Button>}>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => setActiveSubmenu('summary')} variant={activeSubmenu === 'summary' ? 'primary' : undefined}><BarChart3 className="h-4 w-4" />{t('reports.summaryTab')}</Button>
+        <Button onClick={() => setActiveSubmenu('payments')} variant={activeSubmenu === 'payments' ? 'primary' : undefined}><FileText className="h-4 w-4" />{t('reports.paymentsTab')}</Button>
+      </div>
+
+      {activeSubmenu === 'summary' && reportError ? <Alert tone="error">{reportError}</Alert> : null}
+      {activeSubmenu === 'summary' ? <SectionCard title={t('reports.financialTitle')} action={<Button onClick={() => void loadReport()} disabled={reportLoading}><RefreshCw className="h-4 w-4" />{t('common.refresh')}</Button>}>
         <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-4">
           <Input label={t('reports.filters.from')} type="date" value={filters.from} onChange={(event) => updateFilter('from', event.target.value)} />
           <Input label={t('reports.filters.to')} type="date" value={filters.to} onChange={(event) => updateFilter('to', event.target.value)} />
@@ -385,9 +441,73 @@ export function ReportsView(props: ReportsViewProps) {
             </div>
           </>
         ) : <p className="mt-5 text-sm text-slate-500">{reportLoading ? t('common.loading') : t('reports.noFinancialData')}</p>}
-      </SectionCard>
+      </SectionCard> : null}
 
-      {canExportReports ? (
+      {activeSubmenu === 'payments' ? (
+        <SectionCard
+          title={t('reports.paymentsDocumentsTitle')}
+          action={
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => void loadDocuments()} disabled={documentsLoading}><RefreshCw className="h-4 w-4" />{t('common.refresh')}</Button>
+              {canExportReports ? <Button onClick={() => void downloadAllDocuments()} disabled={documentDownloadKey === 'all'} variant="primary"><Download className="h-4 w-4" />{t('reports.downloadAllDocuments')}</Button> : null}
+            </div>
+          }
+        >
+          {documentsError ? <Alert tone="error" className="mb-4">{documentsError}</Alert> : null}
+          <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[180px_180px_auto]">
+            <Input label={t('reports.filters.from')} type="date" value={filters.from} onChange={(event) => updateFilter('from', event.target.value)} />
+            <Input label={t('reports.filters.to')} type="date" value={filters.to} onChange={(event) => updateFilter('to', event.target.value)} />
+            <div className="flex items-end gap-2">
+              <Button onClick={() => void loadDocuments()} disabled={documentsLoading} variant="primary"><FileText className="h-4 w-4" />{documentsLoading ? t('common.loading') : t('reports.applyFilters')}</Button>
+              <Button onClick={() => setFilters(emptyFilters)}>{t('users.resetFilters')}</Button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="min-w-[980px] w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">{t('reports.documentType')}</th>
+                  <th className="px-4 py-3">{t('reports.documentNumber')}</th>
+                  <th className="px-4 py-3">{t('events.date')}</th>
+                  <th className="px-4 py-3">{t('payments.member')}</th>
+                  <th className="px-4 py-3">{t('common.details')}</th>
+                  <th className="px-4 py-3 text-right">{t('payments.amount')}</th>
+                  <th className="px-4 py-3 text-right">{t('common.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {documents.length ? documents.map((document) => {
+                  const key = `${document.type}-${document.id}`;
+                  return (
+                    <tr key={key} className="border-t border-slate-100">
+                      <td className="px-4 py-3 font-medium text-slate-900">{document.type_label}</td>
+                      <td className="px-4 py-3 text-slate-600">{document.number}</td>
+                      <td className="px-4 py-3 text-slate-600">{document.date}</td>
+                      <td className="px-4 py-3 text-slate-600">{document.member || '-'}</td>
+                      <td className="px-4 py-3 text-slate-600">{document.description}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatCurrency(document.amount, document.currency ?? 'RON')}</td>
+                      <td className="px-4 py-3 text-right">
+                        {canExportReports ? (
+                          <Button onClick={() => void downloadDocument(document)} disabled={documentDownloadKey === key} size="sm">
+                            <Download className="h-4 w-4" />{t('userDocuments.download')}
+                          </Button>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">{documentsLoading ? t('common.loading') : t('reports.noDocuments')}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      ) : null}
+
+      {activeSubmenu === 'summary' && canExportReports ? (
         <SectionCard title={t('reports.exports')} action={<div className="flex flex-wrap gap-2"><Button onClick={() => void createExport('csv')} disabled={exportLoading}><FileSpreadsheet className="h-4 w-4" />CSV</Button><Button onClick={() => void createExport('xlsx')} disabled={exportLoading}>XLSX</Button></div>}>
           {exportError ? <Alert tone="error" className="mb-4">{exportError}</Alert> : null}
           {exportRecord ? (
@@ -405,7 +525,7 @@ export function ReportsView(props: ReportsViewProps) {
         </SectionCard>
       ) : null}
 
-      {canViewSegments ? (
+      {activeSubmenu === 'summary' && canViewSegments ? (
         <SectionCard title={t('reports.segments')} action={<Button onClick={() => void loadSegments()} disabled={segmentsLoading}><RefreshCw className="h-4 w-4" />{t('common.refresh')}</Button>}>
           {segmentError ? <Alert tone="error" className="mb-4">{segmentError}</Alert> : null}
           {canManageSegments ? (
