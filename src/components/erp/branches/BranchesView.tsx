@@ -150,12 +150,12 @@ export function BranchesView() {
         backLabel={t('branches.backToList')}
         onBack={closeForm}
       >
-        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('branches.editCardTitle', { id: editing.id }) : t('branches.add')}
           action={
-            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
@@ -165,7 +165,7 @@ export function BranchesView() {
             <Input label={t('branches.description')} value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Headquarters" />
             <label className="block text-sm font-medium text-slate-700">
               <span className="mb-2 block">{t('branches.locationGroup')}</span>
-              <select value={form.location_group_id} onChange={(event) => setForm((prev) => ({ ...prev, location_group_id: event.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+              <select value={form.location_group_id} onChange={(event) => setForm((prev) => ({ ...prev, location_group_id: event.target.value }))} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                 <option value="">{t('branches.noLocationGroup')}</option>
                 {locationGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
               </select>
@@ -176,11 +176,11 @@ export function BranchesView() {
             </div>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-            <button onClick={() => void saveLocation()} disabled={saving} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            <button onClick={closeForm} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+            <button onClick={() => void saveLocation()} disabled={saving} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('branches.save')}
             </button>
-            <button onClick={() => void saveLocation(true)} disabled={saving} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            <button onClick={() => void saveLocation(true)} disabled={saving} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('common.saveAndClose')}
             </button>
           </div>
@@ -195,10 +195,10 @@ export function BranchesView() {
         title={t('branches.title')}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => void loadLocations()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={() => void loadLocations()} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
-            <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+            <button onClick={startCreate} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
               <Plus className="mr-2 inline h-4 w-4" />{t('branches.add')}
             </button>
           </div>
@@ -215,13 +215,13 @@ export function BranchesView() {
             placeholder={t('branches.searchPlaceholder')}
           />
           <div className="flex items-end">
-            <button onClick={() => void loadLocations()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => void loadLocations()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
-        {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <div className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('branches.showingCount', { count: locations.length })}
         </div>
 
@@ -239,7 +239,7 @@ export function BranchesView() {
             </thead>
             <tbody>
               {locations.map((location) => (
-                <tr key={location.id} className="hover:bg-slate-50/70">
+                <tr key={location.id} className="group transition-colors hover:bg-indigo-50/30">
                   <TableCell className="font-semibold text-slate-900">{location.name}</TableCell>
                   <TableCell className="max-w-[360px] text-slate-600">{location.description || t('branches.defaultDescription')}</TableCell>
                   <TableCell className="text-slate-600">{location.location_group?.name ?? t('branches.noLocationGroup')}</TableCell>
@@ -247,10 +247,10 @@ export function BranchesView() {
                   <TableCell className="text-slate-600">{formatDate(location.updated_at)}</TableCell>
                   <TableCell align="right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => startEdit(location)} className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
+                      <button onClick={() => startEdit(location)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
                         <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
                       </button>
-                      <button onClick={() => void deleteLocation(location)} className="inline-flex items-center rounded-xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                      <button onClick={() => void deleteLocation(location)} className="inline-flex items-center rounded-lg border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
                         <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                       </button>
                     </div>

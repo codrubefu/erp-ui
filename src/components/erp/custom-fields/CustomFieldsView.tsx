@@ -203,11 +203,11 @@ export function CustomFieldsView() {
   if (formOpen) {
     return (
       <PageShell title={editing ? t('customFields.edit') : t('customFields.add')} subtitle={t('customFields.formSubtitle')} backLabel={t('customFields.backToList')} onBack={closeForm}>
-        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('customFields.editCardTitle', { id: editing.id }) : t('customFields.add')}
-          action={<button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><X className="h-4 w-4" />{t('common.close')}</button>}
+          action={<button onClick={closeForm} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><X className="h-4 w-4" />{t('common.close')}</button>}
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Input label={t('customFields.entityType')} value={form.entity_type} onChange={(event) => setForm((prev) => ({ ...prev, entity_type: event.target.value }))} placeholder="users" />
@@ -217,8 +217,8 @@ export function CustomFieldsView() {
               {fieldTypes.map((type) => <option key={type} value={type}>{t(`customFields.types.${type}`)}</option>)}
             </Select>
             <Input label={t('customFields.sortOrder')} type="number" min="0" value={form.sort_order} onChange={(event) => setForm((prev) => ({ ...prev, sort_order: event.target.value }))} />
-            <label className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-              <input type="checkbox" checked={form.is_required} onChange={(event) => setForm((prev) => ({ ...prev, is_required: event.target.checked }))} className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
+            <label className="flex items-end gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+              <input type="checkbox" checked={form.is_required} onChange={(event) => setForm((prev) => ({ ...prev, is_required: event.target.checked }))} className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
               {t('customFields.required')}
             </label>
             {choiceTypes.includes(form.type) ? (
@@ -233,11 +233,11 @@ export function CustomFieldsView() {
             </div>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-            <button onClick={() => void saveField()} disabled={saving || !form.name || !form.slug} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            <button onClick={closeForm} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+            <button onClick={() => void saveField()} disabled={saving || !form.name || !form.slug} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('customFields.save')}
             </button>
-            <button onClick={() => void saveField(true)} disabled={saving || !form.name || !form.slug} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            <button onClick={() => void saveField(true)} disabled={saving || !form.name || !form.slug} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('common.saveAndClose')}
             </button>
           </div>
@@ -251,20 +251,20 @@ export function CustomFieldsView() {
       title={t('customFields.title')}
       action={
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => void loadFields()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}</button>
-          <button onClick={startCreate} className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 inline h-4 w-4" />{t('customFields.add')}</button>
+          <button onClick={() => void loadFields()} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}</button>
+          <button onClick={startCreate} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-2 inline h-4 w-4" />{t('customFields.add')}</button>
         </div>
       }
     >
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
         <Input label={t('customFields.entityType')} value={entityType} onChange={(event) => setEntityType(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void loadFields(); }} placeholder="users" />
         <div className="flex items-end">
-          <button onClick={() => void loadFields()} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('customFields.loadEntity')}</button>
+          <button onClick={() => void loadFields()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('customFields.loadEntity')}</button>
         </div>
       </div>
 
-      {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-      <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">{t('customFields.showingCount', { count: sortedFields.length, entity: entityType || 'users' })}</div>
+      {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+      <div className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">{t('customFields.showingCount', { count: sortedFields.length, entity: entityType || 'users' })}</div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
@@ -297,8 +297,8 @@ export function CustomFieldsView() {
                 <td className="py-4 text-slate-600">{formatDate(field.updated_at)}</td>
                 <td className="py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => startEdit(field)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"><Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}</button>
-                    <button onClick={() => void deleteField(field)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"><Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}</button>
+                    <button onClick={() => startEdit(field)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"><Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}</button>
+                    <button onClick={() => void deleteField(field)} className="inline-flex items-center rounded-lg border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"><Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}</button>
                   </div>
                 </td>
               </tr>

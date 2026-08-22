@@ -106,14 +106,14 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      <SectionCard title={title} action={<Link to="/erp/articles" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.back')}</Link>}>
-        {serverError ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{serverError}</p> : null}
-        {successMessage ? <SuccessMessage fixed className="rounded-xl border-none font-semibold">{successMessage}</SuccessMessage> : null}
-        {optionsError ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{optionsError}</p> : null}
+      <SectionCard title={title} action={<Link to="/erp/articles" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.back')}</Link>}>
+        {serverError ? <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{serverError}</p> : null}
+        {successMessage ? <SuccessMessage fixed className="rounded-lg border-none font-semibold">{successMessage}</SuccessMessage> : null}
+        {optionsError ? <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{optionsError}</p> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.titleField')}</span>
-            <input value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+            <input value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
             {errors.title ? <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span> : null}
           </label>
           <Select label="status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as ArticleStatus }))}>
@@ -131,29 +131,29 @@ export default function ArticleForm({ mode, initialData, onSubmit, submitting, s
           <Input label="expires_at" type="datetime-local" value={form.expires_at ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, expires_at: event.target.value }))} />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.groups')}</span>
-            <select multiple value={form.groups.map(String)} disabled={loadingOptions} onChange={(event) => setForm((prev) => ({ ...prev, groups: selectedOptions(event) }))} className="min-h-32 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+            <select multiple value={form.groups.map(String)} disabled={loadingOptions} onChange={(event) => setForm((prev) => ({ ...prev, groups: selectedOptions(event) }))} className="min-h-32 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
               {groups.map((group) => <option key={group.id} value={group.id}>{labelFor(group)}</option>)}
             </select>
           </label>
           <label className="block md:col-span-2">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.description')}</span>
-            <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={5} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+            <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={5} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
             {errors.description ? <span className="mt-1 block text-xs font-medium text-red-600">{errors.description}</span> : null}
           </label>
           <label className="block md:col-span-2">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('articles.locations')}</span>
-            <select multiple value={form.locations.map(String)} disabled={loadingOptions} onChange={(event) => setForm((prev) => ({ ...prev, locations: selectedOptions(event) }))} className="min-h-32 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100">
+            <select multiple value={form.locations.map(String)} disabled={loadingOptions} onChange={(event) => setForm((prev) => ({ ...prev, locations: selectedOptions(event) }))} className="min-h-32 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
               {locations.map((location) => <option key={location.id} value={location.id}>{labelFor(location)}</option>)}
             </select>
           </label>
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <Link to="/erp/articles" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.cancel')}</Link>
-          <button disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+          <Link to="/erp/articles" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.cancel')}</Link>
+          <button disabled={submitting} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
             <Save className="h-4 w-4" />
             {t('common.save')}
           </button>
-          <button type="button" onClick={submitAndClose} disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+          <button type="button" onClick={submitAndClose} disabled={submitting} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
             <Save className="h-4 w-4" />
             {t('common.saveAndClose')}
           </button>

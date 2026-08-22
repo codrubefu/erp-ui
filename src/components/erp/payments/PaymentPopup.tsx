@@ -52,7 +52,7 @@ export function PaymentPopup({ title, subtitle, values, maxAmount, error, succes
   return (
     <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4">
       <div className="mx-auto grid min-h-full place-items-center">
-        <div className="w-full max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+        <div className="w-full max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{title}</h3>

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --text: #526077;
-  --text-h: #172033;
-  --bg: #f5f7fb;
+  --text: #526071;
+  --text-h: #111827;
+  --bg: #f3f6fb;
   --surface: #ffffff;
-  --border: #dfe4ee;
-  --muted: #eef2f8;
-  --accent: #635bdf;
-  --accent-bg: rgba(99, 91, 223, 0.09);
-  --accent-border: rgba(99, 91, 223, 0.26);
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.06);
+  --border: #d8dee9;
+  --muted: #eef2f7;
+  --accent: #4f46e5;
+  --accent-bg: rgba(79, 70, 229, 0.08);
+  --accent-border: rgba(79, 70, 229, 0.22);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.05);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -41,9 +41,7 @@ body {
   margin: 0;
   min-width: 320px;
   background: var(--bg);
-  background-image:
-    radial-gradient(circle at 78% -10%, rgba(99, 91, 223, 0.08), transparent 28rem),
-    linear-gradient(180deg, #fafbfe 0, var(--bg) 22rem);
+  background-image: linear-gradient(180deg, #f8fafc 0, var(--bg) 18rem);
   background-attachment: fixed;
 }
 
@@ -67,7 +65,7 @@ select {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cbd3e1 transparent;
+  scrollbar-color: #c8d1df transparent;
 }
 
 h1,
@@ -94,10 +92,10 @@ p {
 code {
   font-family: var(--mono);
   display: inline-flex;
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--text-h);
   font-size: 15px;
   line-height: 135%;
   padding: 4px 8px;
-  background: var(--muted);
+  background: #e9eef6;
 }

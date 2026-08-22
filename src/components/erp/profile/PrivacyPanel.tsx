@@ -195,7 +195,7 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
 
       {exportRecord ? (
         <SectionCard title="Export date">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
             <div><p className="font-semibold text-slate-900">#{exportRecord.id}</p><p className="text-slate-600">{exportRecord.status} - expira: {formatDate(exportRecord.expires_at)}</p></div>
             <div className="flex flex-wrap gap-2">
               <Button type="button" onClick={() => void refreshExport()} disabled={loading}><RefreshCw className="h-4 w-4" />Status</Button>
@@ -218,13 +218,15 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
           </Select>
           <div className="flex items-end"><Button type="button" onClick={() => void recordConsent()} disabled={loading} className="w-full"><ShieldCheck className="h-4 w-4" />Inregistreaza</Button></div>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="min-w-[760px] w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">Scop</th><th className="px-4 py-3">Canal</th><th className="px-4 py-3">Versiune</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Data</th></tr></thead>
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[760px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
+            <thead className="bg-slate-50 text-slate-500"><tr><th className="border-b border-slate-200 px-5 py-3">Scop</th><th className="border-b border-slate-200 px-4 py-3">Canal</th><th className="border-b border-slate-200 px-4 py-3">Versiune</th><th className="border-b border-slate-200 px-4 py-3">Status</th><th className="border-b border-slate-200 px-5 py-3">Data</th></tr></thead>
             <tbody>
-              {consents.length ? consents.map((item) => <tr key={item.id} className="border-t border-slate-100"><td className="px-4 py-3">{item.purpose}</td><td className="px-4 py-3">{item.channel}</td><td className="px-4 py-3">{item.policy_version}</td><td className="px-4 py-3">{item.granted ? 'granted' : 'withdrawn'}</td><td className="px-4 py-3">{formatDate(item.occurred_at)}</td></tr>) : <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">{loading ? 'Se incarca...' : 'Nu exista consimtaminte.'}</td></tr>}
+              {consents.length ? consents.map((item) => <tr key={item.id} className="border-b border-slate-100 transition-colors hover:bg-indigo-50/30"><td className="px-5 py-3">{item.purpose}</td><td className="px-4 py-3">{item.channel}</td><td className="px-4 py-3">{item.policy_version}</td><td className="px-4 py-3">{item.granted ? 'granted' : 'withdrawn'}</td><td className="px-5 py-3">{formatDate(item.occurred_at)}</td></tr>) : <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">{loading ? 'Se incarca...' : 'Nu exista consimtaminte.'}</td></tr>}
             </tbody>
           </table>
+          </div>
         </div>
       </SectionCard>
 
@@ -234,7 +236,7 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
             <Input label="GDPR request id" value={requestIdToProcess} onChange={(event) => setRequestIdToProcess(event.target.value)} placeholder={erasureRequest?.id ?? 'uuid'} />
             <div className="flex items-end"><Button type="button" onClick={() => void processErasure()} disabled={loading || !requestIdToProcess.trim()} variant="danger">Proceseaza</Button></div>
           </div>
-          {erasureRequest ? <pre className="mt-4 overflow-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-700">{JSON.stringify(erasureRequest, null, 2)}</pre> : null}
+          {erasureRequest ? <pre className="mt-4 overflow-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-700">{JSON.stringify(erasureRequest, null, 2)}</pre> : null}
         </SectionCard>
       ) : null}
     </div>

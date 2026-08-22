@@ -299,12 +299,12 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
         backLabel={t('services.backToList')}
         onBack={closeForm}
       >
-        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('services.editCardTitle', { id: editing.id }) : t('services.add')}
           action={
-            <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
+            <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
@@ -313,7 +313,7 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
             <Input label={t('services.name')} value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Enterprise" />
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">{t('services.type')}</span>
-              <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value as ServiceType }))} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
+              <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value as ServiceType }))} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                 <option value="membership">{t('services.types.membership')}</option>
                 <option value="access_pass">{t('services.types.access_pass')}</option>
               </select>
@@ -322,7 +322,7 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
             <Input label={t('services.currency')} maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">{t('services.expirationRule')}</span>
-              <select value={form.expiration_rule} onChange={(event) => setForm((prev) => ({ ...prev, expiration_rule: event.target.value as ServiceExpirationRule }))} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
+              <select value={form.expiration_rule} onChange={(event) => setForm((prev) => ({ ...prev, expiration_rule: event.target.value as ServiceExpirationRule }))} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                 <option value="duration">{t('services.expirationRules.duration')}</option>
                 <option value="fixed_date">{t('services.expirationRules.fixed_date')}</option>
                 <option value="none">{t('services.expirationRules.none')}</option>
@@ -333,8 +333,8 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
             <Input label={t('services.gracePeriodDays')} type="number" min="0" value={form.grace_period_days} onChange={(event) => setForm((prev) => ({ ...prev, grace_period_days: event.target.value }))} placeholder="0" />
             <Input label={t('services.maxAccesses')} type="number" min="1" value={form.max_accesses} onChange={(event) => setForm((prev) => ({ ...prev, max_accesses: event.target.value }))} placeholder="30" />
             <Input label={t('services.maxUsers')} type="number" min="1" value={form.max_users} onChange={(event) => setForm((prev) => ({ ...prev, max_users: event.target.value }))} placeholder="25" />
-            <label className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
-              <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
+            <label className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+              <input type="checkbox" checked={form.is_active} onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))} className="h-4 w-4 accent-indigo-600" />
               {t('services.activeService')}
             </label>
             <div className="md:col-span-2">
@@ -342,12 +342,12 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
             </div>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button onClick={closeForm} className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm">{t('common.cancel')}</button>
+            <button onClick={closeForm} className="h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm">{t('common.cancel')}</button>
             <Can anyOf={editing ? ['services.update', 'services.manage'] : ['services.create', 'services.manage']}>
-              <button onClick={() => void saveService()} disabled={saving} className="h-10 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6] disabled:cursor-not-allowed disabled:opacity-60">
+              <button onClick={() => void saveService()} disabled={saving} className="h-10 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('services.save')}
               </button>
-              <button onClick={() => void saveService(true)} disabled={saving} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+              <button onClick={() => void saveService(true)} disabled={saving} className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="mr-2 inline h-4 w-4" />{saving ? t('common.saving') : t('common.saveAndClose')}
               </button>
             </Can>
@@ -365,39 +365,40 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
         backLabel={t('services.backToList')}
         onBack={closeUsersPanel}
       >
-        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         <SectionCard
           title={t('services.serviceMembers')}
           action={
-            <button onClick={closeUsersPanel} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
+            <button onClick={closeUsersPanel} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
-          <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
             {serviceUsersLoading ? t('services.loadingMembers') : t('services.showingMembers', { count: usersForSelectedService.length })}
           </div>
 
-          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-[760px] w-full text-left text-sm">
+          <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+            <table className="min-w-[760px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
               <thead>
                 <tr className="bg-slate-50 text-xs uppercase text-slate-500">
-                  <th className="px-4 py-3 font-semibold">{t('payments.member')}</th>
-                  <th className="px-4 py-3 font-semibold">{t('users.contact')}</th>
-                  <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
+                  <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('payments.member')}</th>
+                  <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.contact')}</th>
+                  <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('common.status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {usersForSelectedService.length > 0 ? usersForSelectedService.map((user) => (
-                  <tr key={user.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
-                    <td className="px-4 py-3">
+                  <tr key={user.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                    <td className="px-5 py-3">
                       <p className="font-semibold text-slate-900">{userName(user)}</p>
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       <p>{user.email}</p>
                       <p className="text-xs text-slate-500">{user.phone || '-'}</p>
                     </td>
-                    <td className="px-4 py-3"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
+                    <td className="px-5 py-3"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
                   </tr>
                 )) : (
                   <tr>
@@ -408,6 +409,7 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </SectionCard>
       </PageShell>
@@ -420,21 +422,21 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
         title={t('services.managementTitle')}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={resetFilters} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <button onClick={resetFilters} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
-            <button onClick={() => void loadServices()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <button onClick={() => void loadServices()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
             <Can anyOf={['services.create', 'services.manage']}>
-              <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]">
+              <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
                 <Plus className="mr-2 inline h-4 w-4" />{t('services.add')}
               </button>
             </Can>
           </div>
         }
       >
-        <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_150px_150px_auto]">
+        <div className="mb-5 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_150px_150px_auto]">
           <Input
             label={t('common.search')}
             value={searchTerm}
@@ -446,7 +448,7 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
           />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.status')}</span>
-            <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as typeof activeFilter)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
+            <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as typeof activeFilter)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
               <option value="all">{t('common.all')}</option>
               <option value="active">{t('services.active')}</option>
               <option value="inactive">{t('services.inactive')}</option>
@@ -454,37 +456,38 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
           </label>
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.perPage')}</span>
-            <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none">
+            <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           <div className="flex items-end">
-            <button onClick={() => void loadServices()} className="h-10 w-full rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => void loadServices()} className="h-10 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
-        {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="mb-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('services.showingCount', { count: services.length })}
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="min-w-[1050px] w-full text-left text-sm">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[1050px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
             <thead>
               <tr className="bg-slate-50 text-xs uppercase text-slate-500">
-                <th className="px-4 py-3 font-semibold">{t('services.service')}</th>
-                <th className="px-4 py-3 font-semibold">{t('services.price')}</th>
-                <th className="px-4 py-3 font-semibold">{t('services.limits')}</th>
-                <th className="px-4 py-3 font-semibold">{t('services.members')}</th>
-                <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
-                <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('services.service')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('services.price')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('services.limits')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('services.members')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('common.status')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {services.length > 0 ? services.map((service) => (
-                <tr key={service.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
-                  <td className="max-w-[320px] px-4 py-3">
+                <tr key={service.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                  <td className="max-w-[320px] px-5 py-3">
                     <p className="font-semibold text-slate-900">{service.name}</p>
                     <p className="text-xs text-slate-500">#{service.id} - {t('branches.updated')} {formatDate(service.updated_at)}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-500">{serviceTypeLabel(service.type, t)} - {expirationRuleLabel(service.expiration_rule, t)}</p>
@@ -500,26 +503,26 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
                   </td>
                   <td className="px-4 py-3 text-slate-600">{service.users_count ?? service.users?.length ?? '-'}</td>
                   <td className="px-4 py-3"><StatusBadge status={service.is_active ? t('users.statusActive') : t('users.statusInactive')} /></td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => openUsersPanel(service)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      <button onClick={() => openUsersPanel(service)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         {t('services.members')}
                       </button>
                       {service.deleted_at ? (
                         <Can anyOf={['services.restore', 'services.manage']}>
-                          <button onClick={() => void restoreService(service)} className="inline-flex items-center rounded-2xl border border-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">
+                          <button onClick={() => void restoreService(service)} className="inline-flex items-center rounded-lg border border-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">
                             <RefreshCw className="mr-2 h-4 w-4" />{t('common.restore')}
                           </button>
                         </Can>
                       ) : (
                         <>
                           <Can anyOf={['services.update', 'services.manage']}>
-                            <button onClick={() => startEdit(service)} className="inline-flex items-center rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                            <button onClick={() => startEdit(service)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                               <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
                             </button>
                           </Can>
                           <Can anyOf={['services.delete', 'services.manage']}>
-                            <button onClick={() => void deleteService(service)} className="inline-flex items-center rounded-2xl border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                            <button onClick={() => void deleteService(service)} className="inline-flex items-center rounded-lg border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
                               <Trash2 className="mr-2 h-4 w-4" />{t('common.delete')}
                             </button>
                           </Can>
@@ -535,6 +538,7 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </SectionCard>
 

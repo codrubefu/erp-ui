@@ -13,8 +13,8 @@ export function ServiceFormPage({ mode, data, onChange, onBack, onSave, onSaveAn
       <SectionCard title={t('services.details')} action={<StatusBadge status={data.is_active ? 'Activ' : 'Inactiv'} />}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t('services.id')} value={data.id} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('id', e.target.value)} placeholder="5" />
-          <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
-            <input type="checkbox" checked={data.is_active} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('is_active', String(e.target.checked))} className="h-4 w-4 accent-violet-600" />
+          <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+            <input type="checkbox" checked={data.is_active} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('is_active', String(e.target.checked))} className="h-4 w-4 accent-indigo-600" />
             {t('common.status')}
           </label>
           <div className="md:col-span-2"><Input label={t('services.name')} value={data.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('name', e.target.value)} placeholder={t('services.namePlaceholder')} /></div>
@@ -25,9 +25,9 @@ export function ServiceFormPage({ mode, data, onChange, onBack, onSave, onSaveAn
           <div className="md:col-span-2"><Textarea label={t('services.description')} value={data.description ?? ''} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('description', e.target.value)} placeholder={t('services.descriptionPlaceholder')} /></div>
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-          <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]"><Save className="h-4 w-4" />{t('services.save')}</button>
-          <button onClick={onSaveAndClose ?? onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button>
+          <button onClick={onBack} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+          <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"><Save className="h-4 w-4" />{t('services.save')}</button>
+          <button onClick={onSaveAndClose ?? onSave} className="inline-flex h-10 items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button>
         </div>
       </SectionCard>
     </PageShell>

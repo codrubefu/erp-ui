@@ -116,7 +116,7 @@ function downloadBlob(blob: Blob, filename: string) {
 
 function Kpi({ label, value, helper }: { label: string; value: string; helper?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
       <p className="mt-2 text-2xl font-bold text-slate-950">{value}</p>
       {helper ? <p className="mt-1 text-xs text-slate-500">{helper}</p> : null}
@@ -363,7 +363,7 @@ export function ReportsView(props: ReportsViewProps) {
 
       {activeSubmenu === 'summary' && reportError ? <Alert tone="error">{reportError}</Alert> : null}
       {activeSubmenu === 'summary' ? <SectionCard title={t('reports.financialTitle')} action={<Button onClick={() => void loadReport()} disabled={reportLoading}><RefreshCw className="h-4 w-4" />{t('common.refresh')}</Button>}>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 lg:grid-cols-4">
           <Input label={t('reports.filters.from')} type="date" value={filters.from} onChange={(event) => updateFilter('from', event.target.value)} />
           <Input label={t('reports.filters.to')} type="date" value={filters.to} onChange={(event) => updateFilter('to', event.target.value)} />
           <Select label={t('reports.filters.groupBy')} value={filters.group_by} onChange={(event) => updateFilter('group_by', event.target.value as FilterForm['group_by'])}>
@@ -417,7 +417,7 @@ export function ReportsView(props: ReportsViewProps) {
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="rounded-lg border border-slate-200 bg-white p-4">
                 <h3 className="text-sm font-semibold text-slate-900">{t('reports.revenueByPeriod')}</h3>
                 <div className="mt-4 h-72">
                   {chartData.length ? (
@@ -433,7 +433,7 @@ export function ReportsView(props: ReportsViewProps) {
                   ) : <p className="text-sm text-slate-500">{t('reports.noRevenue')}</p>}
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="rounded-lg border border-slate-200 bg-white p-4">
                 <h3 className="text-sm font-semibold text-slate-900">{t('reports.bankReconciliation')}</h3>
                 <div className="mt-4 space-y-3 text-sm text-slate-600">
                   <p>{t('reports.kpis.total')}: <b>{formatCurrency(report.bank_reconciliation.total)}</b></p>
@@ -457,7 +457,7 @@ export function ReportsView(props: ReportsViewProps) {
           }
         >
           {documentsError ? <Alert tone="error" className="mb-4">{documentsError}</Alert> : null}
-          <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[180px_180px_auto]">
+          <div className="mb-5 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[180px_180px_auto]">
             <Input label={t('reports.filters.from')} type="date" value={filters.from} onChange={(event) => updateFilter('from', event.target.value)} />
             <Input label={t('reports.filters.to')} type="date" value={filters.to} onChange={(event) => updateFilter('to', event.target.value)} />
             <div className="flex items-end gap-2">
@@ -466,17 +466,18 @@ export function ReportsView(props: ReportsViewProps) {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-[980px] w-full text-left text-sm">
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+            <table className="min-w-[980px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
               <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">{t('reports.documentType')}</th>
-                  <th className="px-4 py-3">{t('reports.documentNumber')}</th>
-                  <th className="px-4 py-3">{t('events.date')}</th>
-                  <th className="px-4 py-3">{t('payments.member')}</th>
-                  <th className="px-4 py-3">{t('common.details')}</th>
-                  <th className="px-4 py-3 text-right">{t('payments.amount')}</th>
-                  <th className="px-4 py-3 text-right">{t('common.actions')}</th>
+                  <th className="border-b border-slate-200 px-5 py-3">{t('reports.documentType')}</th>
+                  <th className="border-b border-slate-200 px-4 py-3">{t('reports.documentNumber')}</th>
+                  <th className="border-b border-slate-200 px-4 py-3">{t('events.date')}</th>
+                  <th className="border-b border-slate-200 px-4 py-3">{t('payments.member')}</th>
+                  <th className="border-b border-slate-200 px-4 py-3">{t('common.details')}</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-right">{t('payments.amount')}</th>
+                  <th className="border-b border-slate-200 px-5 py-3 text-right">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -484,14 +485,14 @@ export function ReportsView(props: ReportsViewProps) {
                   const pdfKey = `${document.type}-${document.id}-pdf`;
                   const xmlKey = `${document.type}-${document.id}-xml`;
                   return (
-                    <tr key={`${document.type}-${document.id}`} className="border-t border-slate-100">
-                      <td className="px-4 py-3 font-medium text-slate-900">{document.type_label}</td>
+                    <tr key={`${document.type}-${document.id}`} className="border-b border-slate-100 transition-colors hover:bg-indigo-50/30">
+                      <td className="px-5 py-3 font-medium text-slate-900">{document.type_label}</td>
                       <td className="px-4 py-3 text-slate-600">{document.number}</td>
                       <td className="px-4 py-3 text-slate-600">{document.date}</td>
                       <td className="px-4 py-3 text-slate-600">{document.member || '-'}</td>
                       <td className="px-4 py-3 text-slate-600">{document.description}</td>
                       <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatCurrency(document.amount, document.currency ?? 'RON')}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-5 py-3 text-right">
                         {canExportReports ? (
                           <Button onClick={() => void downloadDocument(document, 'pdf')} disabled={documentDownloadKey === pdfKey} size="sm">
                             <Download className="h-4 w-4" />PDF
@@ -512,6 +513,7 @@ export function ReportsView(props: ReportsViewProps) {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </SectionCard>
       ) : null}
@@ -520,7 +522,7 @@ export function ReportsView(props: ReportsViewProps) {
         <SectionCard title={t('reports.exports')} action={<div className="flex flex-wrap gap-2"><Button onClick={() => void createExport('csv')} disabled={exportLoading}><FileSpreadsheet className="h-4 w-4" />CSV</Button><Button onClick={() => void createExport('xlsx')} disabled={exportLoading}>XLSX</Button></div>}>
           {exportError ? <Alert tone="error" className="mb-4">{exportError}</Alert> : null}
           {exportRecord ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
               <div>
                 <p className="font-semibold text-slate-900">#{exportRecord.id}</p>
                 <p className="text-slate-600">{exportRecord.format.toUpperCase()} - {exportRecord.status}{exportRecord.error ? ` - ${exportRecord.error}` : ''}</p>
@@ -538,7 +540,7 @@ export function ReportsView(props: ReportsViewProps) {
         <SectionCard title={t('reports.segments')} action={<Button onClick={() => void loadSegments()} disabled={segmentsLoading}><RefreshCw className="h-4 w-4" />{t('common.refresh')}</Button>}>
           {segmentError ? <Alert tone="error" className="mb-4">{segmentError}</Alert> : null}
           {canManageSegments ? (
-            <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 lg:grid-cols-4">
+            <div className="mb-5 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 lg:grid-cols-4">
               <Input label={t('reports.segmentName')} value={segmentForm.name} onChange={(event) => updateSegmentForm('name', event.target.value)} />
               <Select label={t('reports.criteria.active')} value={segmentForm.active} onChange={(event) => updateSegmentForm('active', event.target.value)}>
                 <option value="">{t('common.all')}</option>
@@ -555,8 +557,8 @@ export function ReportsView(props: ReportsViewProps) {
                 <option value="membership">{t('services.types.membership')}</option>
                 <option value="access_pass">{t('services.types.access_pass')}</option>
               </Select>
-              <label className="flex h-10 items-center gap-3 self-end rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
-                <input type="checkbox" checked={segmentForm.expired} onChange={(event) => updateSegmentForm('expired', event.target.checked)} className="h-4 w-4 accent-violet-600" />
+              <label className="flex h-10 items-center gap-3 self-end rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
+                <input type="checkbox" checked={segmentForm.expired} onChange={(event) => updateSegmentForm('expired', event.target.checked)} className="h-4 w-4 accent-indigo-600" />
                 {t('reports.criteria.expired')}
               </label>
               <div className="flex items-end gap-2 lg:col-span-2">
@@ -567,15 +569,16 @@ export function ReportsView(props: ReportsViewProps) {
             </div>
           ) : null}
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-[900px] w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">{t('reports.segmentName')}</th><th className="px-4 py-3">{t('reports.criteria.title')}</th><th className="px-4 py-3 text-right">{t('common.actions')}</th></tr></thead>
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+            <table className="min-w-[900px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="border-b border-slate-200 px-5 py-3">{t('reports.segmentName')}</th><th className="border-b border-slate-200 px-4 py-3">{t('reports.criteria.title')}</th><th className="border-b border-slate-200 px-5 py-3 text-right">{t('common.actions')}</th></tr></thead>
               <tbody>
                 {segments.length ? segments.map((segment) => (
-                  <tr key={segment.id} className="border-t border-slate-100 align-top">
-                    <td className="px-4 py-3 font-semibold text-slate-900">{segment.name}</td>
+                  <tr key={segment.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                    <td className="px-5 py-3 font-semibold text-slate-900">{segment.name}</td>
                     <td className="px-4 py-3 text-slate-600"><pre className="whitespace-pre-wrap font-mono text-xs">{JSON.stringify(segment.criteria, null, 2)}</pre></td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-5 py-3 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
                         <Button onClick={() => {
                           const nextFilters = { ...filters, segment_id: String(segment.id) };
@@ -599,10 +602,11 @@ export function ReportsView(props: ReportsViewProps) {
                 )) : <tr><td colSpan={3} className="px-4 py-10 text-center text-sm text-slate-500">{segmentsLoading ? t('common.loading') : t('reports.noSegments')}</td></tr>}
               </tbody>
             </table>
+            </div>
           </div>
 
           {segmentMembersLabel ? (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
               <h3 className="text-sm font-semibold text-slate-900">{t('reports.previewFor', { name: segmentMembersLabel })}</h3>
               <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
                 {segmentMembers.length ? segmentMembers.map((member) => <div key={member.id} className="rounded-lg bg-white px-3 py-2 text-sm text-slate-700">{userLabel(member)}<p className="text-xs text-slate-500">{member.email}</p></div>) : <p className="text-sm text-slate-500">{t('reports.noSegmentMembers')}</p>}

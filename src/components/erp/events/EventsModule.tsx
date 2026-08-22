@@ -38,7 +38,7 @@ function TextField({ label, error, ...props }: React.InputHTMLAttributes<HTMLInp
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+      <input {...props} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
       {error ? <span className="mt-1 block text-xs font-medium text-red-600">{error}</span> : null}
     </label>
   );
@@ -48,14 +48,14 @@ function SelectField({ label, error, children, ...props }: React.SelectHTMLAttri
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <select {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100">{children}</select>
+      <select {...props} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">{children}</select>
       {error ? <span className="mt-1 block text-xs font-medium text-red-600">{error}</span> : null}
     </label>
   );
 }
 
 function Toast({ type, message, onClose }: { type: 'success' | 'error'; message: string; onClose: () => void }) {
-  return <div className={`fixed right-4 top-4 z-50 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}><button onClick={onClose} className="mr-3"><X className="inline h-4 w-4" /></button>{message}</div>;
+  return <div className={`fixed right-4 top-4 z-50 rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}><button onClick={onClose} className="mr-3"><X className="inline h-4 w-4" /></button>{message}</div>;
 }
 
 export function StatusBadge({ status }: { status: string }) {
@@ -77,12 +77,12 @@ function DeleteConfirmModal({ label, loading, onCancel, onConfirm }: { label: st
   return (
     <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4">
       <div className="mx-auto grid min-h-full place-items-center">
-        <div className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+        <div className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-slate-900">{t('events.deleteConfirmTitle')}</h3>
         <p className="mt-2 text-sm text-slate-600">{t('events.deleteConfirm', { label })}</p>
         <div className="mt-6 flex justify-end gap-2">
-          <button onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button>
-          <button onClick={onConfirm} disabled={loading} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{t('common.delete')}</button>
+          <button onClick={onCancel} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button>
+          <button onClick={onConfirm} disabled={loading} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{t('common.delete')}</button>
         </div>
         </div>
       </div>
@@ -94,9 +94,9 @@ function Pagination({ page, lastPage, onPage }: { page: number; lastPage: number
   const { t } = useTranslation();
   return (
     <div className="flex items-center justify-end gap-2">
-      <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded-xl border border-slate-200 p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
+      <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded-lg border border-slate-200 p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
       <span className="text-sm text-slate-600">{t('events.pageOf', { page, lastPage })}</span>
-      <button disabled={page >= lastPage} onClick={() => onPage(page + 1)} className="rounded-xl border border-slate-200 p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button>
+      <button disabled={page >= lastPage} onClick={() => onPage(page + 1)} className="rounded-lg border border-slate-200 p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button>
     </div>
   );
 }
@@ -127,7 +127,7 @@ function EventsPage() {
   return (
     <div className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <SectionCard title={t('events.managementTitle')} action={permissions.canManageEvents ? <Link to="new" className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />{t('events.create')}</Link> : null}>
+      <SectionCard title={t('events.managementTitle')} action={permissions.canManageEvents ? <Link to="new" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />{t('events.create')}</Link> : null}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-8">
           <TextField label={t('events.searchTitle')} value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value, page: 1 }))} />
           <SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{eventStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
@@ -136,9 +136,9 @@ function EventsPage() {
           <SelectField label="Paid event" value={filters.requires_payment} onChange={(e) => setFilters((p) => ({ ...p, requires_payment: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
           <SelectField label={t('events.sort')} value={filters.sort} onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value as typeof p.sort }))}><option value="created_at">created_at</option><option value="start_date">start_date</option><option value="title">title</option></SelectField>
           <SelectField label="direction" value={filters.direction} onChange={(e) => setFilters((p) => ({ ...p, direction: e.target.value as typeof p.direction }))}><option value="desc">desc</option><option value="asc">asc</option></SelectField>
-          <button onClick={() => void reload()} className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Search className="h-4 w-4" />{t('common.search')}</button>
+          <button onClick={() => void reload()} className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Search className="h-4 w-4" />{t('common.search')}</button>
         </div>
-        {error ? <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
+        {error ? <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead><tr className="border-b text-slate-500"><th className="pb-3">{t('common.title')}</th><th className="pb-3">{t('events.date')}</th><th className="pb-3">{t('events.recurrence')}</th><th className="pb-3">{t('services.service')}</th><th className="pb-3">Paid</th><th className="pb-3">{t('common.status')}</th><th className="pb-3 text-right">{t('common.actions')}</th></tr></thead>
@@ -151,10 +151,10 @@ function EventsPage() {
                 <td className="py-4">{event.requires_payment ? <span className="font-semibold text-slate-900">{event.payment_amount ?? '-'} {event.payment_type ?? ''}</span> : '-'}</td>
                 <td className="py-4"><StatusBadge status={event.status} /></td>
                 <td className="py-4"><div className="flex flex-wrap justify-end gap-2">
-                  <Link to={`${event.id}`} className="rounded-xl border px-3 py-2"><Eye className="h-4 w-4" /></Link>
-                  {permissions.canManageEvents ? <Link to={`${event.id}/edit`} className="rounded-xl border px-3 py-2"><Edit3 className="h-4 w-4" /></Link> : null}
-                  <Link to={`${event.id}/occurrences`} className="rounded-xl border px-3 py-2"><CalendarClock className="h-4 w-4" /></Link>
-                  {permissions.canManageEvents ? <button onClick={() => setDeleting(event)} className="rounded-xl border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button> : null}
+                  <Link to={`${event.id}`} className="rounded-lg border px-3 py-2"><Eye className="h-4 w-4" /></Link>
+                  {permissions.canManageEvents ? <Link to={`${event.id}/edit`} className="rounded-lg border px-3 py-2"><Edit3 className="h-4 w-4" /></Link> : null}
+                  <Link to={`${event.id}/occurrences`} className="rounded-lg border px-3 py-2"><CalendarClock className="h-4 w-4" /></Link>
+                  {permissions.canManageEvents ? <button onClick={() => setDeleting(event)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button> : null}
                 </div></td>
               </tr>
             )) : <tr><td colSpan={7} className="py-10 text-center text-slate-500">{loading ? t('events.loadingList') : t('events.empty')}</td></tr>}</tbody>
@@ -273,7 +273,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <SectionCard title={mode === 'create' ? t('events.createEvent') : t('events.editEvent')} action={<Link to="/erp/events" className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.back')}</Link>}>
+      <SectionCard title={mode === 'create' ? t('events.createEvent') : t('events.editEvent')} action={<Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.back')}</Link>}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <TextField label={t('common.title')} value={form.title} onChange={(e) => updateField('title', e.target.value)} error={clientErrors.title || fieldError(serverErrors, 'title')} />
           <TextField label={t('articles.locations')} value={form.location ?? ''} onChange={(e) => updateField('location', e.target.value)} error={fieldError(serverErrors, 'location')} />
@@ -283,18 +283,18 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
           <TextField label="end_date" type="date" value={form.end_date ?? ''} onChange={(e) => updateField('end_date', e.target.value || null)} error={fieldError(serverErrors, 'end_date')} />
           <SelectField label="recurrence_type" value={form.recurrence_type} onChange={(e) => updateField('recurrence_type', e.target.value as RecurrenceType)} error={fieldError(serverErrors, 'recurrence_type')}><option value="once">once</option><option value="weekly">weekly</option><option value="monthly">monthly</option></SelectField>
           {recurrenceType === 'monthly' ? <TextField label="monthly_day" type="number" min={1} max={31} value={form.monthly_day ?? ''} onChange={(e) => updateField('monthly_day', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'monthly_day')} /> : null}
-          {recurrenceType === 'weekly' ? <div><span className="mb-2 block text-sm font-medium text-slate-700">{t('events.recurrenceDays')}</span><div className="grid grid-cols-2 gap-2">{weekdays.map((day) => <label key={day} className="rounded-xl border px-3 py-2 text-sm"><input type="checkbox" checked={(form.recurrence_days ?? []).includes(day)} onChange={(e) => updateField('recurrence_days', e.target.checked ? [...(form.recurrence_days ?? []), day] : (form.recurrence_days ?? []).filter((item) => item !== day))} className="mr-2 accent-violet-600" />{t(weekdayLabelKeys[day])}</label>)}</div>{fieldError(serverErrors, 'recurrence_days') ? <span className="mt-1 block text-xs text-red-600">{fieldError(serverErrors, 'recurrence_days')}</span> : null}</div> : null}
+          {recurrenceType === 'weekly' ? <div><span className="mb-2 block text-sm font-medium text-slate-700">{t('events.recurrenceDays')}</span><div className="grid grid-cols-2 gap-2">{weekdays.map((day) => <label key={day} className="rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={(form.recurrence_days ?? []).includes(day)} onChange={(e) => updateField('recurrence_days', e.target.checked ? [...(form.recurrence_days ?? []), day] : (form.recurrence_days ?? []).filter((item) => item !== day))} className="mr-2 accent-indigo-600" />{t(weekdayLabelKeys[day])}</label>)}</div>{fieldError(serverErrors, 'recurrence_days') ? <span className="mt-1 block text-xs text-red-600">{fieldError(serverErrors, 'recurrence_days')}</span> : null}</div> : null}
           <TextField label="max_participants" type="number" min={1} value={form.max_participants ?? ''} onChange={(e) => updateField('max_participants', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'max_participants')} />
           <SelectField label="status" value={form.status} onChange={(e) => updateField('status', e.target.value as EventStatus)} error={fieldError(serverErrors, 'status')}>{eventStatuses.map((status) => <option key={status}>{status}</option>)}</SelectField>
-          <label className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.requires_active_service} onChange={(e) => updateField('requires_active_service', e.target.checked)} className="accent-violet-600" />requires_active_service</label>
+          <label className="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.requires_active_service} onChange={(e) => updateField('requires_active_service', e.target.checked)} className="accent-indigo-600" />requires_active_service</label>
           {needsService ? <SelectField label={t('events.requiredService')} value={form.required_service_id ?? ''} onChange={(e) => updateField('required_service_id', e.target.value ? Number(e.target.value) : null)} error={clientErrors.required_service_id || fieldError(serverErrors, 'required_service_id')}><option value="">{t('common.select')}</option>{services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</SelectField> : null}
-          <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input type="checkbox" checked={form.requires_payment} onChange={(e) => updateField('requires_payment', e.target.checked)} className="accent-violet-600" />Paid Event</label>
+          <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input type="checkbox" checked={form.requires_payment} onChange={(e) => updateField('requires_payment', e.target.checked)} className="accent-indigo-600" />Paid Event</label>
             {needsPayment ? <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"><TextField label="payment_amount" type="number" min={0} step="0.01" value={form.payment_amount ?? ''} onChange={(e) => updateField('payment_amount', e.target.value ? Number(e.target.value) : null)} error={clientErrors.payment_amount || fieldError(serverErrors, 'payment_amount')} /><TextField label="currency" value={form.payment_type ?? 'RON'} onChange={(e) => updateField('payment_type', e.target.value)} error={clientErrors.payment_type || fieldError(serverErrors, 'payment_type')} /></div> : <p className="mt-2 text-sm text-slate-500">Payment fields are cleared while this event is free.</p>}
           </div>
-          <label className="md:col-span-2"><span className="mb-2 block text-sm font-medium text-slate-700">description</span><textarea value={form.description ?? ''} onChange={(e) => updateField('description', e.target.value)} rows={4} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none" />{fieldError(serverErrors, 'description') ? <span className="text-xs text-red-600">{fieldError(serverErrors, 'description')}</span> : null}</label>
+          <label className="md:col-span-2"><span className="mb-2 block text-sm font-medium text-slate-700">description</span><textarea value={form.description ?? ''} onChange={(e) => updateField('description', e.target.value)} rows={4} className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none" />{fieldError(serverErrors, 'description') ? <span className="text-xs text-red-600">{fieldError(serverErrors, 'description')}</span> : null}</label>
         </div>
-        <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => navigate('/erp/events')} className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button><button type="submit" onClick={() => setCloseAfterSave(false)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.save')}</button><button type="submit" onClick={() => setCloseAfterSave(true)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button></div>
+        <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => navigate('/erp/events')} className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button><button type="submit" onClick={() => setCloseAfterSave(false)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.save')}</button><button type="submit" onClick={() => setCloseAfterSave(true)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button></div>
       </SectionCard>
     </form>
   );
@@ -308,7 +308,7 @@ function EventDetailsPage() {
   if (loading) return <SectionCard title="Event Details"><p>Se incarca...</p></SectionCard>;
   if (error || !event) return <SectionCard title="Event Details"><p className="text-red-600">{error || 'Evenimentul nu exista.'}</p></SectionCard>;
   return (
-    <SectionCard title={event.title} action={<div className="flex gap-2">{permissions.canManageEvents ? <Link to="edit" className="rounded-xl border px-4 py-2 text-sm font-semibold">Edit</Link> : null}<Link to="occurrences" className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">View Occurrences</Link></div>}>
+    <SectionCard title={event.title} action={<div className="flex gap-2">{permissions.canManageEvents ? <Link to="edit" className="rounded-lg border px-4 py-2 text-sm font-semibold">Edit</Link> : null}<Link to="occurrences" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">View Occurrences</Link></div>}>
       <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
         <p><b>descriere:</b> {event.description || '-'}</p><p><b>locatie:</b> {event.location || '-'}</p>
         <p><b>interval orar:</b> {event.start_date} {event.start_time}-{event.end_time}</p><p><b>tip recurență:</b> <RecurrenceBadge type={event.recurrence_type} /></p>
@@ -340,11 +340,11 @@ function EventOccurrencesPage() {
     }
   };
   return (
-    <SectionCard title={t('events.occurrencesFor', { title: event?.title ?? '' })} action={<Link to="/erp/events" className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.back')}</Link>}>
+    <SectionCard title={t('events.occurrencesFor', { title: event?.title ?? '' })} action={<Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.back')}</Link>}>
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><TextField label={t('events.dateFrom')} type="date" value={filters.date_from} onChange={(e) => setFilters((p) => ({ ...p, date_from: e.target.value }))} /><TextField label={t('events.dateTo')} type="date" value={filters.date_to} onChange={(e) => setFilters((p) => ({ ...p, date_to: e.target.value }))} /><SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}><option value="">{t('common.all')}</option>{occurrenceStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><button onClick={() => void reload()} className="mt-7 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><RefreshCw className="mr-2 inline h-4 w-4" />{t('events.filter')}</button></div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><TextField label={t('events.dateFrom')} type="date" value={filters.date_from} onChange={(e) => setFilters((p) => ({ ...p, date_from: e.target.value }))} /><TextField label={t('events.dateTo')} type="date" value={filters.date_to} onChange={(e) => setFilters((p) => ({ ...p, date_to: e.target.value }))} /><SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}><option value="">{t('common.all')}</option>{occurrenceStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><button onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><RefreshCw className="mr-2 inline h-4 w-4" />{t('events.filter')}</button></div>
       {error ? <p className="mt-4 text-red-600">{error}</p> : null}
-      <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">occurrence_date</th><th className="pb-3">start_datetime</th><th className="pb-3">end_datetime</th><th className="pb-3">status</th><th className="pb-3">participants</th><th className="pb-3">places</th><th className="pb-3 text-right">Actiuni</th></tr></thead><tbody>{occurrences.length ? occurrences.map((o) => <tr key={o.id} className="border-b border-slate-100"><td className="py-4">{o.occurrence_date}</td><td>{o.start_datetime}</td><td>{o.end_datetime}</td><td><StatusBadge status={o.status} /></td><td>{o.participants_count}</td><td>{o.available_places ?? 'nelimitat'}</td><td><div className="flex justify-end gap-2">{permissions.canViewParticipants ? <Link to={`${o.id}/participants`} className="rounded-xl border px-3 py-2"><Users className="h-4 w-4" /></Link> : null}{permissions.canManageParticipants ? <Link to={`${o.id}/participants?add=1`} className="rounded-xl border px-3 py-2"><Plus className="h-4 w-4" /></Link> : null}{permissions.canManageEvents ? <button onClick={() => void cancelOccurrence(o.id)} className="rounded-xl border px-3 py-2 text-red-600"><X className="h-4 w-4" /></button> : null}</div></td></tr>) : <tr><td colSpan={7} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista aparitii.'}</td></tr>}</tbody></table></div>
+      <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">occurrence_date</th><th className="pb-3">start_datetime</th><th className="pb-3">end_datetime</th><th className="pb-3">status</th><th className="pb-3">participants</th><th className="pb-3">places</th><th className="pb-3 text-right">Actiuni</th></tr></thead><tbody>{occurrences.length ? occurrences.map((o) => <tr key={o.id} className="border-b border-slate-100"><td className="py-4">{o.occurrence_date}</td><td>{o.start_datetime}</td><td>{o.end_datetime}</td><td><StatusBadge status={o.status} /></td><td>{o.participants_count}</td><td>{o.available_places ?? 'nelimitat'}</td><td><div className="flex justify-end gap-2">{permissions.canViewParticipants ? <Link to={`${o.id}/participants`} className="rounded-lg border px-3 py-2"><Users className="h-4 w-4" /></Link> : null}{permissions.canManageParticipants ? <Link to={`${o.id}/participants?add=1`} className="rounded-lg border px-3 py-2"><Plus className="h-4 w-4" /></Link> : null}{permissions.canManageEvents ? <button onClick={() => void cancelOccurrence(o.id)} className="rounded-lg border px-3 py-2 text-red-600"><X className="h-4 w-4" /></button> : null}</div></td></tr>) : <tr><td colSpan={7} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista aparitii.'}</td></tr>}</tbody></table></div>
     </SectionCard>
   );
 }
@@ -455,7 +455,7 @@ function AddParticipantModal({ occurrenceId, event, availableSlots, existingPart
     }
   };
 
-  return <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4"><div className="mx-auto grid min-h-full place-items-center"><div className="w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold">{t('events.addParticipant')}</h3>{event?.requires_active_service ? <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.eventNeedsActiveService')}</p> : null}{blocked ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{t('events.noAvailablePlaces')}</p> : null}{error ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><TextField label={t('events.searchUser')} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('events.searchUserPlaceholder')} autoFocus />{search.trim().length >= 2 ? <><div className="overflow-hidden rounded-xl border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">{t('users.user')}</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">{t('members.phone')}</th><th className="px-4 py-3">{t('services.service')}</th><th className="px-4 py-3 text-right">{t('events.selection')}</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${hasActiveService(u) ? '' : 'bg-amber-50/60'}`}><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3 text-slate-600">{u.phone || '-'}</td><td className="px-4 py-3">{hasActiveService(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{t('users.statusActive')}</span> : <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{t('users.noActiveService')}</span>}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => setUserId(String(u.id))} disabled={blocked} className={`rounded-xl px-3 py-2 text-sm font-semibold ${userId === String(u.id) ? 'bg-violet-600 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>{userId === String(u.id) ? t('events.selected') : t('common.select')}</button></td></tr>) : <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? t('events.loadingUsers') : users.length ? t('events.usersAlreadyParticipants') : t('events.noUsers')}</td></tr>}</tbody></table></div><div className="flex items-center justify-between gap-3 text-sm text-slate-600"><span>{usersMeta.total ? t('events.usersCount', { count: usersMeta.total }) : t('events.noResults')}</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div></> : null}<SelectField label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><label><span className="mb-2 block text-sm font-medium">{t('events.notes')}</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-xl border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.close')}</button><button onClick={() => void save()} disabled={!userId || blocked || saving} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? t('events.adding') : t('common.add')}</button></div></div></div></div>;
+  return <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4"><div className="mx-auto grid min-h-full place-items-center"><div className="w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold">{t('events.addParticipant')}</h3>{event?.requires_active_service ? <p className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.eventNeedsActiveService')}</p> : null}{blocked ? <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{t('events.noAvailablePlaces')}</p> : null}{error ? <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><TextField label={t('events.searchUser')} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('events.searchUserPlaceholder')} autoFocus />{search.trim().length >= 2 ? <><div className="overflow-hidden rounded-lg border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">{t('users.user')}</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">{t('members.phone')}</th><th className="px-4 py-3">{t('services.service')}</th><th className="px-4 py-3 text-right">{t('events.selection')}</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${hasActiveService(u) ? '' : 'bg-amber-50/60'}`}><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3 text-slate-600">{u.phone || '-'}</td><td className="px-4 py-3">{hasActiveService(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{t('users.statusActive')}</span> : <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{t('users.noActiveService')}</span>}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => setUserId(String(u.id))} disabled={blocked} className={`rounded-lg px-3 py-2 text-sm font-semibold ${userId === String(u.id) ? 'bg-indigo-600 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>{userId === String(u.id) ? t('events.selected') : t('common.select')}</button></td></tr>) : <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? t('events.loadingUsers') : users.length ? t('events.usersAlreadyParticipants') : t('events.noUsers')}</td></tr>}</tbody></table></div><div className="flex items-center justify-between gap-3 text-sm text-slate-600"><span>{usersMeta.total ? t('events.usersCount', { count: usersMeta.total }) : t('events.noResults')}</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div></> : null}<SelectField label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><label><span className="mb-2 block text-sm font-medium">{t('events.notes')}</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-lg border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.close')}</button><button onClick={() => void save()} disabled={!userId || blocked || saving} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? t('events.adding') : t('common.add')}</button></div></div></div></div>;
 }
 
 function ScanParticipantPanel({ occurrenceId, availableSlots, existingParticipants, onSaved }: { occurrenceId: number; availableSlots?: number | null; existingParticipants: EventParticipant[]; onSaved: () => void }) {
@@ -496,11 +496,11 @@ function ScanParticipantPanel({ occurrenceId, availableSlots, existingParticipan
   };
 
   return (
-    <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <div className="mb-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
         <TextField label="Scaneaza card" value={cardCode} onChange={(e) => setCardCode(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addByCardCode(); } }} placeholder="Scannerul completeaza codul si apasa Enter" disabled={blocked || scanning} autoFocus />
         <SelectField label="Status" value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked || scanning}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
-        <button type="button" onClick={() => void addByCardCode()} disabled={!cardCode.trim() || blocked || scanning} className="mt-7 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{scanning ? 'Se adauga...' : 'Adauga rapid'}</button>
+        <button type="button" onClick={() => void addByCardCode()} disabled={!cardCode.trim() || blocked || scanning} className="mt-7 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{scanning ? 'Se adauga...' : 'Adauga rapid'}</button>
       </div>
       {blocked ? <p className="mt-3 text-sm font-medium text-red-700">Nu exista locuri disponibile.</p> : null}
       {message ? <p className={`mt-3 text-sm font-medium ${message.type === 'success' ? 'text-emerald-700' : 'text-red-700'}`}>{message.text}</p> : null}
@@ -593,17 +593,17 @@ function EventParticipantsPage() {
     <SectionCard
       title="Occurrence Participants"
       action={permissions.canManageParticipants ? (
-        <button onClick={() => setShowAdd(true)} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+        <button onClick={() => setShowAdd(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
           <Plus className="mr-2 inline h-4 w-4" />Add participant
         </button>
       ) : null}
     >
       {permissions.canManageParticipants ? <ScanParticipantPanel occurrenceId={id} availableSlots={occurrence?.available_places} existingParticipants={participants} onSaved={() => void reload()} /> : null}
       {error ? <p className="text-red-600">{error}</p> : null}
-      {paymentsError ? <p className="mb-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{paymentsError}</p> : null}
+      {paymentsError ? <p className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{paymentsError}</p> : null}
 
       <div className="mb-3 flex justify-end">
-        <button onClick={() => void loadOccurrencePayments()} disabled={paymentsLoading} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-60">
+        <button onClick={() => void loadOccurrencePayments()} disabled={paymentsLoading} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-60">
           <RefreshCw className="mr-2 inline h-4 w-4" />{t('events.refreshPayments')}
         </button>
       </div>
@@ -634,7 +634,7 @@ function EventParticipantsPage() {
                     <p className="font-medium text-slate-900">{participantName(participant)}</p>
                     <div className="mt-3 space-y-2">
                       {participantPayments.length ? participantPayments.map((payment) => (
-                        <div key={payment.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div key={payment.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                           <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {formatCurrency(payment.amount)}</p>
                           <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {formatApiDate(payment.paid_at)}</p>
                         </div>
@@ -642,10 +642,10 @@ function EventParticipantsPage() {
                     </div>
                   </td>
                   <td className="py-4">{participant.user?.email ?? participant.email ?? '-'}</td>
-                  <td className="py-4">{permissions.canManageParticipants ? <select value={draft.status} onChange={(e) => updateDraft(userId, { status: e.target.value as ParticipantStatus })} className="rounded-xl border px-3 py-2">{participantStatuses.map((status) => <option key={status}>{status}</option>)}</select> : <StatusBadge status={participant.status} />}</td>
+                  <td className="py-4">{permissions.canManageParticipants ? <select value={draft.status} onChange={(e) => updateDraft(userId, { status: e.target.value as ParticipantStatus })} className="rounded-lg border px-3 py-2">{participantStatuses.map((status) => <option key={status}>{status}</option>)}</select> : <StatusBadge status={participant.status} />}</td>
                   <td className="py-4">{participant.registered_at}</td>
-                  <td className="py-4">{permissions.canManageParticipants ? <textarea value={draft.notes} onChange={(e) => updateDraft(userId, { notes: e.target.value })} rows={2} className="min-w-64 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" /> : participant.notes || '-'}</td>
-                  <td className="py-4 text-right">{permissions.canManageParticipants ? <div className="flex justify-end gap-2"><button onClick={() => setPaymentParticipant(participant)} className="rounded-xl border border-slate-200 px-3 py-2 text-slate-700"><CreditCard className="h-4 w-4" /></button><button onClick={() => void saveParticipant(userId)} disabled={!dirty || savingParticipantId === userId} className="rounded-xl border border-slate-200 px-3 py-2 text-slate-700 disabled:opacity-40"><Save className="h-4 w-4" /></button><button onClick={() => void remove(userId)} className="rounded-xl border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div> : null}</td>
+                  <td className="py-4">{permissions.canManageParticipants ? <textarea value={draft.notes} onChange={(e) => updateDraft(userId, { notes: e.target.value })} rows={2} className="min-w-64 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" /> : participant.notes || '-'}</td>
+                  <td className="py-4 text-right">{permissions.canManageParticipants ? <div className="flex justify-end gap-2"><button onClick={() => setPaymentParticipant(participant)} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700"><CreditCard className="h-4 w-4" /></button><button onClick={() => void saveParticipant(userId)} disabled={!dirty || savingParticipantId === userId} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 disabled:opacity-40"><Save className="h-4 w-4" /></button><button onClick={() => void remove(userId)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div> : null}</td>
                 </tr>
               );
             }) : <tr><td colSpan={6} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista participanti.'}</td></tr>}

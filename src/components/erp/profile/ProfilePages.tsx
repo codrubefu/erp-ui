@@ -129,24 +129,24 @@ export function ProfileInfoPage() {
     <div className="space-y-6">
       <SectionCard title={t('profile.infoTitle')}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-lg bg-slate-50 p-4">
             <div className="flex items-center gap-3">
-              <span className="rounded-2xl bg-violet-100 p-3 text-violet-700"><UserCircle className="h-6 w-6" /></span>
+              <span className="rounded-lg bg-indigo-100 p-3 text-indigo-700"><UserCircle className="h-6 w-6" /></span>
               <div className="min-w-0">
                 <p className="truncate text-lg font-bold text-slate-900">{displayName}</p>
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-            <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-violet-600" />{user?.email ?? '-'}</p>
-            <p className="mt-2 flex items-center gap-2"><Phone className="h-4 w-4 text-violet-600" />{phone || '-'}</p>
+          <div className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-indigo-600" />{user?.email ?? '-'}</p>
+            <p className="mt-2 flex items-center gap-2"><Phone className="h-4 w-4 text-indigo-600" />{phone || '-'}</p>
           </div>
         </div>
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <p className="mb-2 text-sm font-semibold text-slate-700">{t('profile.groups')}</p>
             <div className="flex flex-wrap gap-2">
-              {groups.length ? groups.map((group) => <span key={group.id} className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">{group.label || group.name}</span>) : <span className="text-sm text-slate-500">-</span>}
+              {groups.length ? groups.map((group) => <span key={group.id} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">{group.label || group.name}</span>) : <span className="text-sm text-slate-500">-</span>}
             </div>
           </div>
           <div>
@@ -158,12 +158,12 @@ export function ProfileInfoPage() {
         </div>
       </SectionCard>
 
-      <SectionCard title={t('profile.customFields')} action={<button onClick={() => void loadCustomFields()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
+      <SectionCard title={t('profile.customFields')} action={<button onClick={() => void loadCustomFields()} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
         {customFieldsError ? <Alert tone="error" className="mb-4">{customFieldsError}</Alert> : null}
         {rows.length ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {rows.map((row) => (
-              <div key={row.key} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+              <div key={row.key} className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase text-slate-500">{row.label}</p>
                 <p className="mt-1 break-words text-sm font-medium text-slate-900">{row.value}</p>
               </div>
@@ -228,7 +228,7 @@ export function ProfileSecurityPage() {
         <Input label={t('profile.currentPassword')} type="password" value={form.current_password} onChange={(event) => setField('current_password', event.target.value)} />
         <Input label={t('profile.newPassword')} type="password" value={form.password} onChange={(event) => setField('password', event.target.value)} />
         <Input label={t('profile.confirmPassword')} type="password" value={form.password_confirmation} onChange={(event) => setField('password_confirmation', event.target.value)} />
-        <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+        <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
           <KeyRound className="h-4 w-4" />
           {loading ? t('common.saving') : t('profile.savePassword')}
         </button>
@@ -283,7 +283,7 @@ export function ProfileAnnouncementsPage() {
       {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
       <div className="space-y-3">
         {articles.length ? articles.map((article) => (
-          <article key={article.id} className="rounded-xl border border-slate-200 bg-white p-4">
+          <article key={article.id} className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -307,7 +307,7 @@ export function ProfileAnnouncementsPage() {
             </div>
           </article>
         )) : (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
             {loading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}
           </div>
         )}
@@ -339,7 +339,7 @@ export function ProfileEventsPage() {
   }, [loadEvents]);
 
   return (
-    <SectionCard title={t('profile.eventsTitle')} action={<button onClick={() => void loadEvents()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
+    <SectionCard title={t('profile.eventsTitle')} action={<button onClick={() => void loadEvents()} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
       {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
@@ -354,7 +354,7 @@ export function ProfileEventsPage() {
           <tbody>
             {events.length ? events.map((event) => (
               <tr key={event.id} className="border-b border-slate-100">
-                <td className="py-4 font-semibold text-slate-900"><CalendarDays className="mr-2 inline h-4 w-4 text-violet-600" />{eventTitle(event)}</td>
+                <td className="py-4 font-semibold text-slate-900"><CalendarDays className="mr-2 inline h-4 w-4 text-indigo-600" />{eventTitle(event)}</td>
                 <td className="py-4 text-slate-600">{formatDate(eventStart(event))}</td>
                 <td className="py-4 text-slate-600">{formatDate(eventEnd(event))}</td>
                 <td className="py-4">{event.status ? <StatusBadge status={event.status} /> : '-'}</td>
@@ -392,7 +392,7 @@ export function ProfileServicesPage() {
   }, [loadServices]);
 
   return (
-    <SectionCard title={t('profile.servicesTitle')} action={<button onClick={() => void loadServices()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
+    <SectionCard title={t('profile.servicesTitle')} action={<button onClick={() => void loadServices()} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
       {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">

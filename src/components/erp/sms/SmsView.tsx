@@ -111,10 +111,10 @@ export function SmsView() {
         title={t('sms.title')}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={resetFilters} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={resetFilters} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
               <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
-            <button onClick={() => void fetchMessages(page, perPage, searchTerm, status, type)} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+            <button onClick={() => void fetchMessages(page, perPage, searchTerm, status, type)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
           </div>
@@ -132,7 +132,7 @@ export function SmsView() {
           />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.status')}</span>
-            <select value={status} onChange={(event) => setStatus(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
+            <select value={status} onChange={(event) => setStatus(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none">
               <option value="">{t('common.all')}</option>
               {['sent', 'pending', 'failed', 'draft'].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
@@ -148,47 +148,48 @@ export function SmsView() {
                 setPage(1);
                 void fetchMessages(1, nextPerPage, searchTerm, status, type);
               }}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
             >
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
           <div className="flex items-end">
-            <button onClick={applyFilters} className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={applyFilters} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
-        {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <div className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('sms.showingCount', { count: pagination.total || messages.length })}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[980px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-3 font-semibold">{t('sms.recipient')}</th>
-                <th className="pb-3 font-semibold">{t('sms.destination')}</th>
-                <th className="pb-3 font-semibold">{t('sms.message')}</th>
-                <th className="pb-3 font-semibold">{t('sms.service')}</th>
-                <th className="pb-3 font-semibold">{t('sms.type')}</th>
-                <th className="pb-3 font-semibold">{t('common.status')}</th>
-                <th className="pb-3 font-semibold">{t('sms.sentAt')}</th>
+              <tr className="bg-slate-50 text-xs uppercase text-slate-500">
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('sms.recipient')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('sms.destination')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('sms.message')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('sms.service')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('sms.type')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('common.status')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('sms.sentAt')}</th>
               </tr>
             </thead>
             <tbody>
               {messages.length ? messages.map((message) => (
-                <tr key={message.id} className="border-b border-slate-100 align-top">
-                  <td className="py-4 pr-4">
+                <tr key={message.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                  <td className="px-5 py-3">
                     <p className="font-semibold text-slate-900">{userName(message)}</p>
                   </td>
-                  <td className="py-4 pr-4 text-slate-600">{message.destination || '-'}</td>
-                  <td className="max-w-[420px] py-4 pr-4 text-slate-600">{message.message || '-'}</td>
-                  <td className="py-4 pr-4 text-slate-600">{message.service?.name || (message.service_id ? `#${message.service_id}` : '-')}</td>
-                  <td className="py-4 pr-4 text-slate-600">{message.type || '-'}</td>
-                  <td className="py-4 pr-4"><StatusBadge status={message.status || '-'} /></td>
-                  <td className="py-4 text-slate-600">{formatDateTime(message.sent_at ?? message.created_at)}</td>
+                  <td className="px-4 py-3 text-slate-600">{message.destination || '-'}</td>
+                  <td className="max-w-[420px] px-4 py-3 text-slate-600">{message.message || '-'}</td>
+                  <td className="px-4 py-3 text-slate-600">{message.service?.name || (message.service_id ? `#${message.service_id}` : '-')}</td>
+                  <td className="px-4 py-3 text-slate-600">{message.type || '-'}</td>
+                  <td className="px-4 py-3"><StatusBadge status={message.status || '-'} /></td>
+                  <td className="px-5 py-3 text-slate-600">{formatDateTime(message.sent_at ?? message.created_at)}</td>
                 </tr>
               )) : (
                 <tr>
@@ -197,6 +198,7 @@ export function SmsView() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
@@ -205,14 +207,14 @@ export function SmsView() {
             <button
               onClick={() => void fetchMessages(page - 1, perPage, searchTerm, status, type)}
               disabled={loading || page <= 1}
-              className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="mr-1 h-4 w-4" />{t('users.previousPage')}
             </button>
             <button
               onClick={() => void fetchMessages(page + 1, perPage, searchTerm, status, type)}
               disabled={loading || page >= pagination.last_page}
-              className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t('users.nextPage')}<ChevronRight className="ml-1 h-4 w-4" />
             </button>

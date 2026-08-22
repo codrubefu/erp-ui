@@ -350,13 +350,13 @@ export default function ERPAdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900">
+    <div className="min-h-screen bg-[#f3f6fb] text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} />
         {sidebarOpen ? (
           <button
             aria-label="Close navigation"
-            className="fixed inset-0 z-20 bg-slate-950/35 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-20 bg-slate-950/35 backdrop-blur-[2px] lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         ) : null}

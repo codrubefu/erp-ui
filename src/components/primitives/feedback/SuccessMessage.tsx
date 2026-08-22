@@ -24,7 +24,7 @@ export function SuccessMessage({ children, className, fixed = false }: SuccessMe
       role="status"
       aria-live="polite"
       className={cn(
-        'rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700',
+        'rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700',
         fixed ? 'fixed right-4 top-4 z-50 max-w-sm shadow-lg' : 'mb-5',
         className,
       )}

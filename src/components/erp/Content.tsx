@@ -87,5 +87,5 @@ export default function Content({ current, page, membersData, servicesData, anno
     }
   }, [current, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess]);
 
-  return <main className="mx-auto w-full max-w-[1600px] space-y-6 p-4 md:p-7 xl:px-10 xl:py-8">{view}</main>;
+  return <main className="mx-auto w-full max-w-[1540px] space-y-5 p-4 sm:p-5 lg:p-6 xl:p-7">{view}</main>;
 }

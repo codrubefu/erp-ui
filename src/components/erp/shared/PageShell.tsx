@@ -10,7 +10,7 @@ export function PageShell({ title, subtitle, backLabel, onBack, children }: Page
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             {onBack && backLabel ? (
-              <button onClick={onBack} className="mb-3 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+              <button onClick={onBack} className="mb-3 inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
                 <ArrowLeft className="h-4 w-4" />
                 {backLabel}
               </button>

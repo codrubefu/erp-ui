@@ -292,12 +292,12 @@ export function GroupsRightsView() {
         backLabel={t('access.backToResource', { resource: t(config.titleKey).toLowerCase() })}
         onBack={closeForm}
       >
-        {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('access.editCardTitle', { id: editing.id }) : t('access.addResource', { resource: t(config.labelKey).toLowerCase() })}
           action={
-            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={closeForm} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
@@ -312,7 +312,7 @@ export function GroupsRightsView() {
                     <textarea
                       value={String(value ?? '')}
                       onChange={(event) => setForm((prev) => ({ ...prev, [field.name]: event.target.value }))}
-                      className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                      className="min-h-24 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
                     />
                   </label>
                 );
@@ -323,7 +323,7 @@ export function GroupsRightsView() {
                 return (
                   <div key={field.name} className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-700">{t(field.labelKey)}</span>
-                    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
                       {groupedRights.map((group) => (
                         <section key={group.key} className="space-y-2">
                           <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{group.label}</h4>
@@ -333,7 +333,7 @@ export function GroupsRightsView() {
                               const isChecked = selectedRightIds.has(String(right.id));
 
                               return (
-                                <label key={right.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 px-3 py-2 text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50/50">
+                                <label key={right.id} className="flex items-start gap-3 rounded-lg border border-slate-100 px-3 py-2 text-sm text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50/50">
                                   <input
                                     type="checkbox"
                                     checked={isChecked}
@@ -341,7 +341,7 @@ export function GroupsRightsView() {
                                       const rightIds = toggleSelectedId(value, right.id, event.target.checked);
                                       setForm((prev) => ({ ...prev, [field.name]: rightIds }));
                                     }}
-                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-400"
+                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
                                   />
                                   <span className="min-w-0">
                                     <span className="block font-medium text-slate-900">{label}</span>
@@ -369,11 +369,11 @@ export function GroupsRightsView() {
               );
             })}
             <div className="flex flex-wrap justify-end gap-2">
-              <button onClick={closeForm} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-              <button onClick={() => void save()} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-100 disabled:cursor-not-allowed disabled:opacity-60">
+              <button onClick={closeForm} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+              <button onClick={() => void save()} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-100 disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.save')}
               </button>
-              <button onClick={() => void save(true)} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <button onClick={() => void save(true)} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.saveAndClose')}
               </button>
             </div>
@@ -389,10 +389,10 @@ export function GroupsRightsView() {
         title={t(config.titleKey)}
         action={
           <div className="flex items-center gap-2">
-            <button onClick={() => loadItems(search)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button onClick={() => loadItems(search)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
               <RefreshCw className="h-4 w-4" /> {t('common.refresh')}
             </button>
-            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
+            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
               <Plus className="h-4 w-4" /> {t('access.new')}
             </button>
           </div>
@@ -412,13 +412,13 @@ export function GroupsRightsView() {
                 if (event.key === 'Enter') void loadItems(search);
               }}
               placeholder={t(config.searchPlaceholderKey)}
-              className="w-56 rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-violet-400"
+              className="w-56 rounded-lg border border-slate-200 px-4 py-2 text-sm outline-none focus:border-indigo-400"
             />
-            <button onClick={() => loadItems(search)} className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => loadItems(search)} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         }
       >
-          {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+          {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
               <thead>
@@ -437,10 +437,10 @@ export function GroupsRightsView() {
                     ))}
                     <td className="px-3 py-4">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => startEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700" title={t('common.edit')}>
+                        <button onClick={() => startEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700" title={t('common.edit')}>
                           <Edit3 className="h-4 w-4" />
                         </button>
-                        <button onClick={() => remove(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 text-red-600" title={t('common.delete')}>
+                        <button onClick={() => remove(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 text-red-600" title={t('common.delete')}>
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>

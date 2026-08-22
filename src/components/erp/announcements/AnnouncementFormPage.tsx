@@ -21,10 +21,10 @@ export function AnnouncementFormPage({ mode, data, onChange, onBack, onSave, onS
           <div className="md:col-span-2"><Textarea label={t('announcements.content')} value={data.content} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('content', e.target.value)} placeholder={t('announcements.contentPlaceholder')} /></div>
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <button onClick={onBack} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
-          <button className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><Eye className="mr-2 inline h-4 w-4" />{t('common.preview')}</button>
-          <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]"><Save className="h-4 w-4" />{t('announcements.save')}</button>
-          <button onClick={onSaveAndClose ?? onSave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button>
+          <button onClick={onBack} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700">{t('common.cancel')}</button>
+          <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><Eye className="mr-2 inline h-4 w-4" />{t('common.preview')}</button>
+          <button onClick={onSave} className="inline-flex h-10 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"><Save className="h-4 w-4" />{t('announcements.save')}</button>
+          <button onClick={onSaveAndClose ?? onSave} className="inline-flex h-10 items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button>
         </div>
       </SectionCard>
     </PageShell>

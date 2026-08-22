@@ -11,5 +11,5 @@ const toneClasses: Record<AlertTone, string> = {
 };
 
 export function Alert({ tone = 'info', className, children }: { tone?: AlertTone; className?: string; children: React.ReactNode }) {
-  return <p className={cn('rounded-2xl border px-4 py-3 text-sm font-medium', toneClasses[tone], className)}>{children}</p>;
+  return <p className={cn('rounded-lg border px-4 py-3 text-sm font-medium', toneClasses[tone], className)}>{children}</p>;
 }

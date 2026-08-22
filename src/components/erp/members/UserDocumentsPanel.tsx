@@ -149,15 +149,15 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
 
   return (
     <div className="space-y-5">
-      {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-      {success ? <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
+      {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+      {success ? <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</p> : null}
 
       {canUpload ? (
         <SectionCard title={replaceTarget ? t('userDocuments.replaceTitle', { title: replaceTarget.title }) : t('userDocuments.uploadTitle')}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">{t('userDocuments.category')}</span>
-              <select value={form.category} onChange={(event) => updateField('category', event.target.value as ApiUserDocumentCategory)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+              <select value={form.category} onChange={(event) => updateField('category', event.target.value as ApiUserDocumentCategory)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                 {categories.map((category) => <option key={category} value={category}>{t(`userDocuments.categories.${category}`)}</option>)}
               </select>
             </label>
@@ -165,7 +165,7 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
             <Input label={t('userDocuments.expiresAt')} type="date" value={form.expires_at} onChange={(event) => updateField('expires_at', event.target.value)} />
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">{t('userDocuments.location')}</span>
-              <select value={form.location_id} onChange={(event) => updateField('location_id', event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+              <select value={form.location_id} onChange={(event) => updateField('location_id', event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                 <option value="">{t('userDocuments.noLocation')}</option>
                 {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
               </select>
@@ -175,7 +175,7 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
             </div>
             <label className="block md:col-span-2">
               <span className="mb-2 block text-sm font-medium text-slate-700">{t('userDocuments.file')}</span>
-              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(event) => updateField('file', event.target.files?.[0] ?? null)} className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" />
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(event) => updateField('file', event.target.files?.[0] ?? null)} className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
               <span className="mt-2 block text-xs text-slate-500">{selectedFileName} - {t('userDocuments.fileHint')}</span>
             </label>
           </div>
@@ -192,22 +192,23 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
         <div className="mb-4 flex justify-end">
           <Button onClick={() => void loadDocuments()} disabled={loading}><RefreshCw className="h-4 w-4" />{loading ? t('common.loading') : t('common.refresh')}</Button>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="min-w-[920px] w-full text-left text-sm">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[920px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-semibold">{t('userDocuments.document')}</th>
-                <th className="px-4 py-3 font-semibold">{t('userDocuments.category')}</th>
-                <th className="px-4 py-3 font-semibold">{t('userDocuments.expires')}</th>
-                <th className="px-4 py-3 font-semibold">{t('userDocuments.file')}</th>
-                <th className="px-4 py-3 font-semibold">{t('userDocuments.operator')}</th>
-                <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('userDocuments.document')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('userDocuments.category')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('userDocuments.expires')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('userDocuments.file')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('userDocuments.operator')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {documents.length ? documents.map((document) => (
-                <tr key={document.id} className="border-t border-slate-100 align-top">
-                  <td className="px-4 py-3">
+                <tr key={document.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                  <td className="px-5 py-3">
                     <p className="font-semibold text-slate-900"><FileText className="mr-2 inline h-4 w-4" />{document.title}</p>
                     <p className="text-xs text-slate-500">{document.description || '-'}</p>
                     {document.replaces_document_id ? <p className="mt-1 text-xs text-slate-500">{t('userDocuments.replaces', { id: document.replaces_document_id })}</p> : null}
@@ -219,7 +220,7 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
                     <p className="text-xs text-slate-500">{document.mime_type} - {formatBytes(document.size)}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{document.uploader ? `${document.uploader.first_name ?? ''} ${document.uploader.last_name ?? ''}`.trim() || document.uploader.email : '-'}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-3 text-right">
                     <div className="flex flex-wrap justify-end gap-2">
                       <Button onClick={() => void downloadDocument(document)} size="sm"><Download className="h-4 w-4" />{t('userDocuments.download')}</Button>
                       {canUpload ? <Button onClick={() => {
@@ -244,6 +245,7 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </SectionCard>
     </div>

@@ -1,7 +1,7 @@
-import { ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filter, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filter, MoreVertical, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
@@ -151,7 +151,7 @@ function todayDate() {
 
 function normalizeDateInput(value: string) {
   const trimmed = value.trim();
-  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/.exec(trimmed);
   const localMatch = /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/.exec(trimmed);
   const match = isoMatch
     ? { year: Number(isoMatch[1]), month: Number(isoMatch[2]), day: Number(isoMatch[3]) }
@@ -179,54 +179,26 @@ function normalizeDateInput(value: string) {
 
 function DateWithTextInput({
   label,
-  textLabel,
   value,
   disabled,
+  inline = false,
   onChange,
 }: {
   label: string;
-  textLabel: string;
   value: string;
   disabled?: boolean;
+  inline?: boolean;
   onChange: (value: string) => void;
 }) {
-  const [typedValue, setTypedValue] = useState(value);
-
-  useEffect(() => {
-    setTypedValue(value);
-  }, [value]);
-
   const normalizedValue = normalizeDateInput(value);
 
   return (
-    <div className="grid grid-cols-1 gap-2">
-      <Input
-        label={textLabel}
-        value={typedValue}
-        onChange={(event) => {
-          const nextValue = event.target.value;
-          setTypedValue(nextValue);
-          const normalized = normalizeDateInput(nextValue);
-          if (normalized) onChange(normalized);
-        }}
-        onBlur={() => {
-          const normalized = normalizeDateInput(typedValue);
-          if (normalized) {
-            setTypedValue(normalized);
-            onChange(normalized);
-          }
-        }}
-        placeholder="2026-08-22 sau 22.08.2026"
-        disabled={disabled}
-      />
+    <div className={inline ? 'grid grid-cols-1 gap-2 sm:grid-cols-2' : 'grid grid-cols-1 gap-2'}>
       <Input
         label={label}
         type="date"
         value={normalizedValue}
-        onChange={(event) => {
-          setTypedValue(event.target.value);
-          onChange(event.target.value);
-        }}
+        onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
       />
     </div>
@@ -558,13 +530,15 @@ export function UserManagementView({
   countLabel,
   singularLabel,
   entityLabel,
-  newEntityLabel,
   showGroupsInList = false,
   useRelationTabs = false,
 }: UserManagementViewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { id: routeUserId } = useParams();
+  const location = useLocation();
+  const { id: routeParamUserId } = useParams();
+  const routePathUserId = location.pathname.match(/^\/erp\/members\/(\d+)$/)?.[1];
+  const routeUserId = routeParamUserId ?? routePathUserId;
   const { hasAnyRight } = useAuth();
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
@@ -586,6 +560,7 @@ export function UserManagementView({
   const [serviceToAdd, setServiceToAdd] = useState('');
   const [serviceStartDate, setServiceStartDate] = useState(todayDate());
   const [serviceSaving, setServiceSaving] = useState(false);
+  const [openServiceActionsId, setOpenServiceActionsId] = useState<number | null>(null);
   const [paymentServiceId, setPaymentServiceId] = useState<number | null>(null);
   const [paymentForm, setPaymentForm] = useState<ServicePaymentForm>(emptyPaymentForm);
   const [servicePayments, setServicePayments] = useState<ApiPayment[]>([]);
@@ -614,7 +589,6 @@ export function UserManagementView({
   const resolvedCountLabel = countLabel ?? t('members.countLabel');
   const resolvedSingularLabel = singularLabel ?? t('members.singularLabel');
   const resolvedEntityLabel = entityLabel ?? t('members.entityLabel');
-  const resolvedNewEntityLabel = newEntityLabel ?? t('members.newEntityLabel');
   const editEntityLabel = editing ? `${resolvedEntityLabel}: ${userName(editing)}` : resolvedEntityLabel;
 
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
@@ -863,6 +837,7 @@ export function UserManagementView({
     setActiveFormTab('details');
     setServiceToAdd('');
     setServiceStartDate(todayDate());
+    setOpenServiceActionsId(null);
     setPaymentServiceId(null);
     setPaymentForm(emptyPaymentForm);
     setServicePayments([]);
@@ -1108,7 +1083,11 @@ export function UserManagementView({
       }
       const currentStatus = serviceAssignmentStatus(selectedPaymentService, assignment);
       if (!paymentForm.id && savedPayment.id && modelId && ['pending', 'reserved', 'expired'].includes(currentStatus ?? '')) {
-        await serviceLifecycleService.activate(modelId, savedPayment.id);
+        try {
+          await serviceLifecycleService.activate(modelId, savedPayment.id);
+        } catch (activationError) {
+          console.warn('Payment saved, but service assignment activation was skipped.', activationError);
+        }
       }
       if (editing) {
         await reloadEditingUserServices();
@@ -1288,7 +1267,7 @@ export function UserManagementView({
       return (
         <label key={key} className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-          <select value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+          <select value={String(value)} onChange={(event) => updateCustomField(field, event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
             <option value="">{t('common.select')}</option>
             {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
           </select>
@@ -1300,7 +1279,7 @@ export function UserManagementView({
       return (
         <label key={key} className="block">
           <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-          <select multiple value={arrayValue(value)} onChange={(event) => updateCustomField(field, Array.from(event.currentTarget.selectedOptions).map((option) => option.value))} className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+          <select multiple value={arrayValue(value)} onChange={(event) => updateCustomField(field, Array.from(event.currentTarget.selectedOptions).map((option) => option.value))} className="min-h-36 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
             {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
           </select>
         </label>
@@ -1309,8 +1288,8 @@ export function UserManagementView({
 
     if (field.type === 'checkbox' || field.type === 'boolean') {
       return (
-        <label key={key} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
-          <input type="checkbox" checked={Boolean(value)} onChange={(event) => updateCustomField(field, event.target.checked)} className="h-4 w-4 accent-violet-600" />
+        <label key={key} className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+          <input type="checkbox" checked={Boolean(value)} onChange={(event) => updateCustomField(field, event.target.checked)} className="h-4 w-4 accent-indigo-600" />
           {label}
         </label>
       );
@@ -1327,17 +1306,17 @@ export function UserManagementView({
   const renderGroupCheckboxes = () => (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {groups.length ? groups.map((group) => (
-        <label key={group.id} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
+        <label key={group.id} className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
           <input
             type="checkbox"
             checked={selectedGroupIds.includes(String(group.id))}
             onChange={(event) => setForm((prev) => ({ ...prev, group_ids: toggleId(prev.group_ids, group.id, event.target.checked) }))}
-            className="h-4 w-4 accent-violet-600"
+            className="h-4 w-4 accent-indigo-600"
           />
           {group.label || group.name}
         </label>
       )) : (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
           {t('access.empty')}
         </div>
       )}
@@ -1353,7 +1332,7 @@ export function UserManagementView({
         const partiallySelected = selectedCount > 0 && !allSelected;
 
         return (
-          <div key={group.id} className="rounded-xl border border-slate-200 bg-white">
+          <div key={group.id} className="rounded-lg border border-slate-200 bg-white">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">{group.name}</h3>
@@ -1367,19 +1346,19 @@ export function UserManagementView({
                     if (input) input.indeterminate = partiallySelected;
                   }}
                   onChange={(event) => setForm((prev) => ({ ...prev, location_ids: toggleIds(prev.location_ids, groupLocationIds, event.target.checked) }))}
-                  className="h-4 w-4 accent-violet-600"
+                  className="h-4 w-4 accent-indigo-600"
                 />
                 {t('common.selectAll')}
               </label>
             </div>
             <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
               {group.locations.map((location) => (
-                <label key={location.id} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
+                <label key={location.id} className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
                   <input
                     type="checkbox"
                     checked={selectedLocationIds.includes(String(location.id))}
                     onChange={(event) => setForm((prev) => ({ ...prev, location_ids: toggleId(prev.location_ids, location.id, event.target.checked) }))}
-                    className="h-4 w-4 accent-violet-600"
+                    className="h-4 w-4 accent-indigo-600"
                   />
                   {location.name}
                 </label>
@@ -1388,7 +1367,7 @@ export function UserManagementView({
           </div>
         );
       }) : (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
           {t('branches.empty')}
         </div>
       )}
@@ -1440,17 +1419,17 @@ export function UserManagementView({
   if (formOpen) {
     return (
       <PageShell>
-        {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
           title={editing ? t('users.editTitle', { label: editEntityLabel }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
-            <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
+            <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}
             </button>
           }
         >
-          <div className="mb-5 flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+          <div className="mb-5 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
             {formTabs.map(([tab, label]) => (
               <button
                 key={tab}
@@ -1468,13 +1447,13 @@ export function UserManagementView({
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
               <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
-              <label className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700">
-                <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-violet-600" />
+              <label className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+                <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-indigo-600" />
                 {t('users.activeUser')}
               </label>
-              <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-2 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 md:col-span-2 sm:grid-cols-3">
                 {(['sms', 'mail'] as const).map((channel) => (
-                  <label key={channel} className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
+                  <label key={channel} className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
                     <input
                       type="checkbox"
                       checked={form.notification_consents[channel]}
@@ -1482,7 +1461,7 @@ export function UserManagementView({
                         ...prev,
                         notification_consents: { ...prev.notification_consents, [channel]: event.target.checked },
                       }))}
-                      className="h-4 w-4 accent-violet-600"
+                      className="h-4 w-4 accent-indigo-600"
                     />
                     Consent {channel}
                   </label>
@@ -1499,7 +1478,7 @@ export function UserManagementView({
                         const groupIds = idsFromSelect(event.currentTarget.selectedOptions);
                         setForm((prev) => ({ ...prev, group_ids: groupIds }));
                       }}
-                      className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                      className="min-h-36 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
                     >
                       {groups.map((group) => <option key={group.id} value={group.id}>{group.label || group.name}</option>)}
                     </select>
@@ -1539,7 +1518,7 @@ export function UserManagementView({
                   </Button>
                 </div>
               </div>
-              <div className={`rounded-xl border px-4 py-3 text-sm ${scanningCode ? 'border-indigo-200 bg-indigo-50 text-indigo-800' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+              <div className={`rounded-lg border px-4 py-3 text-sm ${scanningCode ? 'border-indigo-200 bg-indigo-50 text-indigo-800' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
                 {scanningCode ? (
                   <div className="space-y-1">
                     <p className="font-semibold">{t('users.scanWaiting')}</p>
@@ -1553,7 +1532,7 @@ export function UserManagementView({
           ) : activeFormTab === 'information' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {userCustomFields.length ? userCustomFields.map(renderCustomField) : (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
                   {t('users.noCustomFields')}
                 </div>
               )}
@@ -1578,26 +1557,27 @@ export function UserManagementView({
                   </Button>
                 </div>
               </div>
-              {activityError ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{activityError}</p> : null}
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="min-w-[920px] w-full text-left text-sm">
+              {activityError ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{activityError}</p> : null}
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div className="overflow-x-auto">
+                <table className="min-w-[920px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
                   <thead className="bg-slate-50 text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">type</th>
-                      <th className="px-4 py-3 font-semibold">model</th>
-                      <th className="px-4 py-3 font-semibold">actor</th>
-                      <th className="px-4 py-3 font-semibold">created_at</th>
-                      <th className="px-4 py-3 font-semibold">new_values</th>
+                      <th className="border-b border-slate-200 px-5 py-3 font-semibold">type</th>
+                      <th className="border-b border-slate-200 px-4 py-3 font-semibold">model</th>
+                      <th className="border-b border-slate-200 px-4 py-3 font-semibold">actor</th>
+                      <th className="border-b border-slate-200 px-4 py-3 font-semibold">created_at</th>
+                      <th className="border-b border-slate-200 px-5 py-3 font-semibold">new_values</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activities.length ? activities.map((activity) => (
-                      <tr key={activity.id} className="border-t border-slate-100 align-top">
-                        <td className="px-4 py-3 font-semibold text-slate-900">{activity.type}</td>
+                      <tr key={activity.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                        <td className="px-5 py-3 font-semibold text-slate-900">{activity.type}</td>
                         <td className="px-4 py-3 text-slate-600">{activity.model_type ?? '-'} #{activity.model_id ?? '-'}</td>
                         <td className="px-4 py-3 text-slate-600">{activity.actor_id ?? '-'}</td>
                         <td className="px-4 py-3 text-slate-600">{formatDate(activity.created_at)}</td>
-                        <td className="max-w-[360px] px-4 py-3 text-xs text-slate-600"><pre className="whitespace-pre-wrap font-mono">{JSON.stringify(activity.new_values ?? {}, null, 2)}</pre></td>
+                        <td className="max-w-[360px] px-5 py-3 text-xs text-slate-600"><pre className="whitespace-pre-wrap font-mono">{JSON.stringify(activity.new_values ?? {}, null, 2)}</pre></td>
                       </tr>
                     )) : (
                       <tr>
@@ -1606,14 +1586,15 @@ export function UserManagementView({
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_240px_auto]">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(220px,320px)_minmax(360px,440px)_auto] md:items-end">
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.addService')}</span>
-                  <select value={serviceToAdd} onChange={(event) => setServiceToAdd(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                  <select value={serviceToAdd} onChange={(event) => setServiceToAdd(event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                     <option value="">{t('users.selectService')}</option>
                     {services.filter((service) => !selectedServiceIds.includes(String(service.id))).map((service) => (
                       <option key={service.id} value={service.id}>{service.name}</option>
@@ -1622,9 +1603,9 @@ export function UserManagementView({
                 </label>
                 <DateWithTextInput
                   label={t('users.startDate')}
-                  textLabel={t('users.startDateText')}
                   value={serviceStartDate}
                   onChange={setServiceStartDate}
+                  inline
                 />
                 <div className="flex items-end">
                   <Button onClick={addServiceAssignment} disabled={!serviceToAdd || serviceSaving} variant="primary" className="w-full py-3 md:w-auto">
@@ -1656,15 +1637,16 @@ export function UserManagementView({
 
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.currentServices')}</h3>
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="min-w-[980px] w-full text-left text-sm">
+                <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                  <div className="overflow-x-auto">
+                  <table className="min-w-[980px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">{t('services.service')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('users.added')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('users.expires')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
-                        <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
+                        <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('services.service')}</th>
+                        <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.added')}</th>
+                        <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.expires')}</th>
+                        <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('common.status')}</th>
+                        <th className="border-b border-slate-200 px-5 py-3 font-semibold text-right">{t('common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1685,15 +1667,15 @@ export function UserManagementView({
                             : payment.service_id === assignment.id
                         ));
                         return (
-                          <tr key={assignment.id} className="border-t border-slate-100 align-top">
-                            <td className="px-4 py-3">
+                          <tr key={assignment.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                            <td className="px-5 py-3">
                               <p className="font-medium text-slate-900">{service?.name ?? `#${assignment.id}`}</p>
                               <p className="text-xs text-slate-500">{service?.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
                               <p className="text-xs text-slate-500">{t('services.invoiceNumber')}: {assignment.invoice_number ?? '-'}</p>
                               <p className="text-xs text-slate-500">{t('services.billNumber')}: {assignment.bill_number ?? '-'}</p>
                               <div className="mt-3 space-y-2">
                                 {paymentsForService.length ? paymentsForService.map((payment) => (
-                                  <div key={payment.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                                  <div key={payment.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                       <div>
                                         <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {payment.amount}</p>
@@ -1719,7 +1701,6 @@ export function UserManagementView({
                             <td className="px-4 py-3">
                               <DateWithTextInput
                                 label={t('users.startDate')}
-                                textLabel={t('users.startDateText')}
                                 value={assignment.start_date ?? ''}
                                 onChange={(value) => updateServiceStartDate(assignment.id, value)}
                                 disabled={serviceSaving}
@@ -1734,61 +1715,76 @@ export function UserManagementView({
                                 {statusReason ? <p>{t('services.statusReason')}: {statusReason}</p> : null}
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-right">
-                              <div className="flex flex-wrap justify-end gap-2">
-                                <Button onClick={() => selectServiceForPayment(assignment.id)}>
-                                  <Plus className="h-4 w-4" />Adauga plata noua
-                                </Button>
-                                {serviceUserId ? (
-                                  <Button onClick={() => void downloadPaymentNote(serviceUserId)} disabled={paymentNoteLoadingId === serviceUserId}>
-                                    <FileText className="h-4 w-4" />{paymentNoteLoadingId === serviceUserId ? t('services.generatingPaymentNote') : t('services.paymentNote')}
-                                  </Button>
+                            <td className="px-5 py-3 text-right">
+                              <div className="relative inline-block text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenServiceActionsId((currentId) => (currentId === assignment.id ? null : assignment.id))}
+                                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                                  aria-expanded={openServiceActionsId === assignment.id}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                  {t('common.actions')}
+                                </button>
+                                {openServiceActionsId === assignment.id ? (
+                                  <div className="absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 text-left shadow-xl shadow-slate-900/10">
+                                    <button type="button" onClick={() => { setOpenServiceActionsId(null); selectServiceForPayment(assignment.id); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                      <Plus className="h-4 w-4" />Adauga plata noua
+                                    </button>
+                                    {serviceUserId ? (
+                                      <button type="button" onClick={() => { setOpenServiceActionsId(null); void downloadPaymentNote(serviceUserId); }} disabled={paymentNoteLoadingId === serviceUserId} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        <FileText className="h-4 w-4" />{paymentNoteLoadingId === serviceUserId ? t('services.generatingPaymentNote') : t('services.paymentNote')}
+                                      </button>
+                                    ) : null}
+                                    {serviceUserId && !assignment.invoice_number ? (
+                                      <button type="button" onClick={() => { setOpenServiceActionsId(null); void generateInvoice(serviceUserId); }} disabled={invoiceLoadingId === serviceUserId} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        <FileText className="h-4 w-4" />{invoiceLoadingId === serviceUserId ? t('services.generatingInvoice') : t('services.generateInvoice')}
+                                      </button>
+                                    ) : null}
+                                    {serviceUserId && assignment.invoice_number ? (
+                                      <>
+                                        <button type="button" onClick={() => { setOpenServiceActionsId(null); void downloadServiceInvoice(serviceUserId, assignment.invoice_number, 'pdf'); }} disabled={invoiceDownloadKey === `${serviceUserId}-pdf`} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                          <Download className="h-4 w-4" />{t('services.invoicePdf')}
+                                        </button>
+                                        <button type="button" onClick={() => { setOpenServiceActionsId(null); void downloadServiceInvoice(serviceUserId, assignment.invoice_number, 'xml'); }} disabled={invoiceDownloadKey === `${serviceUserId}-xml`} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                          <Download className="h-4 w-4" />{t('services.invoiceXml')}
+                                        </button>
+                                      </>
+                                    ) : null}
+                                    {serviceUserId && service && Number(service.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
+                                      <button type="button" onClick={() => { setOpenServiceActionsId(null); void runLifecycleAction(serviceUserId, 'activate'); }} disabled={lifecycleSavingId === serviceUserId} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        {t('services.activate')}
+                                      </button>
+                                    ) : null}
+                                    {serviceUserId && ['active', 'reserved'].includes(lifecycleStatus ?? '') ? (
+                                      <button type="button" onClick={() => {
+                                        setOpenServiceActionsId(null);
+                                        setSuspendAssignmentId(serviceUserId);
+                                        setSuspendReason('');
+                                        setSuspendResumeAt('');
+                                      }} disabled={lifecycleSavingId === serviceUserId} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        {t('services.suspend')}
+                                      </button>
+                                    ) : null}
+                                    {serviceUserId && lifecycleStatus === 'suspended' ? (
+                                      <button type="button" onClick={() => { setOpenServiceActionsId(null); void runLifecycleAction(serviceUserId, 'resume'); }} disabled={lifecycleSavingId === serviceUserId} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        {t('services.resume')}
+                                      </button>
+                                    ) : null}
+                                    {serviceUserId && lifecycleStatus === 'active' && maxAccesses ? (
+                                      <button type="button" onClick={() => { setOpenServiceActionsId(null); void runLifecycleAction(serviceUserId, 'consume'); }} disabled={lifecycleSavingId === serviceUserId} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        {t('services.consume')}
+                                      </button>
+                                    ) : null}
+                                    <div className="my-1 border-t border-slate-100" />
+                                    <button type="button" onClick={() => { setOpenServiceActionsId(null); removeServiceAssignment(assignment.id); }} disabled={serviceSaving} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                      <Trash2 className="h-4 w-4" />{t('common.delete')}
+                                    </button>
+                                  </div>
                                 ) : null}
-                                {serviceUserId && !assignment.invoice_number ? (
-                                  <Button onClick={() => void generateInvoice(serviceUserId)} disabled={invoiceLoadingId === serviceUserId} variant="primary">
-                                    <FileText className="h-4 w-4" />{invoiceLoadingId === serviceUserId ? t('services.generatingInvoice') : t('services.generateInvoice')}
-                                  </Button>
-                                ) : null}
-                                {serviceUserId && assignment.invoice_number ? (
-                                  <>
-                                    <Button onClick={() => void downloadServiceInvoice(serviceUserId, assignment.invoice_number, 'pdf')} disabled={invoiceDownloadKey === `${serviceUserId}-pdf`}>
-                                      <Download className="h-4 w-4" />{t('services.invoicePdf')}
-                                    </Button>
-                                    <Button onClick={() => void downloadServiceInvoice(serviceUserId, assignment.invoice_number, 'xml')} disabled={invoiceDownloadKey === `${serviceUserId}-xml`}>
-                                      <Download className="h-4 w-4" />{t('services.invoiceXml')}
-                                    </Button>
-                                  </>
-                                ) : null}
-                                {serviceUserId && service && Number(service.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
-                                  <Button onClick={() => void runLifecycleAction(serviceUserId, 'activate')} disabled={lifecycleSavingId === serviceUserId} variant="primary">
-                                    {t('services.activate')}
-                                  </Button>
-                                ) : null}
-                                {serviceUserId && ['active', 'reserved'].includes(lifecycleStatus ?? '') ? (
-                                  <Button onClick={() => {
-                                    setSuspendAssignmentId(serviceUserId);
-                                    setSuspendReason('');
-                                    setSuspendResumeAt('');
-                                  }} disabled={lifecycleSavingId === serviceUserId}>
-                                    {t('services.suspend')}
-                                  </Button>
-                                ) : null}
-                                {serviceUserId && lifecycleStatus === 'suspended' ? (
-                                  <Button onClick={() => void runLifecycleAction(serviceUserId, 'resume')} disabled={lifecycleSavingId === serviceUserId}>
-                                    {t('services.resume')}
-                                  </Button>
-                                ) : null}
-                                {serviceUserId && lifecycleStatus === 'active' && maxAccesses ? (
-                                  <Button onClick={() => void runLifecycleAction(serviceUserId, 'consume')} disabled={lifecycleSavingId === serviceUserId}>
-                                    {t('services.consume')}
-                                  </Button>
-                                ) : null}
-                                <Button onClick={() => removeServiceAssignment(assignment.id)} disabled={serviceSaving} variant="danger">
-                                  <Trash2 className="h-4 w-4" />{t('common.delete')}
-                                </Button>
                               </div>
                               {serviceUserId && suspendAssignmentId === serviceUserId ? (
-                                <div className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
+                                <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-left">
                                   <Textarea label={t('services.suspendReason')} value={suspendReason} onChange={(event) => setSuspendReason(event.target.value)} />
                                   <Input label={t('services.resumeAtOptional')} type="datetime-local" value={suspendResumeAt} onChange={(event) => setSuspendResumeAt(event.target.value)} />
                                   <div className="flex justify-end gap-2">
@@ -1807,28 +1803,30 @@ export function UserManagementView({
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
 
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.serviceHistory')}</h3>
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="min-w-[760px] w-full text-left text-sm">
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                  <div className="overflow-x-auto">
+                  <table className="min-w-[760px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">{t('services.service')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('users.added')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('users.expires')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
+                        <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('services.service')}</th>
+                        <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.added')}</th>
+                        <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.expires')}</th>
+                        <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('common.status')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {serviceHistoryRows(editing).length ? serviceHistoryRows(editing).map((item) => (
-                        <tr key={`${item.service_id}-${item.id ?? item.start_date}`} className="border-t border-slate-100">
-                          <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
+                        <tr key={`${item.service_id}-${item.id ?? item.start_date}`} className="border-b border-slate-100 transition-colors hover:bg-indigo-50/30">
+                          <td className="px-5 py-3 font-medium text-slate-900">{item.name}</td>
                           <td className="px-4 py-3 text-slate-600">{formatDate(item.start_date)}</td>
                           <td className="px-4 py-3 text-slate-600">{item.expires_at ? formatDate(item.expires_at) : t('services.noAutoExpiry')}</td>
-                          <td className="px-4 py-3"><StatusBadge status={assignmentStatusLabel(item.status, t)} /></td>
+                          <td className="px-5 py-3"><StatusBadge status={assignmentStatusLabel(item.status, t)} /></td>
                         </tr>
                       )) : (
                         <tr>
@@ -1837,6 +1835,7 @@ export function UserManagementView({
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1861,19 +1860,19 @@ export function UserManagementView({
         title={resolvedTitle}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={resetFilters} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <button onClick={resetFilters} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <Filter className="mr-2 inline h-4 w-4" />{t('users.resetFilters')}
             </button>
-            <button onClick={() => void loadUsers()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <button onClick={() => void loadUsers()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
-            <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#5b45f0] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6]">
+            <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
               <Plus className="mr-2 inline h-4 w-4" />{resolvedAddLabel}
             </button>
           </div>
         }
       >
-        <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_160px_auto]">
+        <div className="mb-5 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_160px_auto]">
           <Input
             label={t('common.search')}
             value={searchTerm}
@@ -1896,7 +1895,7 @@ export function UserManagementView({
                 setPage(1);
                 void fetchUsers(searchTerm, nextPerPage, 1);
               }}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none"
+              className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
               {[10, 15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
@@ -1905,33 +1904,34 @@ export function UserManagementView({
             <button onClick={() => {
               setPage(1);
               void fetchUsers(searchTerm, perPage, 1);
-            }} className="h-10 w-full rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
+            }} className="h-10 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
-        {error ? <p className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+        {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
-        <div className="mb-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('users.showingCount', { count: pagination.total || users.length, label: resolvedCountLabel })}
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="min-w-[1120px] w-full text-left text-sm">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[1120px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
             <thead>
               <tr className="bg-slate-50 text-xs uppercase text-slate-500">
-                <th className="px-4 py-3 font-semibold">{t('users.user')}</th>
-                <th className="px-4 py-3 font-semibold">{t('users.contact')}</th>
-                {showGroupsInList ? <th className="px-4 py-3 font-semibold">{t('users.groups')}</th> : null}
-                <th className="px-4 py-3 font-semibold">{t('users.services')}</th>
-                <th className="px-4 py-3 font-semibold">{t('articles.locations')}</th>
-                <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
-                <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold">{t('users.user')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.contact')}</th>
+                {showGroupsInList ? <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.groups')}</th> : null}
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('users.services')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('articles.locations')}</th>
+                <th className="border-b border-slate-200 px-4 py-3 font-semibold">{t('common.status')}</th>
+                <th className="border-b border-slate-200 px-5 py-3 font-semibold text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {users.length > 0 ? users.map((user) => (
-                <tr key={user.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
-                  <td className="px-4 py-3">
+                <tr key={user.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
+                  <td className="px-5 py-3">
                     <p className="font-semibold text-slate-900">{userName(user)}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
@@ -1945,7 +1945,7 @@ export function UserManagementView({
                   </td>
                   <td className="max-w-[260px] px-4 py-3 text-slate-600">{relationLabels(user.locations)}</td>
                   <td className="px-4 py-3"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => void startEdit(user)} className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
@@ -1963,6 +1963,7 @@ export function UserManagementView({
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
@@ -1971,14 +1972,14 @@ export function UserManagementView({
             <button
               onClick={() => void loadUsers(page - 1)}
               disabled={loading || page <= 1}
-              className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="mr-1 h-4 w-4" />{t('users.previousPage')}
             </button>
             <button
               onClick={() => void loadUsers(page + 1)}
               disabled={loading || page >= pagination.last_page}
-              className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t('users.nextPage')}<ChevronRight className="ml-1 h-4 w-4" />
             </button>

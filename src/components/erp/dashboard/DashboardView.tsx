@@ -9,7 +9,7 @@ import { useAuth } from '../../../context/useAuth';
 import type { DashboardViewProps } from '../shared/types';
 
 const statusColors: Record<string, string> = {
-  active: '#2563eb',
+  active: '#4f46e5',
   inactive: '#64748b',
   expired: '#f59e0b',
   suspended: '#dc2626',
@@ -124,15 +124,15 @@ export function DashboardView(props: DashboardViewProps) {
   const announcementsPanel = (
     <SectionCard title={t('profile.announcementsTitle', 'Anunturile mele')} action={<Button type="button" size="sm" onClick={() => void loadAnnouncements()} disabled={announcementsLoading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
       {announcementsError ? <Alert tone="error" className="mb-3">{announcementsError}</Alert> : null}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {announcements.length ? announcements.map((article) => (
-          <div key={article.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-            <div className="flex items-start gap-2">
+          <div key={article.id} className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+            <div className="flex items-start gap-2.5">
               <Bell className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-900">{article.title}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${article.viewed_at ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                  <span className={`rounded-md px-2 py-1 text-[0.6875rem] font-semibold leading-none ${article.viewed_at ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-100'}`}>
                     {article.viewed_at ? t('profile.announcementRead', 'Citit') : t('profile.announcementUnread', 'Necitit')}
                   </span>
                 </div>
@@ -147,7 +147,7 @@ export function DashboardView(props: DashboardViewProps) {
             </div>
           </div>
         )) : (
-          <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">{announcementsLoading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}</div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-500">{announcementsLoading ? t('common.loading') : t('profile.noAnnouncements', 'Nu exista anunturi pentru tine.')}</div>
         )}
       </div>
     </SectionCard>
@@ -193,17 +193,17 @@ export function DashboardView(props: DashboardViewProps) {
         <StatCard title={t('dashboard.activeBranches')} value={String(stats.active_locations)} change={t('dashboard.membersByLocation')} helper={t('dashboard.branchesDefined')} icon={Building2} />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <SectionCard title={t('dashboard.savedTransactionsRevenue')} action={<Button type="button" size="sm" onClick={() => void loadDashboard()} disabled={loading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
             <div className="h-72 w-full xl:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData.length ? revenueData : [{ period: t('dashboard.noData'), revenue: 0 }]}>
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="period" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="revenue" radius={[8, 8, 0, 0]} fill="#2563eb" />
+                  <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} />
+                  <Bar dataKey="revenue" radius={[6, 6, 0, 0]} fill="#4f46e5" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -223,7 +223,7 @@ export function DashboardView(props: DashboardViewProps) {
             </div>
             <div className="mt-4 space-y-2">
               {(statusCounts.length ? statusCounts : [{ name: t('dashboard.noData'), value: 0, color: '#e2e8f0' }]).map((item) => (
-                <div key={item.name} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <div key={item.name} className="flex items-center justify-between rounded-md border border-slate-100 bg-slate-50 px-3 py-2">
                   <div className="flex items-center gap-3">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-sm font-medium text-slate-700">{item.name}</span>
@@ -236,18 +236,18 @@ export function DashboardView(props: DashboardViewProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <SectionCard title={t('dashboard.weeklyActivity')}>
             <div className="h-64 w-full xl:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={activityData.length ? activityData : [{ period: t('dashboard.noData'), active: 0, messages: 0 }]}>
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="period" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
+                  <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="active" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="messages" stroke="#0891b2" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="active" stroke="#4f46e5" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="messages" stroke="#0891b2" strokeWidth={2.5} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -258,12 +258,12 @@ export function DashboardView(props: DashboardViewProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div>
           <SectionCard title={t('dashboard.activeAutomations')}>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {automations.length ? automations.map((item) => (
-                <div key={item.key} className="flex items-start gap-3 rounded-lg bg-slate-50 p-3">
+                <div key={item.key} className="flex items-start gap-3 rounded-md border border-slate-100 bg-slate-50/80 p-3">
                   <div className={`mt-1 h-2.5 w-2.5 rounded-full ${item.enabled ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{automationTitle(item, t)}</p>
@@ -271,7 +271,7 @@ export function DashboardView(props: DashboardViewProps) {
                   </div>
                 </div>
               )) : (
-                <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">{t('dashboard.noData')}</div>
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-500">{t('dashboard.noData')}</div>
               )}
             </div>
           </SectionCard>
