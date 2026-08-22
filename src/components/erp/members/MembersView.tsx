@@ -510,6 +510,7 @@ export function UserManagementView({
   const resolvedSingularLabel = singularLabel ?? t('members.singularLabel');
   const resolvedEntityLabel = entityLabel ?? t('members.entityLabel');
   const resolvedNewEntityLabel = newEntityLabel ?? t('members.newEntityLabel');
+  const editEntityLabel = editing ? `${resolvedEntityLabel}: ${userName(editing)}` : resolvedEntityLabel;
 
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
@@ -1229,7 +1230,7 @@ export function UserManagementView({
   if (formOpen) {
     return (
       <PageShell
-        title={editing ? t('users.editTitle', { label: resolvedEntityLabel }) : resolvedAddLabel}
+        title={editing ? t('users.editTitle', { label: editEntityLabel }) : resolvedAddLabel}
         subtitle={t('users.formSubtitle', { target: editing ? resolvedEntityLabel : resolvedNewEntityLabel })}
         backLabel={t('common.backToList', { list: resolvedCountLabel })}
         onBack={closeForm}
@@ -1237,7 +1238,7 @@ export function UserManagementView({
         {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
         {success ? <SuccessMessage fixed>{success}</SuccessMessage> : null}
         <SectionCard
-          title={editing ? t('users.editTitle', { label: resolvedEntityLabel }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
+          title={editing ? t('users.editTitle', { label: editEntityLabel }) : t('users.addCardTitle', { label: resolvedEntityLabel })}
           action={
             <button onClick={closeForm} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
               <X className="h-4 w-4" />{t('common.close')}

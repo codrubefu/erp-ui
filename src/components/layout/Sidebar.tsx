@@ -86,7 +86,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
     <aside className={cn('fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200/70 bg-white/95 p-3.5 shadow-[8px_0_30px_rgba(15,23,42,0.025)] backdrop-blur-xl transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
       <div className="flex h-full flex-col">
         <div className="border-b border-slate-100 px-2 pb-4 pt-2">
-          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-indigo-500">ERP Console</p>
+          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-indigo-500">Optimizer </p>
         </div>
 
         <nav className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">

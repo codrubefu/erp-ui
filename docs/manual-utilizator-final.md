@@ -1,8 +1,8 @@
-# Manual utilizator final - Master ERP
+# Manual utilizator final - Optimizer 
 
 ## 1. Scopul aplicatiei
 
-Master ERP este o aplicatie pentru administrarea membrilor, serviciilor, anunturilor, platilor, notificarilor si rapoartelor unei organizatii. Aplicatia este impartita pe module, iar accesul la fiecare functie depinde de drepturile primite de utilizatorul autentificat.
+Optimizer  este o aplicatie pentru administrarea membrilor, serviciilor, anunturilor, platilor, notificarilor si rapoartelor unei organizatii. Aplicatia este impartita pe module, iar accesul la fiecare functie depinde de drepturile primite de utilizatorul autentificat.
 
 Manualul descrie functiile disponibile in interfata `erp-ui` si fluxurile sustinute de API-ul `erp-laravel`.
 
