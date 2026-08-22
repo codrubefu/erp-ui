@@ -704,6 +704,7 @@
     "addService": "Add service",
     "selectService": "Select service",
     "startDate": "Start date",
+    "startDateText": "Written start date",
     "currentServices": "Current services",
     "added": "Added",
     "expires": "Expires",

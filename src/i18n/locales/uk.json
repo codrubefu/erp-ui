@@ -693,6 +693,7 @@
     "addService": "Додати послуга",
     "selectService": "Виберіть послуга",
     "startDate": "Дата початку",
+    "startDateText": "Дата початку текстом",
     "currentServices": "Поточні послуги",
     "added": "Додано",
     "expires": "Завершується",

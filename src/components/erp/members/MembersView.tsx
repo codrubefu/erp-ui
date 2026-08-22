@@ -148,6 +148,90 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function normalizeDateInput(value: string) {
+  const trimmed = value.trim();
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  const localMatch = /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/.exec(trimmed);
+  const match = isoMatch
+    ? { year: Number(isoMatch[1]), month: Number(isoMatch[2]), day: Number(isoMatch[3]) }
+    : localMatch
+      ? { year: Number(localMatch[3]), month: Number(localMatch[2]), day: Number(localMatch[1]) }
+      : null;
+
+  if (!match) return '';
+
+  const date = new Date(match.year, match.month - 1, match.day);
+  if (
+    date.getFullYear() !== match.year
+    || date.getMonth() !== match.month - 1
+    || date.getDate() !== match.day
+  ) {
+    return '';
+  }
+
+  return [
+    String(match.year).padStart(4, '0'),
+    String(match.month).padStart(2, '0'),
+    String(match.day).padStart(2, '0'),
+  ].join('-');
+}
+
+function DateWithTextInput({
+  label,
+  textLabel,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  textLabel: string;
+  value: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const [typedValue, setTypedValue] = useState(value);
+
+  useEffect(() => {
+    setTypedValue(value);
+  }, [value]);
+
+  const normalizedValue = normalizeDateInput(value);
+
+  return (
+    <div className="grid grid-cols-1 gap-2">
+      <Input
+        label={textLabel}
+        value={typedValue}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          setTypedValue(nextValue);
+          const normalized = normalizeDateInput(nextValue);
+          if (normalized) onChange(normalized);
+        }}
+        onBlur={() => {
+          const normalized = normalizeDateInput(typedValue);
+          if (normalized) {
+            setTypedValue(normalized);
+            onChange(normalized);
+          }
+        }}
+        placeholder="2026-08-22 sau 22.08.2026"
+        disabled={disabled}
+      />
+      <Input
+        label={label}
+        type="date"
+        value={normalizedValue}
+        onChange={(event) => {
+          setTypedValue(event.target.value);
+          onChange(event.target.value);
+        }}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
+
 function currentDateTimeLocal() {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -167,6 +251,20 @@ function apiDateTimeToLocal(value?: string | null) {
 function amountFromService(service?: ApiService | ApiUserService | null) {
   if (service?.price === undefined || service.price === null) return '';
   return String(service.price);
+}
+
+function moneyToCents(value: unknown) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return null;
+  return Math.round(amount * 100);
+}
+
+function centsToMoney(value: number) {
+  return Number((value / 100).toFixed(2));
+}
+
+function payablePayment(payment: ApiPayment) {
+  return !['failed', 'refunded', 'cancelled'].includes(payment.status ?? '');
 }
 
 function paymentFormFromSelection(form: UserForm, service?: ApiService | ApiUserService | null): ServicePaymentForm {
@@ -525,6 +623,27 @@ export function UserManagementView({
       ?? mergeById(editing?.services, editing?.active_services).find((service) => service.id === serviceId)
       ?? null;
   }, [editing, paymentServiceId, services]);
+  const selectedPaymentMaxAmount = useMemo(() => {
+    const servicePriceCents = moneyToCents(selectedPaymentService?.price);
+    if (servicePriceCents === null) return null;
+
+    const serviceId = Number(paymentForm.service_id || paymentServiceId);
+    if (!serviceId) return centsToMoney(servicePriceCents);
+
+    const assignment = form.services.find((item) => item.id === serviceId);
+    const modelId = serviceUserIdForAssignment(assignment, editing, selectedPaymentService);
+    const alreadyPaidCents = servicePayments
+      .filter((payment) => payablePayment(payment))
+      .filter((payment) => payment.id !== paymentForm.id)
+      .filter((payment) => (
+        modelId
+          ? payment.model_id === modelId
+          : payment.service_id === serviceId
+      ))
+      .reduce((total, payment) => total + (moneyToCents(payment.amount) ?? 0), 0);
+
+    return centsToMoney(Math.max(servicePriceCents - alreadyPaidCents, 0));
+  }, [editing, form.services, paymentForm.id, paymentForm.service_id, paymentServiceId, selectedPaymentService, servicePayments]);
 
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
   const canUseGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
@@ -909,6 +1028,13 @@ export function UserManagementView({
     }
     if (!Number.isFinite(amount) || amount < 0) {
       setPaymentError('Payment amount cannot be negative.');
+      return;
+    }
+    const amountCents = moneyToCents(amount);
+    const maxAmountCents = moneyToCents(selectedPaymentMaxAmount);
+    if (amountCents !== null && maxAmountCents !== null && amountCents > maxAmountCents) {
+      const maxAmountLabel = selectedPaymentMaxAmount === null ? '0.00' : selectedPaymentMaxAmount.toFixed(2);
+      setPaymentError(`Suma platita nu poate depasi suma ramasa pentru serviciu (${maxAmountLabel} ${paymentForm.currency || selectedPaymentService?.currency || ''}).`);
       return;
     }
     if (!paymentForm.first_name.trim() || !paymentForm.last_name.trim() || !paymentForm.paid_at) {
@@ -1407,7 +1533,7 @@ export function UserManagementView({
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_240px_auto]">
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.addService')}</span>
                   <select value={serviceToAdd} onChange={(event) => setServiceToAdd(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
@@ -1417,7 +1543,12 @@ export function UserManagementView({
                     ))}
                   </select>
                 </label>
-                <Input label={t('users.startDate')} type="date" value={serviceStartDate} onChange={(event) => setServiceStartDate(event.target.value)} />
+                <DateWithTextInput
+                  label={t('users.startDate')}
+                  textLabel={t('users.startDateText')}
+                  value={serviceStartDate}
+                  onChange={setServiceStartDate}
+                />
                 <div className="flex items-end">
                   <Button onClick={addServiceAssignment} disabled={!serviceToAdd || serviceSaving} variant="primary" className="w-full py-3 md:w-auto">
                     <Plus className="h-4 w-4" />{serviceSaving ? t('common.saving') : t('common.add')}
@@ -1432,6 +1563,7 @@ export function UserManagementView({
                     ? `Plata pentru ${selectedPaymentService.name}`
                     : `Plata pentru service #${paymentForm.service_id || selectedPaymentService.id}`}
                   values={paymentPopupValuesFromServiceForm(paymentForm)}
+                  maxAmount={selectedPaymentMaxAmount}
                   error={paymentError}
                   success={paymentSuccess}
                   saving={paymentSaving}
@@ -1508,7 +1640,13 @@ export function UserManagementView({
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateServiceStartDate(assignment.id, event.target.value)} disabled={serviceSaving} />
+                              <DateWithTextInput
+                                label={t('users.startDate')}
+                                textLabel={t('users.startDateText')}
+                                value={assignment.start_date ?? ''}
+                                onChange={(value) => updateServiceStartDate(assignment.id, value)}
+                                disabled={serviceSaving}
+                              />
                             </td>
                             <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('services.noAutoExpiry')}</td>
                             <td className="px-4 py-3">

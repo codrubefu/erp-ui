@@ -20,6 +20,7 @@ type PaymentPopupProps = {
   title: string;
   subtitle?: string;
   values: PaymentPopupValues;
+  maxAmount?: number | null;
   error?: string;
   success?: string;
   saving?: boolean;
@@ -29,9 +30,15 @@ type PaymentPopupProps = {
   onSave: () => void;
 };
 
-export function PaymentPopup({ title, subtitle, values, error, success, saving, showReferenceFields = false, onChange, onClose, onSave }: PaymentPopupProps) {
+export function PaymentPopup({ title, subtitle, values, maxAmount, error, success, saving, showReferenceFields = false, onChange, onClose, onSave }: PaymentPopupProps) {
   const { t } = useTranslation();
   const [localValues, setLocalValues] = useState(values);
+  const amount = Number(localValues.amount);
+  const amountTooHigh = maxAmount !== null
+    && maxAmount !== undefined
+    && Number.isFinite(amount)
+    && amount > maxAmount;
+  const maxAmountLabel = maxAmount === null || maxAmount === undefined ? '' : maxAmount.toFixed(2);
 
   useEffect(() => {
     setLocalValues(values);
@@ -56,6 +63,7 @@ export function PaymentPopup({ title, subtitle, values, error, success, saving, 
 
         {success ? <Alert tone="success" className="mb-4">{success}</Alert> : null}
         {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
+        {amountTooHigh ? <Alert tone="error" className="mb-4">Suma platita nu poate depasi suma ramasa pentru serviciu ({maxAmountLabel}).</Alert> : null}
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t('users.firstName')} value={localValues.first_name} onChange={(event) => updateField('first_name', event.target.value)} />
@@ -66,7 +74,7 @@ export function PaymentPopup({ title, subtitle, values, error, success, saving, 
               <Input label={t('services.service')} value={localValues.reference_name ?? ''} onChange={(event) => updateField('reference_name', event.target.value)} />
             </>
           ) : null}
-          <Input label={t('payments.amount')} type="number" min="0" step="0.01" value={localValues.amount} onChange={(event) => updateField('amount', event.target.value)} />
+          <Input label={t('payments.amount')} type="number" min="0" max={maxAmount ?? undefined} step="0.01" value={localValues.amount} onChange={(event) => updateField('amount', event.target.value)} />
           <Input label={t('services.currency')} value={localValues.currency} onChange={(event) => updateField('currency', event.target.value)} />
           <Select label={t('payments.paymentMethod')} value={localValues.payment_type_id} onChange={(event) => updateField('payment_type_id', event.target.value)}>
             <option value="">{t('common.select')}</option>
@@ -84,7 +92,7 @@ export function PaymentPopup({ title, subtitle, values, error, success, saving, 
 
         <div className="mt-6 flex justify-end gap-2">
           <Button onClick={onClose}>{t('common.cancel')}</Button>
-          <Button variant="dark" onClick={onSave} disabled={saving}>
+          <Button variant="dark" onClick={onSave} disabled={saving || amountTooHigh}>
             <Save className="h-4 w-4" />{saving ? t('common.saving') : t('payments.save')}
           </Button>
         </div>
