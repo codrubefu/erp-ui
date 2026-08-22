@@ -218,6 +218,7 @@
     "backToList": "Назад до платежів",
     "transactionDetails": "Деталі транзакції",
     "internalId": "Внутрішній ID",
+    "receipt": "Квитанція",
     "invoice": "Рахунок",
     "member": "Учасник",
     "memberPlaceholder": "Ім'я учасника",
@@ -489,6 +490,9 @@
     "consume": "Використати доступ",
     "lifecycleSaved": "Статус абонемента оновлено.",
     "lifecycleError": "Не вдалося оновити статус абонемента.",
+    "paymentNote": "Платіжна нотатка",
+    "generatingPaymentNote": "Генерується...",
+    "paymentNoteError": "Не вдалося створити платіжну нотатку.",
     "assignmentStatuses": {
       "pending": "Очікує",
       "active": "Активний",

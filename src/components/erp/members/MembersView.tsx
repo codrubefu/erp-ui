@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Edit3, Eye, EyeOff, Filter, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filter, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
@@ -489,7 +489,9 @@ export function UserManagementView({
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
+  const [receiptLoadingId, setReceiptLoadingId] = useState<number | null>(null);
   const [lifecycleSavingId, setLifecycleSavingId] = useState<number | null>(null);
+  const [paymentNoteLoadingId, setPaymentNoteLoadingId] = useState<number | null>(null);
   const [suspendAssignmentId, setSuspendAssignmentId] = useState<number | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendResumeAt, setSuspendResumeAt] = useState('');
@@ -986,6 +988,48 @@ export function UserManagementView({
     }
   };
 
+  const downloadPaymentNote = async (assignmentId: number) => {
+    setPaymentNoteLoadingId(assignmentId);
+    setError('');
+    setSuccess('');
+    try {
+      const blob = await erpApiService.downloadSubscriptionPaymentNote(assignmentId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `nota-plata-abonament-${assignmentId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('subscriptions.paymentNoteError'));
+    } finally {
+      setPaymentNoteLoadingId(null);
+    }
+  };
+
+  const downloadReceipt = async (payment: ApiPayment) => {
+    setReceiptLoadingId(payment.id);
+    setError('');
+    setSuccess('');
+    try {
+      const blob = await erpApiService.downloadPaymentReceipt(payment.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `chitanta-${payment.receipt_number ?? payment.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nu am putut descarca chitanta.');
+    } finally {
+      setReceiptLoadingId(null);
+    }
+  };
+
   const suspendAssignment = async (assignmentId: number) => {
     if (!suspendReason.trim()) {
       setError(t('subscriptions.suspendReasonRequired'));
@@ -1441,9 +1485,16 @@ export function UserManagementView({
                                         <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {payment.amount}</p>
                                         <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {payment.paid_at ?? '-'}</p>
                                       </div>
-                                      <Button onClick={() => editPayment(payment, subscription)} size="sm" className="px-2.5 py-1.5 text-xs">
-                                        <Edit3 className="h-3.5 w-3.5" />{t('common.edit')}
-                                      </Button>
+                                      <div className="flex flex-wrap justify-end gap-2">
+                                        {payment.status === 'confirmed' && payment.receipt_number ? (
+                                          <Button onClick={() => void downloadReceipt(payment)} disabled={receiptLoadingId === payment.id} size="sm" className="px-2.5 py-1.5 text-xs">
+                                            <Download className="h-3.5 w-3.5" />{t('payments.receipt')}
+                                          </Button>
+                                        ) : null}
+                                        <Button onClick={() => editPayment(payment, subscription)} size="sm" className="px-2.5 py-1.5 text-xs">
+                                          <Edit3 className="h-3.5 w-3.5" />{t('common.edit')}
+                                        </Button>
+                                      </div>
                                     </div>
                                   </div>
                                 )) : (
@@ -1468,6 +1519,11 @@ export function UserManagementView({
                                 <Button onClick={() => selectSubscriptionForPayment(assignment.id)}>
                                   <Plus className="h-4 w-4" />Adauga plata noua
                                 </Button>
+                                {subscriptionUserId ? (
+                                  <Button onClick={() => void downloadPaymentNote(subscriptionUserId)} disabled={paymentNoteLoadingId === subscriptionUserId}>
+                                    <FileText className="h-4 w-4" />{paymentNoteLoadingId === subscriptionUserId ? t('subscriptions.generatingPaymentNote') : t('subscriptions.paymentNote')}
+                                  </Button>
+                                ) : null}
                                 {subscriptionUserId && subscription && Number(subscription.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
                                   <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'activate')} disabled={lifecycleSavingId === subscriptionUserId} variant="primary">
                                     {t('subscriptions.activate')}

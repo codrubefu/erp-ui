@@ -228,6 +228,7 @@
     "backToList": "Back to payments",
     "transactionDetails": "Transaction details",
     "internalId": "Internal ID",
+    "receipt": "Receipt",
     "invoice": "Invoice",
     "member": "Member",
     "memberPlaceholder": "Member name",
@@ -499,6 +500,9 @@
     "consume": "Consume access",
     "lifecycleSaved": "Subscription status was updated.",
     "lifecycleError": "Could not update subscription status.",
+    "paymentNote": "Payment note",
+    "generatingPaymentNote": "Generating...",
+    "paymentNoteError": "Could not generate the payment note.",
     "assignmentStatuses": {
       "pending": "Pending",
       "active": "Active",

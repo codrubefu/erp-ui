@@ -228,6 +228,7 @@
     "backToList": "Inapoi la plati",
     "transactionDetails": "Detalii tranzactie",
     "internalId": "ID intern",
+    "receipt": "Chitanta",
     "invoice": "Factura",
     "member": "Membru",
     "memberPlaceholder": "Nume membru",
@@ -500,6 +501,9 @@
     "consume": "Consuma acces",
     "lifecycleSaved": "Statusul abonamentului a fost actualizat.",
     "lifecycleError": "Nu am putut actualiza statusul abonamentului.",
+    "paymentNote": "Nota de plata",
+    "generatingPaymentNote": "Se genereaza...",
+    "paymentNoteError": "Nu am putut genera nota de plata.",
     "assignmentStatuses": {
       "pending": "In asteptare",
       "active": "Activ",

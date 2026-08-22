@@ -162,6 +162,10 @@ Member documents are shown in a dedicated edit tab when the authenticated operat
 
 Free subscriptions can be activated without a payment. Paid subscriptions still activate through a confirmed payment linked to the `subscription_user` assignment. When editing a user's subscriptions, the UI should preserve existing assignment ids/status/payment links by sending the current assignment list rather than forcing a detach/recreate flow.
 
+Each persisted subscription assignment in the member subscriptions tab can download a payment note PDF through `ErpApiService.downloadSubscriptionPaymentNote()`, which calls `GET /api/subscription-assignments/{assignment}/payment-note` and saves the returned blob locally.
+
+Confirmed payments listed under a member subscription expose a receipt download action that calls `ErpApiService.downloadPaymentReceipt()` and saves the returned PDF blob.
+
 Subscription history must display the lifecycle status returned by the API. Do not collapse non-active states into a generic expired label and do not decide history membership only from dates.
 
 ### Subscriptions
