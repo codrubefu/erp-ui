@@ -82,7 +82,7 @@
     "goHome": "Go to Home"
   },
   "login": {
-    "brand": "Master ERP",
+    "brand": "Optimizer",
     "heroTitle": "Sign in to the management platform for members and operations.",
     "heroDescription": "Quick access to members, locations, administrators, services, announcements, payments, and reports. Entered data is kept locally and remains available after refresh.",
     "cardOrganization": "Organization",
@@ -501,6 +501,8 @@
     "lifecycleSaved": "Service status was updated.",
     "lifecycleError": "Could not update service status.",
     "paymentNote": "Payment note",
+    "invoiceNumber": "Invoice",
+    "billNumber": "Bill",
     "generatingPaymentNote": "Generating...",
     "paymentNoteError": "Could not generate the payment note.",
     "assignmentStatuses": {
@@ -716,7 +718,7 @@
     "saveError": "Could not save {{label}}.",
     "deleteError": "Could not delete {{label}}.",
     "deleteConfirm": "Delete {{label}} {{name}}?",
-    "formSubtitle": "Configure data for {{target}} without showing the list in the background.",
+    "formSubtitle": "Configure data for {{target}}.",
     "editTitle": "Edit {{label}}",
     "editCardTitle": "Edit {{label}} #{{id}}",
     "addCardTitle": "Add {{label}}",

@@ -241,6 +241,8 @@ function serviceAssignmentsFromUser(user: ApiUser): ApiUserServiceAssignment[] {
       id: service.id,
       start_date: historyItem?.start_date ?? service.start_date ?? service.pivot?.start_date ?? todayDate(),
       service_user_id: service.pivot?.id ?? historyItem?.id ?? null,
+      invoice_number: historyItem?.invoice_number ?? service.invoice_number ?? service.pivot?.invoice_number ?? null,
+      bill_number: historyItem?.bill_number ?? service.bill_number ?? service.pivot?.bill_number ?? null,
       status: historyItem?.status ?? service.status ?? service.pivot?.status ?? null,
       expires_at: historyItem?.expires_at ?? service.expires_at ?? service.pivot?.expires_at ?? null,
       accesses_used: historyItem?.accesses_used ?? service.accesses_used ?? service.pivot?.accesses_used ?? null,
@@ -1478,6 +1480,8 @@ export function UserManagementView({
                             <td className="px-4 py-3">
                               <p className="font-medium text-slate-900">{service?.name ?? `#${assignment.id}`}</p>
                               <p className="text-xs text-slate-500">{service?.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
+                              <p className="text-xs text-slate-500">{t('services.invoiceNumber')}: {assignment.invoice_number ?? '-'}</p>
+                              <p className="text-xs text-slate-500">{t('services.billNumber')}: {assignment.bill_number ?? '-'}</p>
                               <div className="mt-3 space-y-2">
                                 {paymentsForService.length ? paymentsForService.map((payment) => (
                                   <div key={payment.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">

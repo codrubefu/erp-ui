@@ -112,6 +112,8 @@ export type ApiUserService = {
   max_users?: number | null;
   is_active?: boolean;
   assignment_id?: number | null;
+  invoice_number?: string | null;
+  bill_number?: string | null;
   start_date?: string | null;
   expires_at?: string | null;
   status?: ServiceAssignmentStatus | null;
@@ -129,6 +131,8 @@ export type ApiUserServiceAssignment = {
   id: number;
   start_date?: string;
   service_user_id?: number | null;
+  invoice_number?: string | null;
+  bill_number?: string | null;
   status?: ServiceAssignmentStatus | null;
   expires_at?: string | null;
   accesses_used?: number | null;
@@ -142,6 +146,8 @@ export type ApiUserServicePivot = {
   id?: number | null;
   user_id?: number;
   service_id?: number;
+  invoice_number?: string | null;
+  bill_number?: string | null;
   status?: ServiceAssignmentStatus;
   start_date?: string | null;
   expires_at?: string | null;
@@ -160,6 +166,8 @@ export type ApiUserServiceHistory = {
   id: number | null;
   service_id: number;
   name: string;
+  invoice_number?: string | null;
+  bill_number?: string | null;
   start_date: string | null;
   expires_at: string | null;
   status?: ServiceAssignmentStatus | null;
@@ -176,6 +184,8 @@ export type ApiServiceAssignment = {
   id: number;
   service_id: number;
   user_id: number;
+  invoice_number?: string | null;
+  bill_number?: string | null;
   status: ServiceAssignmentStatus;
   start_date?: string | null;
   expires_at?: string | null;

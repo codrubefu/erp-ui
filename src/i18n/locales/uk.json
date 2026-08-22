@@ -491,6 +491,8 @@
     "lifecycleSaved": "Статус послуги оновлено.",
     "lifecycleError": "Не вдалося оновити статус послуги.",
     "paymentNote": "Платіжна нотатка",
+    "invoiceNumber": "Рахунок",
+    "billNumber": "Платіжний документ",
     "generatingPaymentNote": "Генерується...",
     "paymentNoteError": "Не вдалося створити платіжну нотатку.",
     "assignmentStatuses": {
@@ -705,7 +707,7 @@
     "saveError": "Не вдалося зберегти {{label}}.",
     "deleteError": "Не вдалося видалити {{label}}.",
     "deleteConfirm": "Видалити {{label}} {{name}}?",
-    "formSubtitle": "Налаштуйте дані для {{target}} без показу списку у фоні.",
+    "formSubtitle": "Налаштуйте дані для {{target}} .",
     "editTitle": "Редагувати {{label}}",
     "editCardTitle": "Редагувати {{label}} #{{id}}",
     "addCardTitle": "Додати {{label}}",

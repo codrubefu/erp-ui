@@ -82,7 +82,7 @@
     "goHome": "Mergi la Home"
   },
   "login": {
-    "brand": "Master ERP",
+    "brand": "Opimizer",
     "heroTitle": "Autentificare in platforma de management pentru membri si operatiuni.",
     "heroDescription": "Acces rapid la membri, filiale, administratori, servicii, anunturi, plati si rapoarte. Datele introduse in interfata sunt salvate local si raman valabile dupa refresh.",
     "cardOrganization": "Organizare",
@@ -502,6 +502,8 @@
     "lifecycleSaved": "Statusul serviciului a fost actualizat.",
     "lifecycleError": "Nu am putut actualiza statusul serviciului.",
     "paymentNote": "Nota de plata",
+    "invoiceNumber": "Factura",
+    "billNumber": "Nota",
     "generatingPaymentNote": "Se genereaza...",
     "paymentNoteError": "Nu am putut genera nota de plata.",
     "assignmentStatuses": {
@@ -717,7 +719,7 @@
     "saveError": "Nu am putut salva {{label}}.",
     "deleteError": "Nu am putut sterge {{label}}.",
     "deleteConfirm": "Stergi {{label}} {{name}}?",
-    "formSubtitle": "Configureaza datele pentru {{target}} fara a afisa lista in fundal.",
+    "formSubtitle": "Configureaza datele pentru {{target}}.",
     "editTitle": "Editare {{label}}",
     "editCardTitle": "Editare {{label}} #{{id}}",
     "addCardTitle": "Adaugare {{label}}",
