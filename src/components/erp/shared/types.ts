@@ -1,4 +1,4 @@
-﻿import type React from 'react';
+import type React from 'react';
 import type {
   Announcement,
   AppPage,
@@ -7,13 +7,13 @@ import type {
   Member,
   Payment,
   SectionId,
-  Subscription,
+  Service,
 } from '../../../types/erp';
 import type { ActivityPoint } from '../../../services/ErpJsonDataService';
 
 export type DashboardViewProps = {
   membersData?: Member[];
-  subscriptionsData?: Subscription[];
+  servicesData?: Service[];
   paymentsData?: Payment[];
   activityData?: ActivityPoint[];
 };
@@ -29,10 +29,10 @@ export type BranchesViewProps = {
   membersData: Member[];
 };
 
-export type SubscriptionsViewProps = {
-  items: Subscription[];
+export type ServicesViewProps = {
+  items: Service[];
   onCreate: () => void;
-  onEdit: (item: Subscription) => void;
+  onEdit: (item: Service) => void;
 };
 
 export type AnnouncementsViewProps = {
@@ -49,7 +49,7 @@ export type PaymentsViewProps = {
 
 export type ReportsViewProps = {
   membersData: Member[];
-  subscriptionsData: Subscription[];
+  servicesData: Service[];
   paymentsData: Payment[];
   announcementsData: Announcement[];
 };
@@ -66,17 +66,17 @@ export type MemberFormPageProps = {
   mode: Exclude<FormMode, null>;
   data: Member;
   branchOptions: string[];
-  subscriptionOptions: Subscription[];
+  serviceOptions: Service[];
   onChange: (field: keyof Member, value: string) => void;
   onBack: () => void;
   onSave: () => void;
   onSaveAndClose?: () => void;
 };
 
-export type SubscriptionFormPageProps = {
+export type ServiceFormPageProps = {
   mode: Exclude<FormMode, null>;
-  data: Subscription;
-  onChange: (field: keyof Subscription, value: string) => void;
+  data: Service;
+  onChange: (field: keyof Service, value: string) => void;
   onBack: () => void;
   onSave: () => void;
   onSaveAndClose?: () => void;
@@ -110,23 +110,23 @@ export type ContentProps = {
   current: SectionId;
   page: AppPage;
   membersData: Member[];
-  subscriptionsData: Subscription[];
+  servicesData: Service[];
   announcementsData: Announcement[];
   paymentsData: Payment[];
   branchesData: string[];
   activityData: ActivityPoint[];
-  navigateToForm: (type: FormType, mode?: Exclude<FormMode, null>, item?: Member | Subscription | Announcement | Payment | null) => void;
+  navigateToForm: (type: FormType, mode?: Exclude<FormMode, null>, item?: Member | Service | Announcement | Payment | null) => void;
   memberForm: Member;
   setMemberForm: React.Dispatch<React.SetStateAction<Member>>;
-  subscriptionForm: Subscription;
-  setSubscriptionForm: React.Dispatch<React.SetStateAction<Subscription>>;
+  serviceForm: Service;
+  setServiceForm: React.Dispatch<React.SetStateAction<Service>>;
   announcementForm: Announcement;
   setAnnouncementForm: React.Dispatch<React.SetStateAction<Announcement>>;
   paymentForm: Payment;
   setPaymentForm: React.Dispatch<React.SetStateAction<Payment>>;
   goBackToList: (targetSection: SectionId) => void;
   saveMember: () => void;
-  saveSubscription: () => void;
+  saveService: () => void;
   saveAnnouncement: () => void;
   saveAnnouncementAndClose?: () => void;
   savePayment: () => void;

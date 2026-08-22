@@ -19,8 +19,8 @@ This project is a React + TypeScript + Vite ERP frontend with:
 - rights-based route and component visibility
 - dashboard loaded from API aggregates
 - organization, locations, location groups, administrators, groups, and rights
-- member management with subscriptions, payments, and custom fields
-- subscription definition and assignment lifecycle controls
+- member management with services, payments, and custom fields
+- service definition and assignment lifecycle controls
 - events and participant payments
 - articles and announcements
 - SMS and notifications screens
@@ -64,7 +64,7 @@ Main feature service files:
 - `src/services/dashboardService.ts` for `GET /dashboard`
 - `src/services/reportingService.ts` for financial reports and exports
 - `src/services/segmentsService.ts` for dynamic report segments
-- `src/services/subscriptionLifecycleService.ts` for subscription assignment actions
+- `src/services/serviceLifecycleService.ts` for service assignment actions
 - `src/services/paymentService.ts` for payment-specific calls
 - `src/services/eventService.ts` for event-specific calls
 - `src/services/articlesService.ts` for articles
@@ -108,7 +108,7 @@ Localization setup:
 - `src/i18n/locales/en.json`
 - `src/i18n/locales/uk.json`
 
-Any new visible label, button, status, loading text, error, or empty state must be added to all three locale files. Prefer existing namespaces such as `dashboard`, `reports`, `subscriptions`, `members`, `payments`, and `common`.
+Any new visible label, button, status, loading text, error, or empty state must be added to all three locale files. Prefer existing namespaces such as `dashboard`, `reports`, `services`, `members`, `payments`, and `common`.
 
 ## UI Architecture
 
@@ -154,29 +154,29 @@ Main files:
 - `src/components/erp/members/MemberFormPage.tsx`
 - `src/services/ErpApiService.ts`
 - `src/services/paymentService.ts`
-- `src/services/subscriptionLifecycleService.ts`
+- `src/services/serviceLifecycleService.ts`
 
-The members module manages users, profile fields, locations, subscription assignments, assignment lifecycle actions, related payments, and private member documents. Subscription assignment status should come from the API payload (`subscription.status` or `subscription.pivot.status`) and not be recalculated only from dates.
+The members module manages users, profile fields, locations, service assignments, assignment lifecycle actions, related payments, and private member documents. Service assignment status should come from the API payload (`service.status` or `service.pivot.status`) and not be recalculated only from dates.
 
 Member documents are shown in a dedicated edit tab when the authenticated operator has `user-documents.view`, `user-documents.upload`, `user-documents.delete`, or `users.manage`. Upload and replace use `multipart/form-data`; download first requests a temporary signed URL and then fetches the blob with the bearer token. The UI supports the backend categories `membership_request`, `identity_document`, `gdpr_agreement`, `certificate`, `contract`, `photo`, and `other`.
 
-Free subscriptions can be activated without a payment. Paid subscriptions still activate through a confirmed payment linked to the `subscription_user` assignment. When editing a user's subscriptions, the UI should preserve existing assignment ids/status/payment links by sending the current assignment list rather than forcing a detach/recreate flow.
+Free services can be activated without a payment. Paid services still activate through a confirmed payment linked to the `service_user` assignment. When editing a user's services, the UI should preserve existing assignment ids/status/payment links by sending the current assignment list rather than forcing a detach/recreate flow.
 
-Each persisted subscription assignment in the member subscriptions tab can download a payment note PDF through `ErpApiService.downloadSubscriptionPaymentNote()`, which calls `GET /api/subscription-assignments/{assignment}/payment-note` and saves the returned blob locally.
+Each persisted service assignment in the member services tab can download a payment note PDF through `ErpApiService.downloadServicePaymentNote()`, which calls `GET /api/service-assignments/{assignment}/payment-note` and saves the returned blob locally.
 
-Confirmed payments listed under a member subscription expose a receipt download action that calls `ErpApiService.downloadPaymentReceipt()` and saves the returned PDF blob.
+Confirmed payments listed under a member service expose a receipt download action that calls `ErpApiService.downloadPaymentReceipt()` and saves the returned PDF blob.
 
-Subscription history must display the lifecycle status returned by the API. Do not collapse non-active states into a generic expired label and do not decide history membership only from dates.
+Service history must display the lifecycle status returned by the API. Do not collapse non-active states into a generic expired label and do not decide history membership only from dates.
 
-### Subscriptions
+### Services
 
 Main files:
 
-- `src/components/erp/subscriptions/SubscriptionsView.tsx`
-- `src/components/erp/subscriptions/SubscriptionFormPage.tsx`
+- `src/components/erp/services/ServicesView.tsx`
+- `src/components/erp/services/ServiceFormPage.tsx`
 - `src/services/ErpApiService.ts`
 
-The subscriptions module manages subscription definitions, including type, expiration rule, fixed expiration date, grace period, max accesses, duration, price, max users, and active flag. Assignment lifecycle is handled from the member subscriptions tab, not from the definition list.
+The services module manages service definitions, including type, expiration rule, fixed expiration date, grace period, max accesses, duration, price, max users, and active flag. Assignment lifecycle is handled from the member services tab, not from the definition list.
 
 ### Payments
 
@@ -188,7 +188,7 @@ Main files:
 - `src/services/paymentService.ts`
 - `src/services/ErpApiService.ts`
 
-Payments are loaded from the backend and can be linked to subscription assignments or event participants depending on model fields returned by the API. Financial reporting also reads payment aggregates.
+Payments are loaded from the backend and can be linked to service assignments or event participants depending on model fields returned by the API. Financial reporting also reads payment aggregates.
 
 ### Reports And Segments
 
@@ -255,7 +255,7 @@ Main files:
 - `src/context/AuthContext.tsx`
 - `src/services/ErpApiService.ts`
 
-Profile pages show the authenticated user's data, security area, event participation, and subscription status. Subscription badges should use the lifecycle status returned by the API, with `is_currently_active` only as an active fallback.
+Profile pages show the authenticated user's data, security area, event participation, and service status. Service badges should use the lifecycle status returned by the API, with `is_currently_active` only as an active fallback.
 
 ## Local Cache And Demo Data
 

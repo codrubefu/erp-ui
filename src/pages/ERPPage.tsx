@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Content from '../components/erp/Content';
@@ -16,10 +16,10 @@ import type {
   Member,
   Payment,
   SectionId,
-  Subscription,
+  Service,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-subscriptions', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'members', 'subscriptions', 'events', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-services', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'members', 'services', 'events', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
 const USE_LOCAL_ERP_CACHE = import.meta.env.VITE_USE_LOCAL_ERP_CACHE === 'true';
 const USE_LOCAL_ERP_SEED = import.meta.env.VITE_USE_LOCAL_ERP_SEED === 'true';
 
@@ -27,14 +27,14 @@ const STORAGE_KEYS = {
   auth: 'master-erp-auth',
   user: 'master-erp-user',
   members: 'master-erp-members',
-  subscriptions: 'master-erp-subscriptions',
+  services: 'master-erp-services',
   announcements: 'master-erp-announcements',
   payments: 'master-erp-payments',
 };
 
 const emptyForms: {
   member: Member;
-  subscription: Subscription;
+  service: Service;
   announcement: Announcement;
   payment: Payment;
 } = {
@@ -43,14 +43,14 @@ const emptyForms: {
     name: '',
     email: '',
     phone: '',
-    subscription: '',
+    service: '',
     status: 'Activ',
     lastContact: '',
     address: '',
     notes: '',
     branch: 'Iași Centru',
   },
-  subscription: {
+  service: {
     id: 0,
     name: '',
     price: '',
@@ -135,14 +135,14 @@ export default function ERPAdminPanel() {
   const [page, setPage] = useState<AppPage>({ section: 'list', mode: null });
 
   const [membersData, setMembersData] = useState<Member[]>(() => loadStoredValue(STORAGE_KEYS.members, []));
-  const [subscriptionsData, setSubscriptionsData] = useState<Subscription[]>(() => loadStoredValue(STORAGE_KEYS.subscriptions, []));
+  const [servicesData, setServicesData] = useState<Service[]>(() => loadStoredValue(STORAGE_KEYS.services, []));
   const [announcementsData, setAnnouncementsData] = useState<Announcement[]>(() => loadStoredValue(STORAGE_KEYS.announcements, []));
   const [paymentsData, setPaymentsData] = useState<Payment[]>(() => loadStoredValue(STORAGE_KEYS.payments, []));
   const [branchesData, setBranchesData] = useState<string[]>([]);
   const [activityData, setActivityData] = useState<ActivityPoint[]>([]);
 
   const [memberForm, setMemberForm] = useState(emptyForms.member);
-  const [subscriptionForm, setSubscriptionForm] = useState(emptyForms.subscription);
+  const [serviceForm, setServiceForm] = useState(emptyForms.service);
   const [announcementForm, setAnnouncementForm] = useState(emptyForms.announcement);
   const [paymentForm, setPaymentForm] = useState(emptyForms.payment);
   const [formSuccess, setFormSuccess] = useState('');
@@ -150,7 +150,7 @@ export default function ERPAdminPanel() {
   useEffect(() => saveStoredValue(STORAGE_KEYS.auth, isAuthenticated), [isAuthenticated]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.user, currentUser), [currentUser]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.members, membersData), [membersData]);
-  useEffect(() => saveStoredValue(STORAGE_KEYS.subscriptions, subscriptionsData), [subscriptionsData]);
+  useEffect(() => saveStoredValue(STORAGE_KEYS.services, servicesData), [servicesData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.announcements, announcementsData), [announcementsData]);
   useEffect(() => saveStoredValue(STORAGE_KEYS.payments, paymentsData), [paymentsData]);
 
@@ -188,7 +188,7 @@ export default function ERPAdminPanel() {
         setActivityData(seed.activity);
 
         setMembersData((prev) => (prev.length > 0 ? prev : seed.members));
-        setSubscriptionsData((prev) => (prev.length > 0 ? prev : seed.subscriptions));
+        setServicesData((prev) => (prev.length > 0 ? prev : seed.services));
         setAnnouncementsData((prev) => (prev.length > 0 ? prev : seed.announcements));
         setPaymentsData((prev) => (prev.length > 0 ? prev : seed.payments));
       } catch (error) {
@@ -222,7 +222,7 @@ export default function ERPAdminPanel() {
     };
   }, []);
 
-  const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Subscription | Announcement | Payment | null = null) => {
+  const navigateToForm = (type: FormType, mode: Exclude<FormMode, null> = 'create', item: Member | Service | Announcement | Payment | null = null) => {
     setFormSuccess('');
     if (type === 'member') {
       setCurrent('members');
@@ -230,11 +230,11 @@ export default function ERPAdminPanel() {
       setPage({ section: 'list', mode: null });
       return;
     }
-    if (type === 'subscription') {
-      setSubscriptionForm(item ? { ...(item as Subscription) } : { ...emptyForms.subscription, id: subscriptionsData.length + 1 });
-      setCurrent('subscriptions');
-      navigate(mode === 'create' ? '/erp/subscriptions/new' : '/erp/subscriptions');
-      setPage({ section: 'subscriptionForm', mode });
+    if (type === 'service') {
+      setServiceForm(item ? { ...(item as Service) } : { ...emptyForms.service, id: servicesData.length + 1 });
+      setCurrent('services');
+      navigate(mode === 'create' ? '/erp/services/new' : '/erp/services');
+      setPage({ section: 'serviceForm', mode });
       return;
     }
     if (type === 'article') {
@@ -277,9 +277,9 @@ export default function ERPAdminPanel() {
     setFormSuccess(t('common.saved'));
   };
 
-  const saveSubscription = () => {
-    const payload = { ...subscriptionForm };
-    setSubscriptionsData((prev) => upsertById(prev, payload));
+  const saveService = () => {
+    const payload = { ...serviceForm };
+    setServicesData((prev) => upsertById(prev, payload));
     setFormSuccess(t('common.saved'));
   };
 
@@ -366,7 +366,7 @@ export default function ERPAdminPanel() {
             current={current}
             page={page}
             membersData={membersData}
-            subscriptionsData={subscriptionsData}
+            servicesData={servicesData}
             announcementsData={announcementsData}
             paymentsData={paymentsData}
             branchesData={branchesData}
@@ -374,15 +374,15 @@ export default function ERPAdminPanel() {
             navigateToForm={navigateToForm}
             memberForm={memberForm}
             setMemberForm={setMemberForm}
-            subscriptionForm={subscriptionForm}
-            setSubscriptionForm={setSubscriptionForm}
+            serviceForm={serviceForm}
+            setServiceForm={setServiceForm}
             announcementForm={announcementForm}
             setAnnouncementForm={setAnnouncementForm}
             paymentForm={paymentForm}
             setPaymentForm={setPaymentForm}
             goBackToList={goBackToList}
             saveMember={saveMember}
-            saveSubscription={saveSubscription}
+            saveService={saveService}
             saveAnnouncement={saveAnnouncement}
             saveAnnouncementAndClose={saveAnnouncementAndClose}
             savePayment={savePayment}

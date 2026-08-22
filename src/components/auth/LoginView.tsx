@@ -30,7 +30,7 @@ export function LoginView({ credentials, onChange, onSubmit, loading = false, er
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {[
               [t('login.cardOrganization'), t('login.cardOrganizationDescription')],
-              [t('login.cardSubscriptions'), t('login.cardSubscriptionsDescription')],
+              [t('login.cardServices'), t('login.cardServicesDescription')],
               [t('login.cardPayments'), t('login.cardPaymentsDescription')],
             ].map(([title, desc]) => (
               <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">

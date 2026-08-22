@@ -12,10 +12,10 @@ export type ApiUser = {
   email_verified_at?: string | null;
   groups?: ApiGroup[];
   locations?: ApiLocation[];
-  subscriptions?: ApiUserSubscription[];
-  active_subscriptions?: ApiUserSubscription[];
-  subscription_history?: ApiUserSubscriptionHistory[];
-  has_active_subscription?: boolean;
+  services?: ApiUserService[];
+  active_services?: ApiUserService[];
+  service_history?: ApiUserServiceHistory[];
+  has_active_service?: boolean;
   custom_fields?: Record<string, unknown> | ApiCustomFieldValue[];
   custom_field_values?: Record<string, unknown> | ApiCustomFieldValue[];
   created_at?: string | null;
@@ -93,19 +93,19 @@ export type ApiLocationGroup = {
   updated_at?: string | null;
 };
 
-export type SubscriptionType = 'membership' | 'access_pass';
-export type SubscriptionExpirationRule = 'duration' | 'fixed_date' | 'none';
-export type SubscriptionAssignmentStatus = 'pending' | 'active' | 'expired' | 'suspended' | 'consumed' | 'reserved';
+export type ServiceType = 'membership' | 'access_pass';
+export type ServiceExpirationRule = 'duration' | 'fixed_date' | 'none';
+export type ServiceAssignmentStatus = 'pending' | 'active' | 'expired' | 'suspended' | 'consumed' | 'reserved';
 
-export type ApiUserSubscription = {
+export type ApiUserService = {
   id: number;
   name: string;
   description?: string | null;
-  type?: SubscriptionType;
+  type?: ServiceType;
   price?: string | number;
   currency?: string;
   duration_days?: number | null;
-  expiration_rule?: SubscriptionExpirationRule;
+  expiration_rule?: ServiceExpirationRule;
   fixed_expires_at?: string | null;
   grace_period_days?: number;
   max_accesses?: number | null;
@@ -114,7 +114,7 @@ export type ApiUserSubscription = {
   assignment_id?: number | null;
   start_date?: string | null;
   expires_at?: string | null;
-  status?: SubscriptionAssignmentStatus | null;
+  status?: ServiceAssignmentStatus | null;
   accesses_used?: number | null;
   activated_at?: string | null;
   suspended_at?: string | null;
@@ -122,14 +122,14 @@ export type ApiUserSubscription = {
   status_reason?: string | null;
   activation_payment_id?: number | null;
   is_currently_active?: boolean;
-  pivot?: ApiUserSubscriptionPivot;
+  pivot?: ApiUserServicePivot;
 };
 
-export type ApiUserSubscriptionAssignment = {
+export type ApiUserServiceAssignment = {
   id: number;
   start_date?: string;
-  subscription_user_id?: number | null;
-  status?: SubscriptionAssignmentStatus | null;
+  service_user_id?: number | null;
+  status?: ServiceAssignmentStatus | null;
   expires_at?: string | null;
   accesses_used?: number | null;
   suspended_at?: string | null;
@@ -138,11 +138,11 @@ export type ApiUserSubscriptionAssignment = {
   activation_payment_id?: number | null;
 };
 
-export type ApiUserSubscriptionPivot = {
+export type ApiUserServicePivot = {
   id?: number | null;
   user_id?: number;
-  subscription_id?: number;
-  status?: SubscriptionAssignmentStatus;
+  service_id?: number;
+  status?: ServiceAssignmentStatus;
   start_date?: string | null;
   expires_at?: string | null;
   accesses_used?: number;
@@ -156,13 +156,13 @@ export type ApiUserSubscriptionPivot = {
   updated_at?: string | null;
 };
 
-export type ApiUserSubscriptionHistory = {
+export type ApiUserServiceHistory = {
   id: number | null;
-  subscription_id: number;
+  service_id: number;
   name: string;
   start_date: string | null;
   expires_at: string | null;
-  status?: SubscriptionAssignmentStatus | null;
+  status?: ServiceAssignmentStatus | null;
   accesses_used?: number | null;
   suspended_at?: string | null;
   resume_at?: string | null;
@@ -172,11 +172,11 @@ export type ApiUserSubscriptionHistory = {
   is_currently_active?: boolean;
 };
 
-export type ApiSubscriptionAssignment = {
+export type ApiServiceAssignment = {
   id: number;
-  subscription_id: number;
+  service_id: number;
   user_id: number;
-  status: SubscriptionAssignmentStatus;
+  status: ServiceAssignmentStatus;
   start_date?: string | null;
   expires_at?: string | null;
   accesses_used: number;
@@ -185,11 +185,11 @@ export type ApiSubscriptionAssignment = {
   resume_at?: string | null;
   status_reason?: string | null;
   activation_payment_id?: number | null;
-  subscription?: ApiSubscription | ApiUserSubscription | null;
-  user?: ApiUser | ApiSubscriptionUser | null;
+  service?: ApiService | ApiUserService | null;
+  user?: ApiUser | ApiServiceUser | null;
 };
 
-export type ApiSubscriptionUser = {
+export type ApiServiceUser = {
   id: number;
   user_code?: string | null;
   first_name: string;
@@ -199,32 +199,32 @@ export type ApiSubscriptionUser = {
   email: string;
 };
 
-export type ApiSubscription = {
+export type ApiService = {
   id: number;
   name: string;
   description: string | null;
-  type?: SubscriptionType;
+  type?: ServiceType;
   price: string | number;
   currency: string;
   duration_days: number | null;
-  expiration_rule?: SubscriptionExpirationRule;
+  expiration_rule?: ServiceExpirationRule;
   fixed_expires_at?: string | null;
   grace_period_days?: number;
   max_accesses?: number | null;
   max_users: number | null;
   is_active: boolean;
-  users?: ApiSubscriptionUser[];
+  users?: ApiServiceUser[];
   users_count?: number;
   start_date?: string | null;
   expires_at?: string | null;
-  status?: SubscriptionAssignmentStatus | null;
+  status?: ServiceAssignmentStatus | null;
   accesses_used?: number | null;
   suspended_at?: string | null;
   resume_at?: string | null;
   status_reason?: string | null;
   activation_payment_id?: number | null;
   is_currently_active?: boolean;
-  pivot?: ApiUserSubscriptionPivot;
+  pivot?: ApiUserServicePivot;
   created_at?: string | null;
   updated_at?: string | null;
   deleted_at?: string | null;
@@ -233,7 +233,7 @@ export type ApiSubscription = {
 export type ApiPayment = {
   id: number;
   user_id?: number | null;
-  user?: ApiUser | ApiSubscriptionUser | null;
+  user?: ApiUser | ApiServiceUser | null;
   first_name: string;
   last_name: string;
   payment_type_id: 1 | 2 | 3;
@@ -247,10 +247,10 @@ export type ApiPayment = {
   provider_transaction_id?: string | null;
   bank_reference?: string | null;
   reconciled_at?: string | null;
-  model_type: 'subscription_user' | 'event_occurrence_user';
+  model_type: 'service_user' | 'event_occurrence_user';
   model_id?: number | null;
-  subscription_id: number | null;
-  subscription?: ApiSubscription | ApiUserSubscription | null;
+  service_id: number | null;
+  service?: ApiService | ApiUserService | null;
   amount: string;
   paid_at: string | null;
   confirmed_at?: string | null;
@@ -498,8 +498,8 @@ export class ErpApiService {
     return response.blob();
   }
 
-  async downloadSubscriptionPaymentNote(assignmentId: number) {
-    const response = await fetch(endpoint(`/subscription-assignments/${assignmentId}/payment-note`), {
+  async downloadServicePaymentNote(assignmentId: number) {
+    const response = await fetch(endpoint(`/service-assignments/${assignmentId}/payment-note`), {
       headers: apiHeaders(),
     });
 

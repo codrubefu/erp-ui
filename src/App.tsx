@@ -1,4 +1,4 @@
-﻿import ERPPage from './pages/ERPPage';
+import ERPPage from './pages/ERPPage';
 
 export default ERPPage;
 
@@ -11,5 +11,5 @@ export type {
   Member,
   Payment,
   SectionId,
-  Subscription,
+  Service,
 } from './types/erp';

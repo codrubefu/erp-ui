@@ -169,7 +169,7 @@ export function DashboardView(props: DashboardViewProps) {
     );
   }
 
-  const stats = dashboard?.stats ?? { active_members: 0, flagged_subscriptions: 0, total_revenue: 0, active_locations: 0 };
+  const stats = dashboard?.stats ?? { active_members: 0, flagged_services: 0, total_revenue: 0, active_locations: 0 };
   const automations = dashboard?.automations ?? [];
 
   return (
@@ -188,7 +188,7 @@ export function DashboardView(props: DashboardViewProps) {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard title={t('dashboard.activeMembers')} value={String(stats.active_members)} change={t('dashboard.liveUpdated')} helper={t('dashboard.activeMembersHelper')} icon={UserCheck} />
-        <StatCard title={t('dashboard.flaggedSubscriptions')} value={String(stats.flagged_subscriptions)} change={t('dashboard.expiredOrSuspended')} helper={t('dashboard.needsFollowUp')} icon={CalendarClock} />
+        <StatCard title={t('dashboard.flaggedServices')} value={String(stats.flagged_services)} change={t('dashboard.expiredOrSuspended')} helper={t('dashboard.needsFollowUp')} icon={CalendarClock} />
         <StatCard title={t('dashboard.totalRevenue')} value={`${money(stats.total_revenue)} RON`} change={t('dashboard.paymentsCalculated')} helper={t('dashboard.persistentData')} icon={BadgeEuro} />
         <StatCard title={t('dashboard.activeBranches')} value={String(stats.active_locations)} change={t('dashboard.membersByLocation')} helper={t('dashboard.branchesDefined')} icon={Building2} />
       </div>

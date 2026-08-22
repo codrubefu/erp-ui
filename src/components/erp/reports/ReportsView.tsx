@@ -17,7 +17,7 @@ type FilterForm = {
   admin_id: string;
   payment_type_id: string;
   status: string;
-  subscription_type: string;
+  service_type: string;
   group_by: 'day' | 'month';
   segment_id: string;
 };
@@ -29,7 +29,7 @@ type SegmentForm = {
   expired: boolean;
   expires_in_days: string;
   location_id: string;
-  subscription_type: string;
+  service_type: string;
 };
 
 const emptyFilters: FilterForm = {
@@ -39,7 +39,7 @@ const emptyFilters: FilterForm = {
   admin_id: '',
   payment_type_id: '',
   status: '',
-  subscription_type: '',
+  service_type: '',
   group_by: 'month',
   segment_id: '',
 };
@@ -51,7 +51,7 @@ const emptySegmentForm: SegmentForm = {
   expired: false,
   expires_in_days: '',
   location_id: '',
-  subscription_type: '',
+  service_type: '',
 };
 
 const paymentStatuses = ['initiated', 'pending', 'confirmed', 'failed', 'refunded', 'cancelled'] as const;
@@ -69,7 +69,7 @@ function buildFilters(form: FilterForm): FinancialReportFilters {
     admin_id: optionalNumber(form.admin_id),
     payment_type_id: optionalNumber(form.payment_type_id) as 1 | 2 | 3 | undefined,
     status: form.status ? form.status as FinancialReportFilters['status'] : undefined,
-    subscription_type: form.subscription_type ? form.subscription_type as FinancialReportFilters['subscription_type'] : undefined,
+    service_type: form.service_type ? form.service_type as FinancialReportFilters['service_type'] : undefined,
     group_by: form.group_by,
     segment_id: optionalNumber(form.segment_id),
   };
@@ -81,7 +81,7 @@ function segmentCriteriaFromForm(form: SegmentForm): SegmentCriteria {
     expired: form.expired ? true : undefined,
     expires_in_days: optionalNumber(form.expires_in_days),
     location_id: optionalNumber(form.location_id),
-    subscription_type: form.subscription_type ? form.subscription_type as SegmentCriteria['subscription_type'] : undefined,
+    service_type: form.service_type ? form.service_type as SegmentCriteria['service_type'] : undefined,
   };
 }
 
@@ -93,7 +93,7 @@ function segmentFormFrom(segment: Segment): SegmentForm {
     expired: Boolean(segment.criteria.expired),
     expires_in_days: segment.criteria.expires_in_days ? String(segment.criteria.expires_in_days) : '',
     location_id: segment.criteria.location_id ? String(segment.criteria.location_id) : '',
-    subscription_type: segment.criteria.subscription_type ?? '',
+    service_type: segment.criteria.service_type ?? '',
   };
 }
 
@@ -321,10 +321,10 @@ export function ReportsView(props: ReportsViewProps) {
             <option value="2">Card</option>
             <option value="3">Bank transfer</option>
           </Select>
-          <Select label={t('reports.filters.subscriptionType')} value={filters.subscription_type} onChange={(event) => updateFilter('subscription_type', event.target.value)}>
+          <Select label={t('reports.filters.serviceType')} value={filters.service_type} onChange={(event) => updateFilter('service_type', event.target.value)}>
             <option value="">{t('common.all')}</option>
-            <option value="membership">{t('subscriptions.types.membership')}</option>
-            <option value="access_pass">{t('subscriptions.types.access_pass')}</option>
+            <option value="membership">{t('services.types.membership')}</option>
+            <option value="access_pass">{t('services.types.access_pass')}</option>
           </Select>
           <Select label={t('reports.filters.location')} value={filters.location_id} onChange={(event) => updateFilter('location_id', event.target.value)}>
             <option value="">{t('common.all')}</option>
@@ -421,10 +421,10 @@ export function ReportsView(props: ReportsViewProps) {
                 <option value="">{t('common.all')}</option>
                 {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
               </Select>
-              <Select label={t('reports.criteria.subscriptionType')} value={segmentForm.subscription_type} onChange={(event) => updateSegmentForm('subscription_type', event.target.value)}>
+              <Select label={t('reports.criteria.serviceType')} value={segmentForm.service_type} onChange={(event) => updateSegmentForm('service_type', event.target.value)}>
                 <option value="">{t('common.all')}</option>
-                <option value="membership">{t('subscriptions.types.membership')}</option>
-                <option value="access_pass">{t('subscriptions.types.access_pass')}</option>
+                <option value="membership">{t('services.types.membership')}</option>
+                <option value="access_pass">{t('services.types.access_pass')}</option>
               </Select>
               <label className="flex h-10 items-center gap-3 self-end rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700">
                 <input type="checkbox" checked={segmentForm.expired} onChange={(event) => updateSegmentForm('expired', event.target.checked)} className="h-4 w-4 accent-violet-600" />

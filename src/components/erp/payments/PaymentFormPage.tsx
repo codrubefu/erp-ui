@@ -14,7 +14,7 @@ const initialForm = {
   first_name: '',
   last_name: '',
   payment_type_id: '1',
-  model_type: 'subscription_user' as PaymentModelType,
+  model_type: 'service_user' as PaymentModelType,
   model_id: '',
   amount: '',
   paid_at: '',
@@ -74,14 +74,14 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
     }
   };
 
-  const modelIdLabel = form.model_type === 'event_occurrence_user' ? 'model_id participant event occurrence' : 'model_id subscription_user';
+  const modelIdLabel = form.model_type === 'event_occurrence_user' ? 'model_id participant event occurrence' : 'model_id service assignment';
 
   if (!hasAnyRight(['payments.create', 'payments.manage'])) {
     return <PageShell title="Adauga payment" subtitle="" backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}><SectionCard title="Payments"><Alert>Nu ai dreptul payments.create.</Alert></SectionCard></PageShell>;
   }
 
   return (
-    <PageShell title="Adauga payment" subtitle="Creeaza o plata asociata explicit unui subscription_user sau event_occurrence_user." backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}>
+    <PageShell title="Adauga payment" subtitle="Creeaza o plata asociata explicit unui service assignment sau event_occurrence_user." backLabel="Inapoi la payments" onBack={() => navigate('/erp/payments')}>
       <form onSubmit={save}>
         <SectionCard title="Payment details">
           {serverError ? <Alert tone="error" className="mb-4">{serverError}</Alert> : null}
@@ -89,8 +89,8 @@ export function PaymentFormPage(props: PaymentFormPageProps) {
             <div><Input label="first_name" value={form.first_name} onChange={(event) => updateField('first_name', event.target.value)} />{errors.first_name ? <p className="mt-1 text-xs font-medium text-red-600">{errors.first_name}</p> : null}</div>
             <div><Input label="last_name" value={form.last_name} onChange={(event) => updateField('last_name', event.target.value)} />{errors.last_name ? <p className="mt-1 text-xs font-medium text-red-600">{errors.last_name}</p> : null}</div>
             <div><Select label="payment_type_id" value={form.payment_type_id} onChange={(event) => updateField('payment_type_id', event.target.value)}><option value="1">1 - cash</option><option value="2">2 - card</option><option value="3">3 - bank_transfer</option></Select>{errors.payment_type_id ? <p className="mt-1 text-xs font-medium text-red-600">{errors.payment_type_id}</p> : null}</div>
-            <div><Select label="model_type" value={form.model_type} onChange={(event) => updateField('model_type', event.target.value as PaymentModelType)}><option value="subscription_user">subscription_user</option><option value="event_occurrence_user">event_occurrence_user</option></Select>{errors.model_type ? <p className="mt-1 text-xs font-medium text-red-600">{errors.model_type}</p> : null}</div>
-            <div><Input label={modelIdLabel} type="number" min={1} value={form.model_id} onChange={(event) => updateField('model_id', event.target.value)} />{errors.model_id ? <p className="mt-1 text-xs font-medium text-red-600">{errors.model_id}</p> : null}<p className="mt-1 text-xs text-slate-500">{form.model_type === 'event_occurrence_user' ? 'ID-ul apartine relatiei participantului la event occurrence.' : 'ID-ul apartine relatiei subscription_user.'}</p></div>
+            <div><Select label="model_type" value={form.model_type} onChange={(event) => updateField('model_type', event.target.value as PaymentModelType)}><option value="service_user">service assignment</option><option value="event_occurrence_user">event_occurrence_user</option></Select>{errors.model_type ? <p className="mt-1 text-xs font-medium text-red-600">{errors.model_type}</p> : null}</div>
+            <div><Input label={modelIdLabel} type="number" min={1} value={form.model_id} onChange={(event) => updateField('model_id', event.target.value)} />{errors.model_id ? <p className="mt-1 text-xs font-medium text-red-600">{errors.model_id}</p> : null}<p className="mt-1 text-xs text-slate-500">{form.model_type === 'event_occurrence_user' ? 'ID-ul apartine relatiei participantului la event occurrence.' : 'ID-ul apartine relatiei de serviciu.'}</p></div>
             <div><Input label="amount" type="number" min={0} step="0.01" value={form.amount} onChange={(event) => updateField('amount', event.target.value)} />{errors.amount ? <p className="mt-1 text-xs font-medium text-red-600">{errors.amount}</p> : null}</div>
             <div><Input label="paid_at" type="datetime-local" value={form.paid_at} onChange={(event) => updateField('paid_at', event.target.value)} />{errors.paid_at ? <p className="mt-1 text-xs font-medium text-red-600">{errors.paid_at}</p> : null}</div>
             <Input label="external_reference" value={form.external_reference} onChange={(event) => updateField('external_reference', event.target.value)} />

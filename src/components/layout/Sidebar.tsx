@@ -62,7 +62,7 @@ const navGroups: readonly NavGroup[] = [
     id: 'management',
     items: [
       { id: 'members', labelKey: 'menu.users', icon: Users, rights: ['users.view', 'users.manage'] },
-      { id: 'subscriptions', labelKey: 'menu.subscriptions', icon: BadgeEuro, rights: ['subscriptions.view', 'subscriptions.manage'] },
+      { id: 'services', labelKey: 'menu.services', icon: BadgeEuro, rights: ['services.view', 'services.manage'] },
       { id: 'events', labelKey: 'menu.events', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
       { id: 'articles', labelKey: 'menu.articles', icon: Bell, rights: ['articles.view', 'articles.manage'] },
       { id: 'campaigns', labelKey: 'menu.campaigns', icon: Megaphone, rights: ['campaigns.view', 'campaigns.manage', 'reports.manage', 'users.manage'] },

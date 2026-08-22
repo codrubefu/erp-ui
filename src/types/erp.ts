@@ -1,5 +1,5 @@
-﻿export type MemberStatus = 'Activ' | 'Suspendat' | 'Expirat' | 'Rezervat';
-export type SubscriptionStatus = 'Activ' | 'Expirat' | 'Suspendat' | 'Consumat' | 'Rezervat';
+export type MemberStatus = 'Activ' | 'Suspendat' | 'Expirat' | 'Rezervat';
+export type ServiceStatus = 'Activ' | 'Expirat' | 'Suspendat' | 'Consumat' | 'Rezervat';
 export type AnnouncementStatus = 'Draft' | 'Programat' | 'Publicat';
 export type PaymentStatus = 'Plătit' | 'În așteptare' | 'Eșuat';
 export type PaymentMethod = 'Card' | 'Numerar' | 'Transfer';
@@ -11,14 +11,14 @@ export type SectionId =
   | 'profile-privacy'
   | 'profile-announcements'
   | 'profile-events'
-  | 'profile-subscriptions'
+  | 'profile-services'
   | 'branches'
   | 'location-groups'
   | 'admins'
   | 'access'
   | 'custom-fields'
   | 'members'
-  | 'subscriptions'
+  | 'services'
   | 'events'
   | 'articles'
   | 'campaigns'
@@ -27,9 +27,9 @@ export type SectionId =
   | 'payments'
   | 'reports';
 
-export type FormSection = 'list' | 'memberForm' | 'subscriptionForm' | 'announcementForm' | 'paymentForm';
+export type FormSection = 'list' | 'memberForm' | 'serviceForm' | 'announcementForm' | 'paymentForm';
 export type FormMode = 'create' | 'edit' | null;
-export type FormType = 'member' | 'subscription' | 'article' | 'announcement' | 'payment';
+export type FormType = 'member' | 'service' | 'article' | 'announcement' | 'payment';
 
 export type Credentials = {
   username: string;
@@ -41,7 +41,7 @@ export type Member = {
   name: string;
   email: string;
   phone: string;
-  subscription: string;
+  service: string;
   status: MemberStatus;
   lastContact: string;
   address: string;
@@ -49,7 +49,7 @@ export type Member = {
   branch: string;
 };
 
-export type Subscription = {
+export type Service = {
   id: number | string;
   name: string;
   description: string | null;
@@ -64,14 +64,14 @@ export type Subscription = {
   deleted_at?: string | null;
 };
 
-export type UserSubscriptionAssignment = {
+export type UserServiceAssignment = {
   id: number;
   start_date?: string;
 };
 
-export type UserSubscriptionHistory = {
+export type UserServiceHistory = {
   id: number | null;
-  subscription_id: number;
+  service_id: number;
   name: string;
   start_date: string | null;
   expires_at: string | null;

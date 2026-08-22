@@ -13,7 +13,7 @@ export type FinancialReportFilters = {
   admin_id?: number;
   payment_type_id?: 1 | 2 | 3;
   status?: 'initiated' | 'pending' | 'confirmed' | 'failed' | 'refunded' | 'cancelled';
-  subscription_type?: 'membership' | 'access_pass';
+  service_type?: 'membership' | 'access_pass';
   group_by?: FinancialReportGroupBy;
   segment_id?: number;
 };

@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { ApiCustomFieldValue, ApiPaginated, ApiSubscription, AuthenticatedUser } from '../services/ErpApiService';
+import type { ApiCustomFieldValue, ApiPaginated, ApiService, AuthenticatedUser } from '../services/ErpApiService';
 
 type MeResponse = AuthenticatedUser | {
   user?: AuthenticatedUser;
@@ -49,8 +49,8 @@ export function getAuthenticatedUserEvents() {
   return apiClient<ApiPaginated<AuthenticatedUserEvent> | AuthenticatedUserEvent[]>('/me/events');
 }
 
-export function getAuthenticatedUserSubscriptions() {
-  return apiClient<ApiPaginated<ApiSubscription> | ApiSubscription[]>('/me/subscriptions');
+export function getAuthenticatedUserServices() {
+  return apiClient<ApiPaginated<ApiService> | ApiService[]>('/me/services');
 }
 
 export function getAuthenticatedUserCustomFields() {

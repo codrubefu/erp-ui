@@ -26,11 +26,11 @@ function adminLabel(payment: ApiPayment) {
 }
 
 function resolvePaymentModelLink(payment: ApiPayment) {
-  if (payment.model_type === 'subscription_user' && payment.subscription_id) {
+  if (payment.model_type === 'service_user' && payment.service_id) {
     return {
-      to: `/erp/subscriptions/${payment.subscription_id}/members`,
-      label: 'Vezi subscription',
-      title: `Deschide membrii pentru subscription #${payment.subscription_id}`,
+      to: `/erp/services/${payment.service_id}/members`,
+      label: 'Vezi service',
+      title: `Deschide membrii pentru service #${payment.service_id}`,
     };
   }
 

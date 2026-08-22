@@ -23,7 +23,7 @@ export type Paginated<T> = {
   total?: number;
 };
 
-export type EventSubscription = {
+export type EventService = {
   id: number;
   name: string;
 };
@@ -36,8 +36,8 @@ export type EventUser = {
   last_name?: string;
   email: string;
   phone?: string | null;
-  has_active_subscription?: boolean;
-  active_subscriptions?: EventSubscription[];
+  has_active_service?: boolean;
+  active_services?: EventService[];
 };
 
 export type EventItem = {
@@ -52,9 +52,9 @@ export type EventItem = {
   monthly_day: number | null;
   start_date: string;
   end_date: string | null;
-  requires_active_subscription: boolean;
-  required_subscription_id: number | null;
-  required_subscription?: EventSubscription | null;
+  requires_active_service: boolean;
+  required_service_id: number | null;
+  required_service?: EventService | null;
   requires_payment: boolean;
   payment_amount: string | number | null;
   payment_type: EventPaymentType | null;
@@ -66,7 +66,7 @@ export type EventItem = {
   updated_at?: string | null;
 };
 
-export type EventPayload = Omit<EventItem, 'id' | 'created_at' | 'updated_at' | 'required_subscription'>;
+export type EventPayload = Omit<EventItem, 'id' | 'created_at' | 'updated_at' | 'required_service'>;
 
 export type EventOccurrence = {
   id: number;
@@ -98,7 +98,7 @@ export type EventFilters = {
   search?: string;
   status?: string;
   recurrence_type?: string;
-  requires_active_subscription?: string;
+  requires_active_service?: string;
   requires_payment?: string;
   sort?: 'created_at' | 'start_date' | 'title';
   direction?: 'asc' | 'desc';
@@ -191,7 +191,7 @@ export const eventService = {
   updateOccurrenceParticipantStatus: (occurrenceId: number, userId: number, payload: UpdateParticipantStatusPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   searchUsers: (search: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, page, per_page: perPage }),
   searchUsersByCard: (cardCode: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users/search/user-code', {}, { search: cardCode, page, per_page: perPage }),
-  getSubscriptions: () => request<EventSubscription[] | Paginated<EventSubscription>>('/subscriptions', {}, { per_page: 100, is_active: 1 }),
+  getServices: () => request<EventService[] | Paginated<EventService>>('/services', {}, { per_page: 100, is_active: 1 }),
 };
 
 export const payloadExamples = {
@@ -206,8 +206,8 @@ export const payloadExamples = {
     monthly_day: null,
     start_date: '2026-06-01',
     end_date: '2026-12-31',
-    requires_active_subscription: true,
-    required_subscription_id: 3,
+    requires_active_service: true,
+    required_service_id: 3,
     max_participants: 20,
     status: 'active',
   },

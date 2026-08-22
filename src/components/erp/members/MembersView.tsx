@@ -2,15 +2,15 @@ import { ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filt
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
-import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiSubscription, type ApiUser, type ApiUserSubscription, type ApiUserSubscriptionAssignment, type SubscriptionAssignmentStatus } from '../../../services/ErpApiService';
+import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
-import { subscriptionLifecycleService } from '../../../services/subscriptionLifecycleService';
+import { serviceLifecycleService } from '../../../services/serviceLifecycleService';
 import { useAuth } from '../../../context/useAuth';
 import { PrivacyPanel } from '../profile/PrivacyPanel';
 import { UserDocumentsPanel } from './UserDocumentsPanel';
 
-type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'subscriptions' | 'documents' | 'privacy' | 'activity';
+type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'services' | 'documents' | 'privacy' | 'activity';
 
 type UserForm = {
   user_code: string;
@@ -25,18 +25,18 @@ type UserForm = {
   };
   group_ids: string;
   location_ids: string;
-  subscriptions: ApiUserSubscriptionAssignment[];
+  services: ApiUserServiceAssignment[];
   custom_fields: Record<string, unknown>;
 };
 
-type SubscriptionPaymentForm = {
+type ServicePaymentForm = {
   id: number | null;
   first_name: string;
   last_name: string;
-  subscription_id: string;
-  subscription_reference: string;
-  subscription_name: string;
-  subscription_description: string;
+  service_id: string;
+  service_reference: string;
+  service_name: string;
+  service_description: string;
   amount: string;
   currency: string;
   payment_type_id: string;
@@ -65,18 +65,18 @@ const emptyForm: UserForm = {
   notification_consents: { sms: false, mail: false },
   group_ids: '',
   location_ids: '',
-  subscriptions: [],
+  services: [],
   custom_fields: {},
 };
 
-const emptyPaymentForm: SubscriptionPaymentForm = {
+const emptyPaymentForm: ServicePaymentForm = {
   id: null,
   first_name: '',
   last_name: '',
-  subscription_id: '',
-  subscription_reference: '',
-  subscription_name: '',
-  subscription_description: '',
+  service_id: '',
+  service_reference: '',
+  service_name: '',
+  service_description: '',
   amount: '',
   currency: '',
   payment_type_id: '',
@@ -164,13 +164,13 @@ function apiDateTimeToLocal(value?: string | null) {
   return value.replace(' ', 'T').slice(0, 16);
 }
 
-function amountFromSubscription(subscription?: ApiSubscription | ApiUserSubscription | null) {
-  if (subscription?.price === undefined || subscription.price === null) return '';
-  return String(subscription.price);
+function amountFromService(service?: ApiService | ApiUserService | null) {
+  if (service?.price === undefined || service.price === null) return '';
+  return String(service.price);
 }
 
-function paymentFormFromSelection(form: UserForm, subscription?: ApiSubscription | ApiUserSubscription | null): SubscriptionPaymentForm {
-  if (!subscription) {
+function paymentFormFromSelection(form: UserForm, service?: ApiService | ApiUserService | null): ServicePaymentForm {
+  if (!service) {
     return {
       ...emptyPaymentForm,
       first_name: form.first_name,
@@ -183,34 +183,34 @@ function paymentFormFromSelection(form: UserForm, subscription?: ApiSubscription
     id: null,
     first_name: form.first_name,
     last_name: form.last_name,
-    subscription_id: String(subscription.id),
-    subscription_reference: String(subscription.id),
-    subscription_name: subscription.name ?? '',
-    subscription_description: subscription.description ?? '',
-    amount: amountFromSubscription(subscription),
-    currency: subscription.currency ?? '',
+    service_id: String(service.id),
+    service_reference: String(service.id),
+    service_name: service.name ?? '',
+    service_description: service.description ?? '',
+    amount: amountFromService(service),
+    currency: service.currency ?? '',
     payment_type_id: '',
     paid_at: currentDateTimeLocal(),
   };
 }
 
-function paymentFormFromPayment(payment: ApiPayment, form: UserForm, subscription?: ApiSubscription | ApiUserSubscription | null): SubscriptionPaymentForm {
+function paymentFormFromPayment(payment: ApiPayment, form: UserForm, service?: ApiService | ApiUserService | null): ServicePaymentForm {
   return {
     id: payment.id,
     first_name: payment.first_name ?? form.first_name,
     last_name: payment.last_name ?? form.last_name,
-    subscription_id: String(payment.subscription_id ?? subscription?.id ?? ''),
-    subscription_reference: String(payment.subscription_id ?? subscription?.id ?? ''),
-    subscription_name: subscription?.name ?? payment.subscription?.name ?? '',
-    subscription_description: subscription?.description ?? payment.subscription?.description ?? '',
+    service_id: String(payment.service_id ?? service?.id ?? ''),
+    service_reference: String(payment.service_id ?? service?.id ?? ''),
+    service_name: service?.name ?? payment.service?.name ?? '',
+    service_description: service?.description ?? payment.service?.description ?? '',
     amount: String(payment.amount ?? ''),
-    currency: subscription?.currency ?? payment.subscription?.currency ?? '',
+    currency: service?.currency ?? payment.service?.currency ?? '',
     payment_type_id: String(payment.payment_type_id ?? ''),
     paid_at: apiDateTimeToLocal(payment.paid_at),
   };
 }
 
-function paymentPopupValuesFromSubscriptionForm(form: SubscriptionPaymentForm): PaymentPopupValues {
+function paymentPopupValuesFromServiceForm(form: ServicePaymentForm): PaymentPopupValues {
   return {
     first_name: form.first_name,
     last_name: form.last_name,
@@ -218,10 +218,10 @@ function paymentPopupValuesFromSubscriptionForm(form: SubscriptionPaymentForm): 
     currency: form.currency,
     payment_type_id: form.payment_type_id,
     paid_at: form.paid_at,
-    reference_id: form.subscription_id,
-    reference_label: 'Subscription ID',
-    reference_name: form.subscription_name,
-    reference_description: form.subscription_description,
+    reference_id: form.service_id,
+    reference_label: 'Service ID',
+    reference_name: form.service_name,
+    reference_description: form.service_description,
   };
 }
 
@@ -232,42 +232,42 @@ function paymentMethodLabel(payment: ApiPayment) {
   return payment.payment_type ?? '-';
 }
 
-function subscriptionAssignmentsFromUser(user: ApiUser): ApiUserSubscriptionAssignment[] {
-  const source = mergeById(user.subscriptions, user.active_subscriptions);
+function serviceAssignmentsFromUser(user: ApiUser): ApiUserServiceAssignment[] {
+  const source = mergeById(user.services, user.active_services);
 
-  return source.map((subscription) => {
-    const historyItem = user.subscription_history?.find((item) => item.subscription_id === subscription.id);
+  return source.map((service) => {
+    const historyItem = user.service_history?.find((item) => item.service_id === service.id);
     return {
-      id: subscription.id,
-      start_date: historyItem?.start_date ?? subscription.start_date ?? subscription.pivot?.start_date ?? todayDate(),
-      subscription_user_id: subscription.pivot?.id ?? historyItem?.id ?? null,
-      status: historyItem?.status ?? subscription.status ?? subscription.pivot?.status ?? null,
-      expires_at: historyItem?.expires_at ?? subscription.expires_at ?? subscription.pivot?.expires_at ?? null,
-      accesses_used: historyItem?.accesses_used ?? subscription.accesses_used ?? subscription.pivot?.accesses_used ?? null,
-      suspended_at: historyItem?.suspended_at ?? subscription.suspended_at ?? subscription.pivot?.suspended_at ?? null,
-      resume_at: historyItem?.resume_at ?? subscription.resume_at ?? subscription.pivot?.resume_at ?? null,
-      status_reason: historyItem?.status_reason ?? subscription.status_reason ?? subscription.pivot?.status_reason ?? null,
-      activation_payment_id: historyItem?.activation_payment_id ?? subscription.activation_payment_id ?? subscription.pivot?.activation_payment_id ?? null,
+      id: service.id,
+      start_date: historyItem?.start_date ?? service.start_date ?? service.pivot?.start_date ?? todayDate(),
+      service_user_id: service.pivot?.id ?? historyItem?.id ?? null,
+      status: historyItem?.status ?? service.status ?? service.pivot?.status ?? null,
+      expires_at: historyItem?.expires_at ?? service.expires_at ?? service.pivot?.expires_at ?? null,
+      accesses_used: historyItem?.accesses_used ?? service.accesses_used ?? service.pivot?.accesses_used ?? null,
+      suspended_at: historyItem?.suspended_at ?? service.suspended_at ?? service.pivot?.suspended_at ?? null,
+      resume_at: historyItem?.resume_at ?? service.resume_at ?? service.pivot?.resume_at ?? null,
+      status_reason: historyItem?.status_reason ?? service.status_reason ?? service.pivot?.status_reason ?? null,
+      activation_payment_id: historyItem?.activation_payment_id ?? service.activation_payment_id ?? service.pivot?.activation_payment_id ?? null,
     };
   }) ?? [];
 }
 
-function subscriptionUserIdForAssignment(
-  assignment: ApiUserSubscriptionAssignment | undefined,
+function serviceUserIdForAssignment(
+  assignment: ApiUserServiceAssignment | undefined,
   user: ApiUser | null,
-  subscription?: ApiSubscription | ApiUserSubscription | null,
+  service?: ApiService | ApiUserService | null,
 ) {
-  if (assignment?.subscription_user_id) return assignment.subscription_user_id;
-  if (subscription?.pivot?.id) return subscription.pivot.id;
-  const subscriptionId = assignment?.id ?? subscription?.id;
-  if (!subscriptionId || !user) return null;
-  const userSubscription = mergeById(user.subscriptions, user.active_subscriptions).find((item) => item.id === subscriptionId);
-  const historyItem = user.subscription_history?.find((item) => item.subscription_id === subscriptionId && item.id);
-  return userSubscription?.pivot?.id ?? historyItem?.id ?? null;
+  if (assignment?.service_user_id) return assignment.service_user_id;
+  if (service?.pivot?.id) return service.pivot.id;
+  const serviceId = assignment?.id ?? service?.id;
+  if (!serviceId || !user) return null;
+  const userService = mergeById(user.services, user.active_services).find((item) => item.id === serviceId);
+  const historyItem = user.service_history?.find((item) => item.service_id === serviceId && item.id);
+  return userService?.pivot?.id ?? historyItem?.id ?? null;
 }
 
-function hasActiveSubscription(user: ApiUser) {
-  return user.has_active_subscription ?? Boolean(user.active_subscriptions?.length);
+function hasActiveService(user: ApiUser) {
+  return user.has_active_service ?? Boolean(user.active_services?.length);
 }
 
 function formatDate(value?: string | null) {
@@ -282,16 +282,16 @@ function addDays(date: string | undefined, days: number | null | undefined) {
   return parsed.toISOString().slice(0, 10);
 }
 
-function subscriptionStartDate(subscription?: ApiSubscription | ApiUserSubscription | null) {
-  return subscription?.start_date ?? subscription?.pivot?.start_date ?? null;
+function serviceStartDate(service?: ApiService | ApiUserService | null) {
+  return service?.start_date ?? service?.pivot?.start_date ?? null;
 }
 
-function subscriptionExpiresAt(subscription?: ApiSubscription | ApiUserSubscription | null) {
-  return subscription?.expires_at ?? subscription?.pivot?.expires_at ?? null;
+function serviceExpiresAt(service?: ApiService | ApiUserService | null) {
+  return service?.expires_at ?? service?.pivot?.expires_at ?? null;
 }
 
-function subscriptionIsActive(user: ApiUser | null, subscriptionId: number, fallback?: ApiSubscription | ApiUserSubscription | null) {
-  if (user?.active_subscriptions?.some((subscription) => subscription.id === subscriptionId)) return true;
+function serviceIsActive(user: ApiUser | null, serviceId: number, fallback?: ApiService | ApiUserService | null) {
+  if (user?.active_services?.some((service) => service.id === serviceId)) return true;
   if (fallback?.status) return fallback.status === 'active';
   if (fallback?.pivot?.status) return fallback.pivot.status === 'active';
   if (fallback?.is_currently_active !== undefined) return fallback.is_currently_active;
@@ -301,42 +301,42 @@ function subscriptionIsActive(user: ApiUser | null, subscriptionId: number, fall
   return fallback?.is_active ?? true;
 }
 
-function subscriptionAssignmentStatus(subscription?: ApiSubscription | ApiUserSubscription | null, assignment?: ApiUserSubscriptionAssignment): SubscriptionAssignmentStatus | null {
-  return assignment?.status ?? subscription?.status ?? subscription?.pivot?.status ?? null;
+function serviceAssignmentStatus(service?: ApiService | ApiUserService | null, assignment?: ApiUserServiceAssignment): ServiceAssignmentStatus | null {
+  return assignment?.status ?? service?.status ?? service?.pivot?.status ?? null;
 }
 
 function assignmentValue<T>(
-  assignment: ApiUserSubscriptionAssignment | undefined,
-  subscription: ApiSubscription | ApiUserSubscription | null | undefined,
+  assignment: ApiUserServiceAssignment | undefined,
+  service: ApiService | ApiUserService | null | undefined,
   field: 'accesses_used' | 'suspended_at' | 'resume_at' | 'status_reason' | 'activation_payment_id' | 'expires_at',
 ): T | null {
-  return (assignment?.[field] ?? subscription?.[field] ?? subscription?.pivot?.[field] ?? null) as T | null;
+  return (assignment?.[field] ?? service?.[field] ?? service?.pivot?.[field] ?? null) as T | null;
 }
 
-function assignmentStatusLabel(status: SubscriptionAssignmentStatus | null | undefined, t: ReturnType<typeof useTranslation>['t']) {
-  return status ? t(`subscriptions.assignmentStatuses.${status}`) : '-';
+function assignmentStatusLabel(status: ServiceAssignmentStatus | null | undefined, t: ReturnType<typeof useTranslation>['t']) {
+  return status ? t(`services.assignmentStatuses.${status}`) : '-';
 }
 
-function subscriptionHistoryRows(user: ApiUser | null) {
+function serviceHistoryRows(user: ApiUser | null) {
   if (!user) return [];
-  const currentStatuses: Array<SubscriptionAssignmentStatus | undefined | null> = ['active', 'reserved', 'pending'];
-  if (user.subscription_history?.length) {
-    return user.subscription_history.filter((item) => !currentStatuses.includes(item.status) && !item.is_currently_active);
+  const currentStatuses: Array<ServiceAssignmentStatus | undefined | null> = ['active', 'reserved', 'pending'];
+  if (user.service_history?.length) {
+    return user.service_history.filter((item) => !currentStatuses.includes(item.status) && !item.is_currently_active);
   }
 
-  return mergeById(user.subscriptions, user.active_subscriptions).map((subscription) => ({
-    id: subscription.pivot?.id ?? null,
-    subscription_id: subscription.id,
-    name: subscription.name,
-    start_date: subscriptionStartDate(subscription),
-    expires_at: subscriptionExpiresAt(subscription),
-    status: subscriptionAssignmentStatus(subscription),
-    is_active: subscriptionIsActive(user, subscription.id, subscription),
+  return mergeById(user.services, user.active_services).map((service) => ({
+    id: service.pivot?.id ?? null,
+    service_id: service.id,
+    name: service.name,
+    start_date: serviceStartDate(service),
+    expires_at: serviceExpiresAt(service),
+    status: serviceAssignmentStatus(service),
+    is_active: serviceIsActive(user, service.id, service),
   })).filter((item) => !currentStatuses.includes(item.status) && !item.is_active);
 }
 
-function userSubscriptionLabels(user: ApiUser) {
-  return relationLabels(mergeById(user.subscriptions, user.active_subscriptions));
+function userServiceLabels(user: ApiUser) {
+  return relationLabels(mergeById(user.services, user.active_services));
 }
 
 function buildPayload(form: UserForm) {
@@ -350,9 +350,9 @@ function buildPayload(form: UserForm) {
     active: form.active,
     group_ids: toIdList(form.group_ids),
     location_ids: toIdList(form.location_ids),
-    subscriptions: form.subscriptions.map((subscription) => ({
-      id: subscription.id,
-      start_date: subscription.start_date || todayDate(),
+    services: form.services.map((service) => ({
+      id: service.id,
+      start_date: service.start_date || todayDate(),
     })),
   };
 
@@ -405,7 +405,7 @@ function formFromUser(user: ApiUser): UserForm {
     },
     group_ids: relationIds(user.groups),
     location_ids: relationIds(user.locations),
-    subscriptions: subscriptionAssignmentsFromUser(user),
+    services: serviceAssignmentsFromUser(user),
     custom_fields: customFieldValuesFromUser(user),
   };
 }
@@ -466,7 +466,7 @@ export function UserManagementView({
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
-  const [subscriptions, setSubscriptions] = useState<ApiSubscription[]>([]);
+  const [services, setServices] = useState<ApiService[]>([]);
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [perPage, setPerPage] = useState(15);
@@ -480,12 +480,12 @@ export function UserManagementView({
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<UserForm>(emptyForm);
   const [activeFormTab, setActiveFormTab] = useState<UserFormTab>('details');
-  const [subscriptionToAdd, setSubscriptionToAdd] = useState('');
-  const [subscriptionStartDate, setSubscriptionStartDate] = useState(todayDate());
-  const [subscriptionSaving, setSubscriptionSaving] = useState(false);
-  const [paymentSubscriptionId, setPaymentSubscriptionId] = useState<number | null>(null);
-  const [paymentForm, setPaymentForm] = useState<SubscriptionPaymentForm>(emptyPaymentForm);
-  const [subscriptionPayments, setSubscriptionPayments] = useState<ApiPayment[]>([]);
+  const [serviceToAdd, setServiceToAdd] = useState('');
+  const [serviceStartDate, setServiceStartDate] = useState(todayDate());
+  const [serviceSaving, setServiceSaving] = useState(false);
+  const [paymentServiceId, setPaymentServiceId] = useState<number | null>(null);
+  const [paymentForm, setPaymentForm] = useState<ServicePaymentForm>(emptyPaymentForm);
+  const [servicePayments, setServicePayments] = useState<ApiPayment[]>([]);
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
@@ -514,14 +514,14 @@ export function UserManagementView({
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
   const locationsByBranch = useMemo(() => groupLocationsByBranch(locations), [locations]);
-  const selectedSubscriptionIds = useMemo(() => form.subscriptions.map((subscription) => String(subscription.id)), [form.subscriptions]);
-  const selectedPaymentSubscription = useMemo(() => {
-    const subscriptionId = Number(paymentSubscriptionId);
-    if (!subscriptionId) return null;
-    return subscriptions.find((subscription) => subscription.id === subscriptionId)
-      ?? mergeById(editing?.subscriptions, editing?.active_subscriptions).find((subscription) => subscription.id === subscriptionId)
+  const selectedServiceIds = useMemo(() => form.services.map((service) => String(service.id)), [form.services]);
+  const selectedPaymentService = useMemo(() => {
+    const serviceId = Number(paymentServiceId);
+    if (!serviceId) return null;
+    return services.find((service) => service.id === serviceId)
+      ?? mergeById(editing?.services, editing?.active_services).find((service) => service.id === serviceId)
       ?? null;
-  }, [editing, paymentSubscriptionId, subscriptions]);
+  }, [editing, paymentServiceId, services]);
 
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
   const canUseGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
@@ -541,7 +541,7 @@ export function UserManagementView({
       tabs.push(['groups', t('users.groups')], ['locations', t('articles.locations')]);
     }
 
-    tabs.push(['subscriptions', t('users.subscriptions')]);
+    tabs.push(['services', t('users.services')]);
     if (editing && canViewDocuments) tabs.push(['documents', 'Documente']);
     if (editing && canUseGdpr) tabs.push(['privacy', 'GDPR']);
     if (editing) tabs.push(['activity', 'Activity']);
@@ -599,18 +599,18 @@ export function UserManagementView({
 
   const loadLookups = useCallback(async () => {
     try {
-      const [groupData, locationData, subscriptionData] = await Promise.all([
+      const [groupData, locationData, serviceData] = await Promise.all([
         erpApiService.list<ApiGroup>('groups', { per_page: 100 }),
         erpApiService.list<ApiLocation>('locations', { per_page: 100 }),
-        erpApiService.list<ApiSubscription>('subscriptions', { per_page: 100, is_active: '1' }),
+        erpApiService.list<ApiService>('services', { per_page: 100, is_active: '1' }),
       ]);
       setGroups(groupData);
       setLocations(locationData);
-      setSubscriptions(subscriptionData);
+      setServices(serviceData);
     } catch {
       setGroups([]);
       setLocations([]);
-      setSubscriptions([]);
+      setServices([]);
     }
 
     try {
@@ -665,17 +665,17 @@ export function UserManagementView({
     }
   }, [activityFilters.from, activityFilters.to, activityFilters.type, editing?.id]);
 
-  const loadSubscriptionPayments = useCallback(async (user: ApiUser | null, assignments: ApiUserSubscriptionAssignment[]) => {
+  const loadServicePayments = useCallback(async (user: ApiUser | null, assignments: ApiUserServiceAssignment[]) => {
     if (!user || !assignments.length) {
-      setSubscriptionPayments([]);
+      setServicePayments([]);
       return;
     }
 
     try {
       const paymentGroups = await Promise.all(assignments.map((assignment) => erpApiService.list<ApiPayment>('payments', {
-        model_type: 'subscription_user',
-        model_id: assignment.subscription_user_id ?? undefined,
-        subscription_id: assignment.id,
+        model_type: 'service_user',
+        model_id: assignment.service_user_id ?? undefined,
+        service_id: assignment.id,
         per_page: 100,
       })));
       const merged = mergeById(...paymentGroups).filter((payment) => (
@@ -683,22 +683,22 @@ export function UserManagementView({
         || payment.user_id === null
         || payment.user_id === user.id
       ));
-      setSubscriptionPayments(merged);
+      setServicePayments(merged);
     } catch {
-      setSubscriptionPayments([]);
+      setServicePayments([]);
     }
   }, []);
 
-  const reloadEditingUserSubscriptions = useCallback(async () => {
+  const reloadEditingUserServices = useCallback(async () => {
     if (!editing) return;
     const savedUser = await erpApiService.get<ApiUser>('users', editing.id);
     const customFieldValues = await loadUserCustomFieldValues(savedUser);
     const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
     setEditing(savedUser);
     setForm(savedForm);
-    await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
+    await loadServicePayments(savedUser, savedForm.services);
     await loadUsers();
-  }, [editing, loadSubscriptionPayments, loadUsers]);
+  }, [editing, loadServicePayments, loadUsers]);
 
   useEffect(() => {
     void loadLookups();
@@ -706,15 +706,15 @@ export function UserManagementView({
   }, [fetchUsers, loadLookups]);
 
   useEffect(() => {
-    if (!paymentSubscriptionId || paymentForm.id) return;
+    if (!paymentServiceId || paymentForm.id) return;
     setPaymentError('');
     setPaymentSuccess('');
     setPaymentForm(paymentFormFromSelection({
       ...emptyForm,
       first_name: form.first_name,
       last_name: form.last_name,
-    }, selectedPaymentSubscription));
-  }, [form.first_name, form.last_name, paymentForm.id, paymentSubscriptionId, selectedPaymentSubscription]);
+    }, selectedPaymentService));
+  }, [form.first_name, form.last_name, paymentForm.id, paymentServiceId, selectedPaymentService]);
 
   useEffect(() => {
     if (activeFormTab !== 'activity' || !editing) return;
@@ -733,11 +733,11 @@ export function UserManagementView({
     setForm(emptyForm);
     setSuccess('');
     setActiveFormTab('details');
-    setSubscriptionToAdd('');
-    setSubscriptionStartDate(todayDate());
-    setPaymentSubscriptionId(null);
+    setServiceToAdd('');
+    setServiceStartDate(todayDate());
+    setPaymentServiceId(null);
     setPaymentForm(emptyPaymentForm);
-    setSubscriptionPayments([]);
+    setServicePayments([]);
     setActivities([]);
     setActivityError('');
     setActivityFilters({ type: '', from: '', to: '' });
@@ -761,11 +761,11 @@ export function UserManagementView({
     setForm({ ...formFromUser(selectedUser), custom_fields: customFieldValues });
     setSuccess('');
     setActiveFormTab('details');
-    setSubscriptionToAdd('');
-    setSubscriptionStartDate(todayDate());
-    setPaymentSubscriptionId(null);
+    setServiceToAdd('');
+    setServiceStartDate(todayDate());
+    setPaymentServiceId(null);
     setPaymentForm(emptyPaymentForm);
-    setSubscriptionPayments([]);
+    setServicePayments([]);
     setActivities([]);
     setActivityError('');
     setActivityFilters({ type: '', from: '', to: '' });
@@ -775,7 +775,7 @@ export function UserManagementView({
     setSuspendReason('');
     setSuspendResumeAt('');
     setFormOpen(true);
-    void loadSubscriptionPayments(selectedUser, subscriptionAssignmentsFromUser(selectedUser));
+    void loadServicePayments(selectedUser, serviceAssignmentsFromUser(selectedUser));
   };
 
   const closeForm = () => {
@@ -784,11 +784,11 @@ export function UserManagementView({
     setForm(emptyForm);
     setSuccess('');
     setActiveFormTab('details');
-    setSubscriptionToAdd('');
-    setSubscriptionStartDate(todayDate());
-    setPaymentSubscriptionId(null);
+    setServiceToAdd('');
+    setServiceStartDate(todayDate());
+    setPaymentServiceId(null);
     setPaymentForm(emptyPaymentForm);
-    setSubscriptionPayments([]);
+    setServicePayments([]);
     setActivities([]);
     setActivityError('');
     setPaymentError('');
@@ -798,102 +798,102 @@ export function UserManagementView({
     setSuspendResumeAt('');
   };
 
-  const persistSubscriptionAssignments = async (nextSubscriptions: ApiUserSubscriptionAssignment[]) => {
+  const persistServiceAssignments = async (nextServices: ApiUserServiceAssignment[]) => {
     if (!editing) return;
-    setSubscriptionSaving(true);
+    setServiceSaving(true);
     setError('');
     setSuccess('');
     try {
-      const nextForm = { ...form, subscriptions: nextSubscriptions };
+      const nextForm = { ...form, services: nextServices };
       await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(nextForm));
       const savedUser = await erpApiService.get<ApiUser>('users', editing.id);
       const customFieldValues = await loadUserCustomFieldValues(savedUser);
       const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
       setEditing(savedUser);
       setForm(savedForm);
-      await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
+      await loadServicePayments(savedUser, savedForm.services);
       setSuccess(t('common.saved'));
       await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('users.saveError', { label: resolvedSingularLabel }));
     } finally {
-      setSubscriptionSaving(false);
+      setServiceSaving(false);
     }
   };
 
-  const updateSubscriptionStartDate = (subscriptionId: number, startDate: string) => {
-    const nextSubscriptions = form.subscriptions.map((subscription) => (
-      subscription.id === subscriptionId ? { ...subscription, start_date: startDate } : subscription
+  const updateServiceStartDate = (serviceId: number, startDate: string) => {
+    const nextServices = form.services.map((service) => (
+      service.id === serviceId ? { ...service, start_date: startDate } : service
     ));
-    setForm((prev) => ({ ...prev, subscriptions: nextSubscriptions }));
-    void persistSubscriptionAssignments(nextSubscriptions);
+    setForm((prev) => ({ ...prev, services: nextServices }));
+    void persistServiceAssignments(nextServices);
   };
 
-  const addSubscriptionAssignment = () => {
-    const subscriptionId = Number(subscriptionToAdd);
-    if (!subscriptionId) return;
-    if (form.subscriptions.some((subscription) => subscription.id === subscriptionId)) return;
-    const nextSubscriptions = [...form.subscriptions, { id: subscriptionId, start_date: subscriptionStartDate || todayDate() }];
-    setForm((prev) => ({ ...prev, subscriptions: nextSubscriptions }));
-    setSubscriptionToAdd('');
-    setSubscriptionStartDate(todayDate());
-    void persistSubscriptionAssignments(nextSubscriptions);
+  const addServiceAssignment = () => {
+    const serviceId = Number(serviceToAdd);
+    if (!serviceId) return;
+    if (form.services.some((service) => service.id === serviceId)) return;
+    const nextServices = [...form.services, { id: serviceId, start_date: serviceStartDate || todayDate() }];
+    setForm((prev) => ({ ...prev, services: nextServices }));
+    setServiceToAdd('');
+    setServiceStartDate(todayDate());
+    void persistServiceAssignments(nextServices);
   };
 
-  const selectSubscriptionForPayment = (subscriptionId: number) => {
-    if (!form.subscriptions.some((subscription) => subscription.id === subscriptionId)) return;
-    const subscription = subscriptions.find((item) => item.id === subscriptionId)
-      ?? mergeById(editing?.subscriptions, editing?.active_subscriptions).find((item) => item.id === subscriptionId)
+  const selectServiceForPayment = (serviceId: number) => {
+    if (!form.services.some((service) => service.id === serviceId)) return;
+    const service = services.find((item) => item.id === serviceId)
+      ?? mergeById(editing?.services, editing?.active_services).find((item) => item.id === serviceId)
       ?? null;
-    setPaymentSubscriptionId(subscriptionId);
-    setPaymentForm(paymentFormFromSelection(form, subscription));
+    setPaymentServiceId(serviceId);
+    setPaymentForm(paymentFormFromSelection(form, service));
     setPaymentError('');
     setPaymentSuccess('');
   };
 
-  const editPayment = (payment: ApiPayment, subscription?: ApiSubscription | ApiUserSubscription | null) => {
-    const subscriptionId = Number(payment.subscription_id ?? subscription?.id);
-    if (!subscriptionId) return;
-    setPaymentSubscriptionId(subscriptionId);
-    setPaymentForm(paymentFormFromPayment(payment, form, subscription));
+  const editPayment = (payment: ApiPayment, service?: ApiService | ApiUserService | null) => {
+    const serviceId = Number(payment.service_id ?? service?.id);
+    if (!serviceId) return;
+    setPaymentServiceId(serviceId);
+    setPaymentForm(paymentFormFromPayment(payment, form, service));
     setPaymentError('');
     setPaymentSuccess('');
   };
 
-  const updatePaymentForm = (field: keyof SubscriptionPaymentForm, value: string) => {
+  const updatePaymentForm = (field: keyof ServicePaymentForm, value: string) => {
     setPaymentForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const updatePaymentPopupForm = <K extends keyof PaymentPopupValues>(field: K, value: PaymentPopupValues[K]) => {
-    const mappedFields: Partial<Record<keyof PaymentPopupValues, keyof SubscriptionPaymentForm>> = {
+    const mappedFields: Partial<Record<keyof PaymentPopupValues, keyof ServicePaymentForm>> = {
       first_name: 'first_name',
       last_name: 'last_name',
       amount: 'amount',
       currency: 'currency',
       payment_type_id: 'payment_type_id',
       paid_at: 'paid_at',
-      reference_id: 'subscription_id',
-      reference_name: 'subscription_name',
-      reference_description: 'subscription_description',
+      reference_id: 'service_id',
+      reference_name: 'service_name',
+      reference_description: 'service_description',
     };
     const targetField = mappedFields[field];
     if (!targetField) return;
     updatePaymentForm(targetField, String(value ?? ''));
-    if (field === 'reference_id') updatePaymentForm('subscription_reference', String(value ?? ''));
+    if (field === 'reference_id') updatePaymentForm('service_reference', String(value ?? ''));
   };
 
   const savePayment = async () => {
-    const subscriptionId = Number(paymentForm.subscription_id || paymentSubscriptionId);
+    const serviceId = Number(paymentForm.service_id || paymentServiceId);
     const paymentTypeId = Number(paymentForm.payment_type_id);
     const amount = Number(paymentForm.amount);
-    const assignment = form.subscriptions.find((item) => item.id === subscriptionId);
-    const modelId = subscriptionUserIdForAssignment(assignment, editing, selectedPaymentSubscription);
+    const assignment = form.services.find((item) => item.id === serviceId);
+    const modelId = serviceUserIdForAssignment(assignment, editing, selectedPaymentService);
 
     setPaymentError('');
     setPaymentSuccess('');
 
-    if (!subscriptionId) {
-      setPaymentError('Select a subscription before creating a payment.');
+    if (!serviceId) {
+      setPaymentError('Select a service before creating a payment.');
       return;
     }
     if (!modelId) {
@@ -917,9 +917,9 @@ export function UserManagementView({
     try {
       const payload = {
         ...(editing ? { user_id: editing.id } : {}),
-        model_type: 'subscription_user',
+        model_type: 'service_user',
         model_id: modelId,
-        subscription_id: subscriptionId,
+        service_id: serviceId,
         first_name: paymentForm.first_name.trim(),
         last_name: paymentForm.last_name.trim(),
         amount,
@@ -932,19 +932,19 @@ export function UserManagementView({
       } else {
         savedPayment = await erpApiService.create<ApiPayment>('payments', payload);
       }
-      const currentStatus = subscriptionAssignmentStatus(selectedPaymentSubscription, assignment);
+      const currentStatus = serviceAssignmentStatus(selectedPaymentService, assignment);
       if (!paymentForm.id && savedPayment.id && modelId && ['pending', 'reserved', 'expired'].includes(currentStatus ?? '')) {
-        await subscriptionLifecycleService.activate(modelId, savedPayment.id);
+        await serviceLifecycleService.activate(modelId, savedPayment.id);
       }
       if (editing) {
-        await reloadEditingUserSubscriptions();
+        await reloadEditingUserServices();
       } else {
-        setSubscriptionPayments((prev) => {
+        setServicePayments((prev) => {
           const withoutSaved = prev.filter((payment) => payment.id !== savedPayment.id);
           return [...withoutSaved, savedPayment];
         });
       }
-      setPaymentSubscriptionId(null);
+      setPaymentServiceId(null);
       setPaymentForm(emptyPaymentForm);
       setPaymentSuccess('');
       setSuccess(paymentForm.id ? 'Payment updated.' : 'Payment saved.');
@@ -955,16 +955,16 @@ export function UserManagementView({
     }
   };
 
-  const removeSubscriptionAssignment = (subscriptionId: number) => {
-    const nextSubscriptions = form.subscriptions.filter((subscription) => subscription.id !== subscriptionId);
-    setForm((prev) => ({ ...prev, subscriptions: nextSubscriptions }));
-    if (paymentSubscriptionId === subscriptionId) {
-      setPaymentSubscriptionId(null);
+  const removeServiceAssignment = (serviceId: number) => {
+    const nextServices = form.services.filter((service) => service.id !== serviceId);
+    setForm((prev) => ({ ...prev, services: nextServices }));
+    if (paymentServiceId === serviceId) {
+      setPaymentServiceId(null);
       setPaymentForm(emptyPaymentForm);
       setPaymentError('');
       setPaymentSuccess('');
     }
-    void persistSubscriptionAssignments(nextSubscriptions);
+    void persistServiceAssignments(nextServices);
   };
 
   const runLifecycleAction = async (assignmentId: number, action: 'activate' | 'resume' | 'consume') => {
@@ -973,16 +973,16 @@ export function UserManagementView({
     setSuccess('');
     try {
       if (action === 'activate') {
-        await subscriptionLifecycleService.activate(assignmentId);
+        await serviceLifecycleService.activate(assignmentId);
       } else if (action === 'resume') {
-        await subscriptionLifecycleService.resume(assignmentId);
+        await serviceLifecycleService.resume(assignmentId);
       } else {
-        await subscriptionLifecycleService.consume(assignmentId);
+        await serviceLifecycleService.consume(assignmentId);
       }
-      await reloadEditingUserSubscriptions();
-      setSuccess(t('subscriptions.lifecycleSaved'));
+      await reloadEditingUserServices();
+      setSuccess(t('services.lifecycleSaved'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('subscriptions.lifecycleError'));
+      setError(err instanceof Error ? err.message : t('services.lifecycleError'));
     } finally {
       setLifecycleSavingId(null);
     }
@@ -993,17 +993,17 @@ export function UserManagementView({
     setError('');
     setSuccess('');
     try {
-      const blob = await erpApiService.downloadSubscriptionPaymentNote(assignmentId);
+      const blob = await erpApiService.downloadServicePaymentNote(assignmentId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `nota-plata-abonament-${assignmentId}.pdf`;
+      link.download = `nota-plata-serviciu-${assignmentId}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('subscriptions.paymentNoteError'));
+      setError(err instanceof Error ? err.message : t('services.paymentNoteError'));
     } finally {
       setPaymentNoteLoadingId(null);
     }
@@ -1032,24 +1032,24 @@ export function UserManagementView({
 
   const suspendAssignment = async (assignmentId: number) => {
     if (!suspendReason.trim()) {
-      setError(t('subscriptions.suspendReasonRequired'));
+      setError(t('services.suspendReasonRequired'));
       return;
     }
     setLifecycleSavingId(assignmentId);
     setError('');
     setSuccess('');
     try {
-      await subscriptionLifecycleService.suspend(assignmentId, {
+      await serviceLifecycleService.suspend(assignmentId, {
         reason: suspendReason.trim(),
         resume_at: suspendResumeAt ? dateTimeLocalToApi(suspendResumeAt) : null,
       });
       setSuspendAssignmentId(null);
       setSuspendReason('');
       setSuspendResumeAt('');
-      await reloadEditingUserSubscriptions();
-      setSuccess(t('subscriptions.lifecycleSaved'));
+      await reloadEditingUserServices();
+      setSuccess(t('services.lifecycleSaved'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('subscriptions.lifecycleError'));
+      setError(err instanceof Error ? err.message : t('services.lifecycleError'));
     } finally {
       setLifecycleSavingId(null);
     }
@@ -1204,7 +1204,7 @@ export function UserManagementView({
       const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
       setEditing(savedUser);
       setForm(savedForm);
-      await loadSubscriptionPayments(savedUser, savedForm.subscriptions);
+      await loadServicePayments(savedUser, savedForm.services);
       setSuccess(t('common.saved'));
       await loadUsers();
       if (closeAfterSave) closeForm();
@@ -1363,7 +1363,7 @@ export function UserManagementView({
           ) : activeFormTab === 'activity' ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
-                <Input label="type" value={activityFilters.type} onChange={(event) => setActivityFilters((prev) => ({ ...prev, type: event.target.value }))} placeholder="subscription_assigned" />
+                <Input label="type" value={activityFilters.type} onChange={(event) => setActivityFilters((prev) => ({ ...prev, type: event.target.value }))} placeholder="service_assigned" />
                 <Input label="from" type="date" value={activityFilters.from} onChange={(event) => setActivityFilters((prev) => ({ ...prev, from: event.target.value }))} />
                 <Input label="to" type="date" value={activityFilters.to} onChange={(event) => setActivityFilters((prev) => ({ ...prev, to: event.target.value }))} />
                 <div className="flex items-end">
@@ -1406,35 +1406,35 @@ export function UserManagementView({
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto]">
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.addSubscription')}</span>
-                  <select value={subscriptionToAdd} onChange={(event) => setSubscriptionToAdd(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
-                    <option value="">{t('users.selectSubscription')}</option>
-                    {subscriptions.filter((subscription) => !selectedSubscriptionIds.includes(String(subscription.id))).map((subscription) => (
-                      <option key={subscription.id} value={subscription.id}>{subscription.name}</option>
+                  <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.addService')}</span>
+                  <select value={serviceToAdd} onChange={(event) => setServiceToAdd(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                    <option value="">{t('users.selectService')}</option>
+                    {services.filter((service) => !selectedServiceIds.includes(String(service.id))).map((service) => (
+                      <option key={service.id} value={service.id}>{service.name}</option>
                     ))}
                   </select>
                 </label>
-                <Input label={t('users.startDate')} type="date" value={subscriptionStartDate} onChange={(event) => setSubscriptionStartDate(event.target.value)} />
+                <Input label={t('users.startDate')} type="date" value={serviceStartDate} onChange={(event) => setServiceStartDate(event.target.value)} />
                 <div className="flex items-end">
-                  <Button onClick={addSubscriptionAssignment} disabled={!subscriptionToAdd || subscriptionSaving} variant="primary" className="w-full py-3 md:w-auto">
-                    <Plus className="h-4 w-4" />{subscriptionSaving ? t('common.saving') : t('common.add')}
+                  <Button onClick={addServiceAssignment} disabled={!serviceToAdd || serviceSaving} variant="primary" className="w-full py-3 md:w-auto">
+                    <Plus className="h-4 w-4" />{serviceSaving ? t('common.saving') : t('common.add')}
                   </Button>
                 </div>
               </div>
 
-              {selectedPaymentSubscription ? (
+              {selectedPaymentService ? (
                 <PaymentPopup
                   title={paymentForm.id ? `Edit payment #${paymentForm.id}` : 'Adauga plata'}
-                  subtitle={selectedPaymentSubscription.name
-                    ? `Plata pentru ${selectedPaymentSubscription.name}`
-                    : `Plata pentru subscription #${paymentForm.subscription_id || selectedPaymentSubscription.id}`}
-                  values={paymentPopupValuesFromSubscriptionForm(paymentForm)}
+                  subtitle={selectedPaymentService.name
+                    ? `Plata pentru ${selectedPaymentService.name}`
+                    : `Plata pentru service #${paymentForm.service_id || selectedPaymentService.id}`}
+                  values={paymentPopupValuesFromServiceForm(paymentForm)}
                   error={paymentError}
                   success={paymentSuccess}
                   saving={paymentSaving}
                   onChange={updatePaymentPopupForm}
                   onClose={() => {
-                    setPaymentSubscriptionId(null);
+                    setPaymentServiceId(null);
                     setPaymentForm(emptyPaymentForm);
                     setPaymentError('');
                   }}
@@ -1443,12 +1443,12 @@ export function UserManagementView({
               ) : null}
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.currentSubscriptions')}</h3>
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.currentServices')}</h3>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="min-w-[980px] w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('services.service')}</th>
                         <th className="px-4 py-3 font-semibold">{t('users.added')}</th>
                         <th className="px-4 py-3 font-semibold">{t('users.expires')}</th>
                         <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
@@ -1456,29 +1456,29 @@ export function UserManagementView({
                       </tr>
                     </thead>
                     <tbody>
-                      {form.subscriptions.length > 0 ? form.subscriptions.map((assignment) => {
-                        const userSubscription = mergeById(editing?.subscriptions, editing?.active_subscriptions).find((item) => item.id === assignment.id);
-                        const subscription = subscriptions.find((item) => item.id === assignment.id) ?? userSubscription;
-                        const persistedExpiresAt = subscriptionExpiresAt(userSubscription);
-                        const expiresAt = persistedExpiresAt ?? addDays(assignment.start_date, subscription?.duration_days);
-                        const subscriptionUserId = subscriptionUserIdForAssignment(assignment, editing, subscription);
-                        const lifecycleStatus = subscriptionAssignmentStatus(userSubscription ?? subscription, assignment);
-                        const accessesUsed = assignmentValue<number>(assignment, userSubscription ?? subscription, 'accesses_used') ?? 0;
-                        const maxAccesses = subscription?.max_accesses ?? userSubscription?.max_accesses ?? null;
-                        const resumeAt = assignmentValue<string>(assignment, userSubscription ?? subscription, 'resume_at');
-                        const statusReason = assignmentValue<string>(assignment, userSubscription ?? subscription, 'status_reason');
-                        const paymentsForSubscription = subscriptionPayments.filter((payment) => (
-                          subscriptionUserId
-                            ? payment.model_id === subscriptionUserId || (payment.model_id === undefined && payment.subscription_id === assignment.id)
-                            : payment.subscription_id === assignment.id
+                      {form.services.length > 0 ? form.services.map((assignment) => {
+                        const userService = mergeById(editing?.services, editing?.active_services).find((item) => item.id === assignment.id);
+                        const service = services.find((item) => item.id === assignment.id) ?? userService;
+                        const persistedExpiresAt = serviceExpiresAt(userService);
+                        const expiresAt = persistedExpiresAt ?? addDays(assignment.start_date, service?.duration_days);
+                        const serviceUserId = serviceUserIdForAssignment(assignment, editing, service);
+                        const lifecycleStatus = serviceAssignmentStatus(userService ?? service, assignment);
+                        const accessesUsed = assignmentValue<number>(assignment, userService ?? service, 'accesses_used') ?? 0;
+                        const maxAccesses = service?.max_accesses ?? userService?.max_accesses ?? null;
+                        const resumeAt = assignmentValue<string>(assignment, userService ?? service, 'resume_at');
+                        const statusReason = assignmentValue<string>(assignment, userService ?? service, 'status_reason');
+                        const paymentsForService = servicePayments.filter((payment) => (
+                          serviceUserId
+                            ? payment.model_id === serviceUserId || (payment.model_id === undefined && payment.service_id === assignment.id)
+                            : payment.service_id === assignment.id
                         ));
                         return (
                           <tr key={assignment.id} className="border-t border-slate-100 align-top">
                             <td className="px-4 py-3">
-                              <p className="font-medium text-slate-900">{subscription?.name ?? `#${assignment.id}`}</p>
-                              <p className="text-xs text-slate-500">{subscription?.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</p>
+                              <p className="font-medium text-slate-900">{service?.name ?? `#${assignment.id}`}</p>
+                              <p className="text-xs text-slate-500">{service?.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
                               <div className="mt-3 space-y-2">
-                                {paymentsForSubscription.length ? paymentsForSubscription.map((payment) => (
+                                {paymentsForService.length ? paymentsForService.map((payment) => (
                                   <div key={payment.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                       <div>
@@ -1491,7 +1491,7 @@ export function UserManagementView({
                                             <Download className="h-3.5 w-3.5" />{t('payments.receipt')}
                                           </Button>
                                         ) : null}
-                                        <Button onClick={() => editPayment(payment, subscription)} size="sm" className="px-2.5 py-1.5 text-xs">
+                                        <Button onClick={() => editPayment(payment, service)} size="sm" className="px-2.5 py-1.5 text-xs">
                                           <Edit3 className="h-3.5 w-3.5" />{t('common.edit')}
                                         </Button>
                                       </div>
@@ -1503,62 +1503,62 @@ export function UserManagementView({
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateSubscriptionStartDate(assignment.id, event.target.value)} disabled={subscriptionSaving} />
+                              <Input label={t('users.startDate')} type="date" value={assignment.start_date ?? ''} onChange={(event) => updateServiceStartDate(assignment.id, event.target.value)} disabled={serviceSaving} />
                             </td>
-                            <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('subscriptions.noAutoExpiry')}</td>
+                            <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('services.noAutoExpiry')}</td>
                             <td className="px-4 py-3">
                               <StatusBadge status={assignmentStatusLabel(lifecycleStatus, t)} />
                               <div className="mt-2 space-y-1 text-xs text-slate-500">
-                                <p>{t('subscriptions.accesses')}: {maxAccesses ? `${accessesUsed} / ${maxAccesses}` : '-'}</p>
-                                {resumeAt ? <p>{t('subscriptions.resumeAt')}: {formatDate(resumeAt)}</p> : null}
-                                {statusReason ? <p>{t('subscriptions.statusReason')}: {statusReason}</p> : null}
+                                <p>{t('services.accesses')}: {maxAccesses ? `${accessesUsed} / ${maxAccesses}` : '-'}</p>
+                                {resumeAt ? <p>{t('services.resumeAt')}: {formatDate(resumeAt)}</p> : null}
+                                {statusReason ? <p>{t('services.statusReason')}: {statusReason}</p> : null}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex flex-wrap justify-end gap-2">
-                                <Button onClick={() => selectSubscriptionForPayment(assignment.id)}>
+                                <Button onClick={() => selectServiceForPayment(assignment.id)}>
                                   <Plus className="h-4 w-4" />Adauga plata noua
                                 </Button>
-                                {subscriptionUserId ? (
-                                  <Button onClick={() => void downloadPaymentNote(subscriptionUserId)} disabled={paymentNoteLoadingId === subscriptionUserId}>
-                                    <FileText className="h-4 w-4" />{paymentNoteLoadingId === subscriptionUserId ? t('subscriptions.generatingPaymentNote') : t('subscriptions.paymentNote')}
+                                {serviceUserId ? (
+                                  <Button onClick={() => void downloadPaymentNote(serviceUserId)} disabled={paymentNoteLoadingId === serviceUserId}>
+                                    <FileText className="h-4 w-4" />{paymentNoteLoadingId === serviceUserId ? t('services.generatingPaymentNote') : t('services.paymentNote')}
                                   </Button>
                                 ) : null}
-                                {subscriptionUserId && subscription && Number(subscription.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
-                                  <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'activate')} disabled={lifecycleSavingId === subscriptionUserId} variant="primary">
-                                    {t('subscriptions.activate')}
+                                {serviceUserId && service && Number(service.price ?? 0) <= 0 && ['pending', 'reserved', 'expired'].includes(lifecycleStatus ?? '') ? (
+                                  <Button onClick={() => void runLifecycleAction(serviceUserId, 'activate')} disabled={lifecycleSavingId === serviceUserId} variant="primary">
+                                    {t('services.activate')}
                                   </Button>
                                 ) : null}
-                                {subscriptionUserId && ['active', 'reserved'].includes(lifecycleStatus ?? '') ? (
+                                {serviceUserId && ['active', 'reserved'].includes(lifecycleStatus ?? '') ? (
                                   <Button onClick={() => {
-                                    setSuspendAssignmentId(subscriptionUserId);
+                                    setSuspendAssignmentId(serviceUserId);
                                     setSuspendReason('');
                                     setSuspendResumeAt('');
-                                  }} disabled={lifecycleSavingId === subscriptionUserId}>
-                                    {t('subscriptions.suspend')}
+                                  }} disabled={lifecycleSavingId === serviceUserId}>
+                                    {t('services.suspend')}
                                   </Button>
                                 ) : null}
-                                {subscriptionUserId && lifecycleStatus === 'suspended' ? (
-                                  <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'resume')} disabled={lifecycleSavingId === subscriptionUserId}>
-                                    {t('subscriptions.resume')}
+                                {serviceUserId && lifecycleStatus === 'suspended' ? (
+                                  <Button onClick={() => void runLifecycleAction(serviceUserId, 'resume')} disabled={lifecycleSavingId === serviceUserId}>
+                                    {t('services.resume')}
                                   </Button>
                                 ) : null}
-                                {subscriptionUserId && lifecycleStatus === 'active' && maxAccesses ? (
-                                  <Button onClick={() => void runLifecycleAction(subscriptionUserId, 'consume')} disabled={lifecycleSavingId === subscriptionUserId}>
-                                    {t('subscriptions.consume')}
+                                {serviceUserId && lifecycleStatus === 'active' && maxAccesses ? (
+                                  <Button onClick={() => void runLifecycleAction(serviceUserId, 'consume')} disabled={lifecycleSavingId === serviceUserId}>
+                                    {t('services.consume')}
                                   </Button>
                                 ) : null}
-                                <Button onClick={() => removeSubscriptionAssignment(assignment.id)} disabled={subscriptionSaving} variant="danger">
+                                <Button onClick={() => removeServiceAssignment(assignment.id)} disabled={serviceSaving} variant="danger">
                                   <Trash2 className="h-4 w-4" />{t('common.delete')}
                                 </Button>
                               </div>
-                              {subscriptionUserId && suspendAssignmentId === subscriptionUserId ? (
+                              {serviceUserId && suspendAssignmentId === serviceUserId ? (
                                 <div className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
-                                  <Textarea label={t('subscriptions.suspendReason')} value={suspendReason} onChange={(event) => setSuspendReason(event.target.value)} />
-                                  <Input label={t('subscriptions.resumeAtOptional')} type="datetime-local" value={suspendResumeAt} onChange={(event) => setSuspendResumeAt(event.target.value)} />
+                                  <Textarea label={t('services.suspendReason')} value={suspendReason} onChange={(event) => setSuspendReason(event.target.value)} />
+                                  <Input label={t('services.resumeAtOptional')} type="datetime-local" value={suspendResumeAt} onChange={(event) => setSuspendResumeAt(event.target.value)} />
                                   <div className="flex justify-end gap-2">
                                     <Button onClick={() => setSuspendAssignmentId(null)}>{t('common.cancel')}</Button>
-                                    <Button onClick={() => void suspendAssignment(subscriptionUserId)} disabled={lifecycleSavingId === subscriptionUserId} variant="primary">{t('subscriptions.suspend')}</Button>
+                                    <Button onClick={() => void suspendAssignment(serviceUserId)} disabled={lifecycleSavingId === serviceUserId} variant="primary">{t('services.suspend')}</Button>
                                   </div>
                                 </div>
                               ) : null}
@@ -1567,7 +1567,7 @@ export function UserManagementView({
                         );
                       }) : (
                         <tr>
-                          <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noAttachedSubscriptions')}</td>
+                          <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noAttachedServices')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -1576,28 +1576,28 @@ export function UserManagementView({
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.subscriptionHistory')}</h3>
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('users.serviceHistory')}</h3>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="min-w-[760px] w-full text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">{t('subscriptions.subscription')}</th>
+                        <th className="px-4 py-3 font-semibold">{t('services.service')}</th>
                         <th className="px-4 py-3 font-semibold">{t('users.added')}</th>
                         <th className="px-4 py-3 font-semibold">{t('users.expires')}</th>
                         <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {subscriptionHistoryRows(editing).length ? subscriptionHistoryRows(editing).map((item) => (
-                        <tr key={`${item.subscription_id}-${item.id ?? item.start_date}`} className="border-t border-slate-100">
+                      {serviceHistoryRows(editing).length ? serviceHistoryRows(editing).map((item) => (
+                        <tr key={`${item.service_id}-${item.id ?? item.start_date}`} className="border-t border-slate-100">
                           <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
                           <td className="px-4 py-3 text-slate-600">{formatDate(item.start_date)}</td>
-                          <td className="px-4 py-3 text-slate-600">{item.expires_at ? formatDate(item.expires_at) : t('subscriptions.noAutoExpiry')}</td>
+                          <td className="px-4 py-3 text-slate-600">{item.expires_at ? formatDate(item.expires_at) : t('services.noAutoExpiry')}</td>
                           <td className="px-4 py-3"><StatusBadge status={assignmentStatusLabel(item.status, t)} /></td>
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noSubscriptionHistory')}</td>
+                          <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noServiceHistory')}</td>
                         </tr>
                       )}
                     </tbody>
@@ -1608,10 +1608,10 @@ export function UserManagementView({
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <Button onClick={closeForm}>{t('common.cancel')}</Button>
-            {!['subscriptions', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
+            {!['services', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
             </Button> : null}
-            {!['subscriptions', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
+            {!['services', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.saveAndClose')}
             </Button> : null}
           </div>
@@ -1687,7 +1687,7 @@ export function UserManagementView({
                 <th className="px-4 py-3 font-semibold">{t('users.user')}</th>
                 <th className="px-4 py-3 font-semibold">{t('users.contact')}</th>
                 {showGroupsInList ? <th className="px-4 py-3 font-semibold">{t('users.groups')}</th> : null}
-                <th className="px-4 py-3 font-semibold">{t('users.subscriptions')}</th>
+                <th className="px-4 py-3 font-semibold">{t('users.services')}</th>
                 <th className="px-4 py-3 font-semibold">{t('articles.locations')}</th>
                 <th className="px-4 py-3 font-semibold">{t('common.status')}</th>
                 <th className="px-4 py-3 font-semibold text-right">{t('common.actions')}</th>
@@ -1705,8 +1705,8 @@ export function UserManagementView({
                   </td>
                   {showGroupsInList ? <td className="max-w-[260px] px-4 py-3 text-slate-600">{relationLabels(user.groups)}</td> : null}
                   <td className="max-w-[260px] px-4 py-3 text-slate-600">
-                    <p>{userSubscriptionLabels(user)}</p>
-                    <div className="mt-2"><StatusBadge status={hasActiveSubscription(user) ? t('users.statusActive') : t('users.noActiveSubscription')} /></div>
+                    <p>{userServiceLabels(user)}</p>
+                    <div className="mt-2"><StatusBadge status={hasActiveService(user) ? t('users.statusActive') : t('users.noActiveService')} /></div>
                   </td>
                   <td className="max-w-[260px] px-4 py-3 text-slate-600">{relationLabels(user.locations)}</td>
                   <td className="px-4 py-3"><StatusBadge status={user.active ? t('users.statusActive') : t('users.statusInactive')} /></td>

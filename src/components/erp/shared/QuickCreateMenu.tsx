@@ -12,7 +12,7 @@ export function QuickCreateMenu({ onNavigate }: QuickCreateMenuProps) {
   const { t } = useTranslation();
   const allActions = [
     { key: 'member', label: t('quick.member'), icon: Users, rights: ['users.manage'] },
-    { key: 'subscription', label: t('quick.subscription'), icon: BadgeEuro, rights: ['subscriptions.create', 'subscriptions.manage'] },
+    { key: 'service', label: t('quick.service'), icon: BadgeEuro, rights: ['services.create', 'services.manage'] },
     { key: 'article', label: t('quick.article'), icon: Bell, rights: ['articles.create', 'articles.manage'] },
     { key: 'payment', label: t('quick.payment'), icon: CreditCard },
   ] satisfies QuickCreateAction[];

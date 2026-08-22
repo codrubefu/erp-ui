@@ -12,7 +12,7 @@ Utilizatorul poate:
 - cauta dupa titlu;
 - filtra dupa status;
 - filtra dupa recurenta;
-- filtra evenimente care cer abonament activ;
+- filtra evenimente care cer serviciu activ;
 - filtra evenimente platite;
 - sorta dupa data creare, data start sau titlu;
 - vedea detalii;
@@ -34,8 +34,8 @@ Campuri disponibile:
 - tip recurenta: o singura data, saptamanal, lunar;
 - zile de recurenta pentru evenimente saptamanale;
 - zi lunara pentru evenimente lunare;
-- abonament activ obligatoriu;
-- abonament specific obligatoriu;
+- serviciu activ obligatoriu;
+- serviciu specific obligatoriu;
 - eveniment platit;
 - suma si moneda pentru plata;
 - numar maxim de participanti;

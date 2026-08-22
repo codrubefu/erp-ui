@@ -22,7 +22,7 @@ export function Header({ onToggleSidebar, onLogout, currentUser, organizationNam
     { to: '/erp/profile-privacy', label: t('profile.privacy', 'Privacy'), icon: ShieldCheck },
     { to: '/erp/profile-announcements', label: t('profile.announcements', 'Anunturi'), icon: Bell },
     ...(hasAnyRight(['events.view', 'events.manage']) ? [{ to: '/erp/profile-events', label: t('profile.events'), icon: CalendarDays }] : []),
-    { to: '/erp/profile-subscriptions', label: t('profile.subscriptions'), icon: BadgeEuro },
+    { to: '/erp/profile-services', label: t('profile.services'), icon: BadgeEuro },
   ];
 
   return (

@@ -3,7 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { eventService, type ApiValidationError, type EventItem, type EventParticipant, type EventPayload, type EventStatus, type EventSubscription, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
+import { eventService, type ApiValidationError, type EventItem, type EventParticipant, type EventPayload, type EventStatus, type EventService, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
 import { SectionCard } from '../../primitives';
@@ -67,9 +67,9 @@ export function RecurrenceBadge({ type }: { type: RecurrenceType }) {
   return <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">{type}</span>;
 }
 
-export function SubscriptionRequirementBadge({ event }: { event: Pick<EventItem, 'requires_active_subscription' | 'required_subscription'> }) {
+export function ServiceRequirementBadge({ event }: { event: Pick<EventItem, 'requires_active_service' | 'required_service'> }) {
   const { t } = useTranslation();
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${event.requires_active_subscription ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>{event.requires_active_subscription ? t('events.requiresSubscription', { name: event.required_subscription?.name ? `: ${event.required_subscription.name}` : '' }) : t('events.noRequiredSubscription')}</span>;
+  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${event.requires_active_service ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>{event.requires_active_service ? t('events.requiresService', { name: event.required_service?.name ? `: ${event.required_service.name}` : '' }) : t('events.noRequiredService')}</span>;
 }
 
 function DeleteConfirmModal({ label, loading, onCancel, onConfirm }: { label: string; loading?: boolean; onCancel: () => void; onConfirm: () => void }) {
@@ -104,7 +104,7 @@ function Pagination({ page, lastPage, onPage }: { page: number; lastPage: number
 function EventsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
-  const [filters, setFilters] = useState({ page: 1, per_page: 15, search: '', status: '', recurrence_type: '', requires_active_subscription: '', requires_payment: '', sort: 'created_at' as const, direction: 'desc' as const });
+  const [filters, setFilters] = useState({ page: 1, per_page: 15, search: '', status: '', recurrence_type: '', requires_active_service: '', requires_payment: '', sort: 'created_at' as const, direction: 'desc' as const });
   const query = useMemo(() => filters, [filters]);
   const { events, meta, loading, error, reload } = useEvents(query);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -132,7 +132,7 @@ function EventsPage() {
           <TextField label={t('events.searchTitle')} value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value, page: 1 }))} />
           <SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{eventStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
           <SelectField label={t('events.recurrence')} value={filters.recurrence_type} onChange={(e) => setFilters((p) => ({ ...p, recurrence_type: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="once">once</option><option value="weekly">weekly</option><option value="monthly">monthly</option></SelectField>
-          <SelectField label={t('subscriptions.subscription')} value={filters.requires_active_subscription} onChange={(e) => setFilters((p) => ({ ...p, requires_active_subscription: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
+          <SelectField label={t('services.service')} value={filters.requires_active_service} onChange={(e) => setFilters((p) => ({ ...p, requires_active_service: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
           <SelectField label="Paid event" value={filters.requires_payment} onChange={(e) => setFilters((p) => ({ ...p, requires_payment: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
           <SelectField label={t('events.sort')} value={filters.sort} onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value as typeof p.sort }))}><option value="created_at">created_at</option><option value="start_date">start_date</option><option value="title">title</option></SelectField>
           <SelectField label="direction" value={filters.direction} onChange={(e) => setFilters((p) => ({ ...p, direction: e.target.value as typeof p.direction }))}><option value="desc">desc</option><option value="asc">asc</option></SelectField>
@@ -141,13 +141,13 @@ function EventsPage() {
         {error ? <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead><tr className="border-b text-slate-500"><th className="pb-3">{t('common.title')}</th><th className="pb-3">{t('events.date')}</th><th className="pb-3">{t('events.recurrence')}</th><th className="pb-3">{t('subscriptions.subscription')}</th><th className="pb-3">Paid</th><th className="pb-3">{t('common.status')}</th><th className="pb-3 text-right">{t('common.actions')}</th></tr></thead>
+            <thead><tr className="border-b text-slate-500"><th className="pb-3">{t('common.title')}</th><th className="pb-3">{t('events.date')}</th><th className="pb-3">{t('events.recurrence')}</th><th className="pb-3">{t('services.service')}</th><th className="pb-3">Paid</th><th className="pb-3">{t('common.status')}</th><th className="pb-3 text-right">{t('common.actions')}</th></tr></thead>
             <tbody>{events.length ? events.map((event) => (
               <tr key={event.id} className="border-b border-slate-100 align-top">
                 <td className="py-4 font-semibold text-slate-900">{event.title}<p className="text-xs font-normal text-slate-500">{event.location || '-'}</p></td>
                 <td className="py-4 text-slate-600">{event.start_date} {event.start_time}-{event.end_time}</td>
                 <td className="py-4"><RecurrenceBadge type={event.recurrence_type} /></td>
-                <td className="py-4"><SubscriptionRequirementBadge event={event} /></td>
+                <td className="py-4"><ServiceRequirementBadge event={event} /></td>
                 <td className="py-4">{event.requires_payment ? <span className="font-semibold text-slate-900">{event.payment_amount ?? '-'} {event.payment_type ?? ''}</span> : '-'}</td>
                 <td className="py-4"><StatusBadge status={event.status} /></td>
                 <td className="py-4"><div className="flex flex-wrap justify-end gap-2">
@@ -180,8 +180,8 @@ const emptyEventForm: FormValues = {
   monthly_day: null,
   start_date: '',
   end_date: null,
-  requires_active_subscription: false,
-  required_subscription_id: null,
+  requires_active_service: false,
+  required_service_id: null,
   requires_payment: false,
   payment_amount: null,
   payment_type: 'RON',
@@ -195,7 +195,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
   const { eventId } = useParams();
   const id = Number(eventId);
   const { event, loading } = useEvent(mode === 'edit' ? id : undefined);
-  const [subscriptions, setSubscriptions] = useState<EventSubscription[]>([]);
+  const [services, setServices] = useState<EventService[]>([]);
   const [serverErrors, setServerErrors] = useState<Record<string, string[]> | undefined>();
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -203,11 +203,11 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [closeAfterSave, setCloseAfterSave] = useState(false);
   const recurrenceType = form.recurrence_type;
-  const needsSubscription = form.requires_active_subscription;
+  const needsService = form.requires_active_service;
   const needsPayment = form.requires_payment;
 
   useEffect(() => {
-    eventService.getSubscriptions().then((payload) => setSubscriptions(Array.isArray(payload) ? payload : payload.data)).catch(() => setSubscriptions([]));
+    eventService.getServices().then((payload) => setServices(Array.isArray(payload) ? payload : payload.data)).catch(() => setServices([]));
   }, []);
 
   useEffect(() => {
@@ -223,8 +223,8 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
   }, [recurrenceType]);
 
   useEffect(() => {
-    if (!needsSubscription) setForm((prev) => ({ ...prev, required_subscription_id: null }));
-  }, [needsSubscription]);
+    if (!needsService) setForm((prev) => ({ ...prev, required_service_id: null }));
+  }, [needsService]);
 
   useEffect(() => {
     if (!needsPayment) setForm((prev) => ({ ...prev, payment_amount: null, payment_type: 'RON' }));
@@ -240,7 +240,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
     if (!form.start_time) nextErrors.start_time = t('events.startTimeRequired');
     if (!form.end_time) nextErrors.end_time = t('events.endTimeRequired');
     if (!form.start_date) nextErrors.start_date = t('events.startDateRequired');
-    if (form.requires_active_subscription && !form.required_subscription_id) nextErrors.required_subscription_id = t('events.requiredSubscriptionRequired');
+    if (form.requires_active_service && !form.required_service_id) nextErrors.required_service_id = t('events.requiredServiceRequired');
     if (form.requires_payment && !form.payment_amount) nextErrors.payment_amount = 'Payment amount is required.';
     if (form.requires_payment && !form.payment_type) nextErrors.payment_type = 'Currency is required.';
     setClientErrors(nextErrors);
@@ -252,7 +252,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
     if (!validate()) return;
     setIsSubmitting(true);
     setServerErrors(undefined);
-    const payload = { ...form, description: form.description || null, location: form.location || null, max_participants: form.max_participants ? Number(form.max_participants) : null, monthly_day: form.monthly_day ? Number(form.monthly_day) : null, required_subscription_id: form.requires_active_subscription ? Number(form.required_subscription_id) : null, payment_amount: form.requires_payment ? Number(form.payment_amount) : null, payment_type: form.requires_payment ? form.payment_type : null };
+    const payload = { ...form, description: form.description || null, location: form.location || null, max_participants: form.max_participants ? Number(form.max_participants) : null, monthly_day: form.monthly_day ? Number(form.monthly_day) : null, required_service_id: form.requires_active_service ? Number(form.required_service_id) : null, payment_amount: form.requires_payment ? Number(form.payment_amount) : null, payment_type: form.requires_payment ? form.payment_type : null };
     try {
       const savedEvent = mode === 'edit' ? await eventService.updateEvent(id, payload) : await eventService.createEvent(payload);
       setForm({ ...savedEvent, recurrence_days: savedEvent.recurrence_days ?? [], description: savedEvent.description ?? '', location: savedEvent.location ?? '', end_date: savedEvent.end_date ?? null });
@@ -286,8 +286,8 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
           {recurrenceType === 'weekly' ? <div><span className="mb-2 block text-sm font-medium text-slate-700">{t('events.recurrenceDays')}</span><div className="grid grid-cols-2 gap-2">{weekdays.map((day) => <label key={day} className="rounded-xl border px-3 py-2 text-sm"><input type="checkbox" checked={(form.recurrence_days ?? []).includes(day)} onChange={(e) => updateField('recurrence_days', e.target.checked ? [...(form.recurrence_days ?? []), day] : (form.recurrence_days ?? []).filter((item) => item !== day))} className="mr-2 accent-violet-600" />{t(weekdayLabelKeys[day])}</label>)}</div>{fieldError(serverErrors, 'recurrence_days') ? <span className="mt-1 block text-xs text-red-600">{fieldError(serverErrors, 'recurrence_days')}</span> : null}</div> : null}
           <TextField label="max_participants" type="number" min={1} value={form.max_participants ?? ''} onChange={(e) => updateField('max_participants', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'max_participants')} />
           <SelectField label="status" value={form.status} onChange={(e) => updateField('status', e.target.value as EventStatus)} error={fieldError(serverErrors, 'status')}>{eventStatuses.map((status) => <option key={status}>{status}</option>)}</SelectField>
-          <label className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.requires_active_subscription} onChange={(e) => updateField('requires_active_subscription', e.target.checked)} className="accent-violet-600" />requires_active_subscription</label>
-          {needsSubscription ? <SelectField label={t('events.requiredSubscription')} value={form.required_subscription_id ?? ''} onChange={(e) => updateField('required_subscription_id', e.target.value ? Number(e.target.value) : null)} error={clientErrors.required_subscription_id || fieldError(serverErrors, 'required_subscription_id')}><option value="">{t('common.select')}</option>{subscriptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</SelectField> : null}
+          <label className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.requires_active_service} onChange={(e) => updateField('requires_active_service', e.target.checked)} className="accent-violet-600" />requires_active_service</label>
+          {needsService ? <SelectField label={t('events.requiredService')} value={form.required_service_id ?? ''} onChange={(e) => updateField('required_service_id', e.target.value ? Number(e.target.value) : null)} error={clientErrors.required_service_id || fieldError(serverErrors, 'required_service_id')}><option value="">{t('common.select')}</option>{services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</SelectField> : null}
           <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
             <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input type="checkbox" checked={form.requires_payment} onChange={(e) => updateField('requires_payment', e.target.checked)} className="accent-violet-600" />Paid Event</label>
             {needsPayment ? <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"><TextField label="payment_amount" type="number" min={0} step="0.01" value={form.payment_amount ?? ''} onChange={(e) => updateField('payment_amount', e.target.value ? Number(e.target.value) : null)} error={clientErrors.payment_amount || fieldError(serverErrors, 'payment_amount')} /><TextField label="currency" value={form.payment_type ?? 'RON'} onChange={(e) => updateField('payment_type', e.target.value)} error={clientErrors.payment_type || fieldError(serverErrors, 'payment_type')} /></div> : <p className="mt-2 text-sm text-slate-500">Payment fields are cleared while this event is free.</p>}
@@ -313,7 +313,7 @@ function EventDetailsPage() {
         <p><b>descriere:</b> {event.description || '-'}</p><p><b>locatie:</b> {event.location || '-'}</p>
         <p><b>interval orar:</b> {event.start_date} {event.start_time}-{event.end_time}</p><p><b>tip recurență:</b> <RecurrenceBadge type={event.recurrence_type} /></p>
         <p><b>zile/zi lunara:</b> {event.recurrence_type === 'weekly' ? event.recurrence_days?.map((d) => t(weekdayLabelKeys[d])).join(', ') : event.recurrence_type === 'monthly' ? event.monthly_day : '-'}</p>
-        <p><b>conditie participare:</b> <SubscriptionRequirementBadge event={event} /></p><p><b>status:</b> <StatusBadge status={event.status} /></p><p><b>max participanti:</b> {event.max_participants ?? 'nelimitat'}</p>
+        <p><b>conditie participare:</b> <ServiceRequirementBadge event={event} /></p><p><b>status:</b> <StatusBadge status={event.status} /></p><p><b>max participanti:</b> {event.max_participants ?? 'nelimitat'}</p>
         <p><b>paid event:</b> {event.requires_payment ? `${event.payment_amount ?? '-'} ${event.payment_type ?? ''}` : 'nu'}</p><p><b>occurrences_count:</b> {event.occurrences_count ?? event.occurrences?.length ?? '-'}</p>
       </div>
       {event.occurrences?.length ? <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">occurrence_date</th><th className="pb-3">start_datetime</th><th className="pb-3">end_datetime</th><th className="pb-3">status</th><th className="pb-3">participants</th></tr></thead><tbody>{event.occurrences.map((occurrence) => <tr key={occurrence.id} className="border-b border-slate-100"><td className="py-3">{occurrence.occurrence_date}</td><td>{occurrence.start_datetime}</td><td>{occurrence.end_datetime}</td><td><StatusBadge status={occurrence.status} /></td><td>{occurrence.participants_count}</td></tr>)}</tbody></table></div> : null}
@@ -365,9 +365,9 @@ function participantName(participant: EventParticipant) {
   return participant.user?.name || `${participant.user?.first_name ?? participant.first_name ?? ''} ${participant.user?.last_name ?? participant.last_name ?? ''}`.trim() || '-';
 }
 
-function hasActiveSubscription(user: EventUser) {
-  if (typeof user.has_active_subscription === 'boolean') return user.has_active_subscription;
-  return Boolean(user.active_subscriptions?.length);
+function hasActiveService(user: EventUser) {
+  if (typeof user.has_active_service === 'boolean') return user.has_active_service;
+  return Boolean(user.active_services?.length);
 }
 
 function usersFromPayload(payload: Awaited<ReturnType<typeof eventService.searchUsers>>) {
@@ -455,7 +455,7 @@ function AddParticipantModal({ occurrenceId, event, availableSlots, existingPart
     }
   };
 
-  return <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4"><div className="mx-auto grid min-h-full place-items-center"><div className="w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold">{t('events.addParticipant')}</h3>{event?.requires_active_subscription ? <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.eventNeedsActiveSubscription')}</p> : null}{blocked ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{t('events.noAvailablePlaces')}</p> : null}{error ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><TextField label={t('events.searchUser')} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('events.searchUserPlaceholder')} autoFocus />{search.trim().length >= 2 ? <><div className="overflow-hidden rounded-xl border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">{t('users.user')}</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">{t('members.phone')}</th><th className="px-4 py-3">{t('subscriptions.subscription')}</th><th className="px-4 py-3 text-right">{t('events.selection')}</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${hasActiveSubscription(u) ? '' : 'bg-amber-50/60'}`}><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3 text-slate-600">{u.phone || '-'}</td><td className="px-4 py-3">{hasActiveSubscription(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{t('users.statusActive')}</span> : <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{t('users.noActiveSubscription')}</span>}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => setUserId(String(u.id))} disabled={blocked} className={`rounded-xl px-3 py-2 text-sm font-semibold ${userId === String(u.id) ? 'bg-violet-600 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>{userId === String(u.id) ? t('events.selected') : t('common.select')}</button></td></tr>) : <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? t('events.loadingUsers') : users.length ? t('events.usersAlreadyParticipants') : t('events.noUsers')}</td></tr>}</tbody></table></div><div className="flex items-center justify-between gap-3 text-sm text-slate-600"><span>{usersMeta.total ? t('events.usersCount', { count: usersMeta.total }) : t('events.noResults')}</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div></> : null}<SelectField label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><label><span className="mb-2 block text-sm font-medium">{t('events.notes')}</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-xl border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.close')}</button><button onClick={() => void save()} disabled={!userId || blocked || saving} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? t('events.adding') : t('common.add')}</button></div></div></div></div>;
+  return <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4"><div className="mx-auto grid min-h-full place-items-center"><div className="w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold">{t('events.addParticipant')}</h3>{event?.requires_active_service ? <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.eventNeedsActiveService')}</p> : null}{blocked ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{t('events.noAvailablePlaces')}</p> : null}{error ? <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><TextField label={t('events.searchUser')} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('events.searchUserPlaceholder')} autoFocus />{search.trim().length >= 2 ? <><div className="overflow-hidden rounded-xl border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">{t('users.user')}</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">{t('members.phone')}</th><th className="px-4 py-3">{t('services.service')}</th><th className="px-4 py-3 text-right">{t('events.selection')}</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${hasActiveService(u) ? '' : 'bg-amber-50/60'}`}><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3 text-slate-600">{u.phone || '-'}</td><td className="px-4 py-3">{hasActiveService(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{t('users.statusActive')}</span> : <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{t('users.noActiveService')}</span>}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => setUserId(String(u.id))} disabled={blocked} className={`rounded-xl px-3 py-2 text-sm font-semibold ${userId === String(u.id) ? 'bg-violet-600 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>{userId === String(u.id) ? t('events.selected') : t('common.select')}</button></td></tr>) : <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? t('events.loadingUsers') : users.length ? t('events.usersAlreadyParticipants') : t('events.noUsers')}</td></tr>}</tbody></table></div><div className="flex items-center justify-between gap-3 text-sm text-slate-600"><span>{usersMeta.total ? t('events.usersCount', { count: usersMeta.total }) : t('events.noResults')}</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div></> : null}<SelectField label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><label><span className="mb-2 block text-sm font-medium">{t('events.notes')}</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-xl border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm font-semibold">{t('common.close')}</button><button onClick={() => void save()} disabled={!userId || blocked || saving} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? t('events.adding') : t('common.add')}</button></div></div></div></div>;
 }
 
 function ScanParticipantPanel({ occurrenceId, availableSlots, existingParticipants, onSaved }: { occurrenceId: number; availableSlots?: number | null; existingParticipants: EventParticipant[]; onSaved: () => void }) {

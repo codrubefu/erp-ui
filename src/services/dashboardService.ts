@@ -10,7 +10,7 @@ export type DashboardFilters = {
 
 export type DashboardStats = {
   active_members: number;
-  flagged_subscriptions: number;
+  flagged_services: number;
   total_revenue: number;
   active_locations: number;
 };

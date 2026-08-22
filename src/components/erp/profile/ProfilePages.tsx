@@ -5,12 +5,12 @@ import { ApiClientError } from '../../../api/apiClient';
 import {
   getAuthenticatedUserCustomFields,
   getAuthenticatedUserEvents,
-  getAuthenticatedUserSubscriptions,
+  getAuthenticatedUserServices,
   updateAuthenticatedUserPassword,
   type AuthenticatedUserEvent,
 } from '../../../api/authApi';
 import { useAuth } from '../../../context/useAuth';
-import type { ApiCustomFieldValue, ApiPaginated, ApiSubscription } from '../../../services/ErpApiService';
+import type { ApiCustomFieldValue, ApiPaginated, ApiService } from '../../../services/ErpApiService';
 import { articlesService, type Article } from '../../../services/articlesService';
 import { Alert, Button, Input, SectionCard, StatusBadge } from '../../primitives';
 import { PrivacyPanel } from './PrivacyPanel';
@@ -43,13 +43,13 @@ function formatDate(value?: string | null) {
   return value.slice(0, 10);
 }
 
-function subscriptionStatus(subscription: ApiSubscription) {
-  return subscription.status ?? subscription.pivot?.status ?? (subscription.is_currently_active ?? subscription.is_active ? 'active' : 'expired');
+function serviceStatus(service: ApiService) {
+  return service.status ?? service.pivot?.status ?? (service.is_currently_active ?? service.is_active ? 'active' : 'expired');
 }
 
-function subscriptionAccesses(subscription: ApiSubscription) {
-  const used = subscription.accesses_used ?? subscription.pivot?.accesses_used ?? 0;
-  return subscription.max_accesses ? `${used} / ${subscription.max_accesses}` : '-';
+function serviceAccesses(service: ApiService) {
+  const used = service.accesses_used ?? service.pivot?.accesses_used ?? 0;
+  return service.max_accesses ? `${used} / ${service.max_accesses}` : '-';
 }
 
 function formatValue(value: unknown): string {
@@ -369,67 +369,67 @@ export function ProfileEventsPage() {
   );
 }
 
-export function ProfileSubscriptionsPage() {
+export function ProfileServicesPage() {
   const { t } = useTranslation();
-  const [subscriptions, setSubscriptions] = useState<ApiSubscription[]>([]);
+  const [services, setServices] = useState<ApiService[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const loadSubscriptions = useCallback(async () => {
+  const loadServices = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      setSubscriptions(unwrapList(await getAuthenticatedUserSubscriptions()));
+      setServices(unwrapList(await getAuthenticatedUserServices()));
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('profile.subscriptionsLoadError'));
+      setError(err instanceof Error ? err.message : t('profile.servicesLoadError'));
     } finally {
       setLoading(false);
     }
   }, [t]);
 
   useEffect(() => {
-    void loadSubscriptions();
-  }, [loadSubscriptions]);
+    void loadServices();
+  }, [loadServices]);
 
   return (
-    <SectionCard title={t('profile.subscriptionsTitle')} action={<button onClick={() => void loadSubscriptions()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
+    <SectionCard title={t('profile.servicesTitle')} action={<button onClick={() => void loadServices()} className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">{t('common.refresh')}</button>}>
       {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-slate-500">
-              <th className="pb-3 font-semibold">{t('subscriptions.subscription')}</th>
-              <th className="pb-3 font-semibold">{t('subscriptions.price')}</th>
-              <th className="pb-3 font-semibold">{t('subscriptions.duration')}</th>
+              <th className="pb-3 font-semibold">{t('services.service')}</th>
+              <th className="pb-3 font-semibold">{t('services.price')}</th>
+              <th className="pb-3 font-semibold">{t('services.duration')}</th>
               <th className="pb-3 font-semibold">{t('users.startDate')}</th>
               <th className="pb-3 font-semibold">{t('users.expires')}</th>
-              <th className="pb-3 font-semibold">{t('subscriptions.accesses')}</th>
-              <th className="pb-3 font-semibold">{t('subscriptions.resumeAt')}</th>
+              <th className="pb-3 font-semibold">{t('services.accesses')}</th>
+              <th className="pb-3 font-semibold">{t('services.resumeAt')}</th>
               <th className="pb-3 font-semibold">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody>
-            {subscriptions.length ? subscriptions.map((subscription) => (
-              <tr key={subscription.id} className="border-b border-slate-100 align-top">
+            {services.length ? services.map((service) => (
+              <tr key={service.id} className="border-b border-slate-100 align-top">
                 <td className="max-w-[360px] py-4">
-                  <p className="font-semibold text-slate-900">{subscription.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">#{subscription.id}</p>
-                  <p className="mt-1 text-sm text-slate-600">{subscription.description || '-'}</p>
+                  <p className="font-semibold text-slate-900">{service.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">#{service.id}</p>
+                  <p className="mt-1 text-sm text-slate-600">{service.description || '-'}</p>
                 </td>
-                <td className="py-4 font-semibold text-slate-900">{subscription.price} {subscription.currency}</td>
-                <td className="py-4 text-slate-600">{subscription.duration_days ? t('subscriptions.days', { count: subscription.duration_days }) : t('subscriptions.noAutoExpiry')}</td>
-                <td className="py-4 text-slate-600">{formatDate(subscription.start_date ?? subscription.pivot?.start_date)}</td>
-                <td className="py-4 text-slate-600">{formatDate(subscription.expires_at ?? subscription.pivot?.expires_at)}</td>
-                <td className="py-4 text-slate-600">{subscriptionAccesses(subscription)}</td>
-                <td className="py-4 text-slate-600">{formatDate(subscription.resume_at ?? subscription.pivot?.resume_at)}</td>
+                <td className="py-4 font-semibold text-slate-900">{service.price} {service.currency}</td>
+                <td className="py-4 text-slate-600">{service.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</td>
+                <td className="py-4 text-slate-600">{formatDate(service.start_date ?? service.pivot?.start_date)}</td>
+                <td className="py-4 text-slate-600">{formatDate(service.expires_at ?? service.pivot?.expires_at)}</td>
+                <td className="py-4 text-slate-600">{serviceAccesses(service)}</td>
+                <td className="py-4 text-slate-600">{formatDate(service.resume_at ?? service.pivot?.resume_at)}</td>
                 <td className="py-4">
-                  <StatusBadge status={t(`subscriptions.assignmentStatuses.${subscriptionStatus(subscription)}`)} />
-                  {subscription.status_reason ?? subscription.pivot?.status_reason ? <p className="mt-1 text-xs text-slate-500">{subscription.status_reason ?? subscription.pivot?.status_reason}</p> : null}
+                  <StatusBadge status={t(`services.assignmentStatuses.${serviceStatus(service)}`)} />
+                  {service.status_reason ?? service.pivot?.status_reason ? <p className="mt-1 text-xs text-slate-500">{service.status_reason ?? service.pivot?.status_reason}</p> : null}
                 </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-sm text-slate-500">{loading ? t('common.loading') : t('profile.noSubscriptions')}</td>
+                <td colSpan={8} className="py-10 text-center text-sm text-slate-500">{loading ? t('common.loading') : t('profile.noServices')}</td>
               </tr>
             )}
           </tbody>

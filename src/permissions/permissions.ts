@@ -3,7 +3,7 @@ export type RightName = string;
 const impliedRights: Record<string, string[]> = {
   'users.manage': ['users.view', 'user-documents.view', 'user-documents.upload', 'user-documents.delete'],
   'articles.manage': ['articles.view', 'articles.create', 'articles.update', 'articles.delete'],
-  'subscriptions.manage': ['subscriptions.view', 'subscriptions.create', 'subscriptions.update', 'subscriptions.delete', 'subscriptions.restore'],
+  'services.manage': ['services.view', 'services.create', 'services.update', 'services.delete', 'services.restore'],
   'groups.manage': ['groups.view'],
   'rights.manage': ['rights.view'],
   'locations.manage': ['locations.view'],

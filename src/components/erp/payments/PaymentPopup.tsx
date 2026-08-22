@@ -63,11 +63,11 @@ export function PaymentPopup({ title, subtitle, values, error, success, saving, 
           {showReferenceFields ? (
             <>
               <Input label={localValues.reference_label ?? 'Reference ID'} value={localValues.reference_id ?? ''} onChange={(event) => updateField('reference_id', event.target.value)} />
-              <Input label={t('subscriptions.subscription')} value={localValues.reference_name ?? ''} onChange={(event) => updateField('reference_name', event.target.value)} />
+              <Input label={t('services.service')} value={localValues.reference_name ?? ''} onChange={(event) => updateField('reference_name', event.target.value)} />
             </>
           ) : null}
           <Input label={t('payments.amount')} type="number" min="0" step="0.01" value={localValues.amount} onChange={(event) => updateField('amount', event.target.value)} />
-          <Input label={t('subscriptions.currency')} value={localValues.currency} onChange={(event) => updateField('currency', event.target.value)} />
+          <Input label={t('services.currency')} value={localValues.currency} onChange={(event) => updateField('currency', event.target.value)} />
           <Select label={t('payments.paymentMethod')} value={localValues.payment_type_id} onChange={(event) => updateField('payment_type_id', event.target.value)}>
             <option value="">{t('common.select')}</option>
             <option value="1">Cash</option>
@@ -77,7 +77,7 @@ export function PaymentPopup({ title, subtitle, values, error, success, saving, 
           <Input label={t('payments.transactionDate')} type="datetime-local" value={localValues.paid_at} onChange={(event) => updateField('paid_at', event.target.value)} />
           {showReferenceFields ? (
             <div className="md:col-span-2">
-              <Textarea label={t('subscriptions.description')} value={localValues.reference_description ?? ''} onChange={(event) => updateField('reference_description', event.target.value)} />
+              <Textarea label={t('services.description')} value={localValues.reference_description ?? ''} onChange={(event) => updateField('reference_description', event.target.value)} />
             </div>
           ) : null}
         </div>

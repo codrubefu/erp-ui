@@ -7,7 +7,7 @@ import { erpApiService, type ApiPaginated } from '../../../services/ErpApiServic
 type SmsMessage = {
   id: number;
   user_id?: number | null;
-  subscription_id?: number | null;
+  service_id?: number | null;
   type: string;
   destination: string;
   message: string;
@@ -22,7 +22,7 @@ type SmsMessage = {
     email: string;
     phone?: string | null;
   } | null;
-  subscription?: {
+  service?: {
     id: number;
     name: string;
     is_active: boolean;
@@ -137,7 +137,7 @@ export function SmsView() {
               {['sent', 'pending', 'failed', 'draft'].map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
-          <Input label={t('sms.type')} value={type} onChange={(event) => setType(event.target.value)} placeholder="subscription_expiring" />
+          <Input label={t('sms.type')} value={type} onChange={(event) => setType(event.target.value)} placeholder="service_expiring" />
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.perPage')}</span>
             <select
@@ -171,7 +171,7 @@ export function SmsView() {
                 <th className="pb-3 font-semibold">{t('sms.recipient')}</th>
                 <th className="pb-3 font-semibold">{t('sms.destination')}</th>
                 <th className="pb-3 font-semibold">{t('sms.message')}</th>
-                <th className="pb-3 font-semibold">{t('sms.subscription')}</th>
+                <th className="pb-3 font-semibold">{t('sms.service')}</th>
                 <th className="pb-3 font-semibold">{t('sms.type')}</th>
                 <th className="pb-3 font-semibold">{t('common.status')}</th>
                 <th className="pb-3 font-semibold">{t('sms.sentAt')}</th>
@@ -185,7 +185,7 @@ export function SmsView() {
                   </td>
                   <td className="py-4 pr-4 text-slate-600">{message.destination || '-'}</td>
                   <td className="max-w-[420px] py-4 pr-4 text-slate-600">{message.message || '-'}</td>
-                  <td className="py-4 pr-4 text-slate-600">{message.subscription?.name || (message.subscription_id ? `#${message.subscription_id}` : '-')}</td>
+                  <td className="py-4 pr-4 text-slate-600">{message.service?.name || (message.service_id ? `#${message.service_id}` : '-')}</td>
                   <td className="py-4 pr-4 text-slate-600">{message.type || '-'}</td>
                   <td className="py-4 pr-4"><StatusBadge status={message.status || '-'} /></td>
                   <td className="py-4 text-slate-600">{formatDateTime(message.sent_at ?? message.created_at)}</td>

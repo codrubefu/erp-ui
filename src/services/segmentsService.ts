@@ -6,7 +6,7 @@ export type SegmentCriteria = {
   expired?: boolean;
   active?: boolean;
   location_id?: number;
-  subscription_type?: 'membership' | 'access_pass';
+  service_type?: 'membership' | 'access_pass';
 };
 
 export type Segment = {

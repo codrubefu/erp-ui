@@ -5,7 +5,7 @@ import { Input, SectionCard, Select, StatusBadge, Textarea } from '../../primiti
 import { PageShell } from '../shared/PageShell';
 import type { MemberFormPageProps } from '../shared/types';
 
-function MemberFormPage({ mode, data, branchOptions, subscriptionOptions, onChange, onBack, onSave, onSaveAndClose }: MemberFormPageProps) {
+function MemberFormPage({ mode, data, branchOptions, serviceOptions, onChange, onBack, onSave, onSaveAndClose }: MemberFormPageProps) {
   const { t } = useTranslation();
 
   return (
@@ -21,9 +21,9 @@ function MemberFormPage({ mode, data, branchOptions, subscriptionOptions, onChan
             <option value="">{t('members.selectBranch')}</option>
             {branchOptions.map((item) => <option key={item} value={item}>{item}</option>)}
           </Select>
-          <Select label={t('members.subscription')} value={data.subscription} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('subscription', e.target.value)}>
-            <option value="">{t('members.selectSubscription')}</option>
-            {subscriptionOptions.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
+          <Select label={t('members.service')} value={data.service} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('service', e.target.value)}>
+            <option value="">{t('members.selectService')}</option>
+            {serviceOptions.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
           </Select>
           <div className="md:col-span-2"><Input label={t('members.address')} value={data.address} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('address', e.target.value)} placeholder={t('members.addressPlaceholder')} /></div>
           <div className="md:col-span-2"><Textarea label={t('members.notes')} value={data.notes} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('notes', e.target.value)} placeholder={t('members.notesPlaceholder')} /></div>

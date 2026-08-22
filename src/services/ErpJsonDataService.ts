@@ -1,4 +1,4 @@
-﻿import type { Announcement, Member, Payment, Subscription } from '../types/erp';
+import type { Announcement, Member, Payment, Service } from '../types/erp';
 
 export type ActivityPoint = {
   day: string;
@@ -8,7 +8,7 @@ export type ActivityPoint = {
 
 export type ERPSeedData = {
   members: Member[];
-  subscriptions: Subscription[];
+  services: Service[];
   announcements: Announcement[];
   payments: Payment[];
   branches: string[];
@@ -32,9 +32,9 @@ export class ErpJsonDataService {
   }
 
   async loadSeedData(): Promise<ERPSeedData> {
-    const [members, subscriptions, announcements, payments, branches, activity] = await Promise.all([
+    const [members, services, announcements, payments, branches, activity] = await Promise.all([
       this.readJson<Member[]>('/json/members.json'),
-      this.readJson<Subscription[]>('/json/subscriptions.json'),
+      this.readJson<Service[]>('/json/services.json'),
       this.readJson<Announcement[]>('/json/announcements.json'),
       this.readJson<Payment[]>('/json/payments.json'),
       this.readJson<string[]>('/json/branches.json'),
@@ -43,7 +43,7 @@ export class ErpJsonDataService {
 
     return {
       members,
-      subscriptions,
+      services,
       announcements,
       payments,
       branches,

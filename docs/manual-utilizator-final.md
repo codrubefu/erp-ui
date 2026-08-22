@@ -2,7 +2,7 @@
 
 ## 1. Scopul aplicatiei
 
-Master ERP este o aplicatie pentru administrarea membrilor, abonamentelor, anunturilor, platilor, notificarilor si rapoartelor unei organizatii. Aplicatia este impartita pe module, iar accesul la fiecare functie depinde de drepturile primite de utilizatorul autentificat.
+Master ERP este o aplicatie pentru administrarea membrilor, serviciilor, anunturilor, platilor, notificarilor si rapoartelor unei organizatii. Aplicatia este impartita pe module, iar accesul la fiecare functie depinde de drepturile primite de utilizatorul autentificat.
 
 Manualul descrie functiile disponibile in interfata `erp-ui` si fluxurile sustinute de API-ul `erp-laravel`.
 
@@ -37,7 +37,7 @@ Meniul principal contine modulele operationale:
 - Grupuri si drepturi
 - Campuri custom
 - Utilizatori / membri
-- Abonamente
+- Servicii
 - Anunturi / articole
 - Campanii
 - SMS si notificari
@@ -50,7 +50,7 @@ In partea de sus exista meniul profilului, cu acces la:
 - securitate;
 - confidentialitate / GDPR;
 - anunturile mele;
-- abonamentele mele.
+- serviciile mele.
 
 ## 4. Dashboard
 
@@ -59,13 +59,13 @@ Dashboard-ul este pagina principala dupa autentificare.
 Utilizatorul poate vedea anunturile publicate pentru el direct pe dashboard. Daca are drepturi de dashboard sau rapoarte, vede si indicatorii operationali:
 
 - numarul de membri activi;
-- abonamente expirate, suspendate sau care necesita verificare;
+- servicii expirate, suspendate sau care necesita verificare;
 - venitul total;
 - locatii active;
 - grafic venituri pe perioada;
 - distributia statusurilor membrilor;
 - activitate recenta;
-- starea automatizarilor, cum ar fi notificari de expirare abonamente.
+- starea automatizarilor, cum ar fi notificari de expirare servicii.
 
 Dashboard-ul permite marcarea anunturilor ca citite. Butoanele `Refresh` reincarca datele din API pentru grafice sau pentru feed.
 
@@ -148,7 +148,7 @@ Exemple de drepturi:
 
 - `users.view`, `users.manage`
 - `user-documents.view`, `user-documents.upload`, `user-documents.delete`
-- `subscriptions.view`, `subscriptions.manage`
+- `services.view`, `services.manage`
 - `payments.view`, `payments.manage`
 - `reports.view`, `reports.export`
 - `gdpr.export`, `gdpr.process`
@@ -194,7 +194,7 @@ Utilizatorul poate:
 - cauta dupa nume, e-mail sau cod;
 - controla numarul de rezultate pe pagina;
 - vedea statusul contului;
-- vedea abonamentele asociate;
+- vedea serviciile asociate;
 - vedea locatiile asociate;
 - deschide formularul de editare;
 - sterge sau anonimiza un utilizator, in functie de regulile GDPR ale serverului.
@@ -222,22 +222,22 @@ Tabul de cod permite:
 - ascunderea/afisarea codului;
 - scanarea codului prin tastatura sau cititor compatibil.
 
-### Abonamentele unui membru
+### Serviciile unui membru
 
-Tabul de abonamente permite:
+Tabul de servicii permite:
 
-- adaugarea unui abonament la membru;
+- adaugarea unui serviciu la membru;
 - setarea datei de start;
 - vizualizarea datei de expirare;
 - vizualizarea statusului assignment-ului;
 - vizualizarea numarului de accesari folosite;
 - vizualizarea motivului de suspendare;
-- vizualizarea platilor asociate abonamentului;
-- adaugarea unei plati pentru abonament;
-- activarea unui abonament gratuit;
-- suspendarea unui abonament;
-- reluarea unui abonament suspendat;
-- consumarea unui acces pentru abonamente cu limita de acces;
+- vizualizarea platilor asociate serviciului;
+- adaugarea unei plati pentru serviciu;
+- activarea unui serviciu gratuit;
+- suspendarea unui serviciu;
+- reluarea unui serviciu suspendat;
+- consumarea unui acces pentru servicii cu limita de acces;
 - stergerea assignment-ului din profil.
 
 Statusuri posibile:
@@ -279,8 +279,8 @@ Fisierele acceptate sunt PDF, JPG, PNG, DOC si DOCX, cu limita de 10 MB. Serveru
 Tabul de activitate afiseaza actiuni de business si audit, cum ar fi:
 
 - user creat sau actualizat;
-- abonament atribuit;
-- abonament activat;
+- serviciu atribuit;
+- serviciu activat;
 - plata inregistrata;
 - SMS trimis;
 - alte modificari relevante.
@@ -303,28 +303,28 @@ Functii:
 - creare cerere de stergere;
 - procesare cerere de stergere, daca operatorul are drept `gdpr.process`.
 
-## 10. Abonamente
+## 10. Servicii
 
-Modulul Abonamente administreaza tipurile de abonamente disponibile.
+Modulul Servicii administreaza tipurile de servicii disponibile.
 
-### Lista abonamente
+### Lista servicii
 
 Utilizatorul poate:
 
-- lista abonamente;
-- cauta abonamente;
+- lista servicii;
+- cauta servicii;
 - filtra active/inactive;
 - vedea nume, descriere, tip, pret, durata, regula de expirare si status;
-- vedea membrii atasati unui abonament;
-- crea, edita, sterge sau restaura abonamente, in functie de drepturi.
+- vedea membrii atasati unui serviciu;
+- crea, edita, sterge sau restaura servicii, in functie de drepturi.
 
-### Creare si editare abonament
+### Creare si editare serviciu
 
 Campuri disponibile:
 
 - nume;
 - descriere;
-- tip abonament: membership sau access pass;
+- tip serviciu: membership sau access pass;
 - pret;
 - moneda;
 - durata in zile;
@@ -337,8 +337,8 @@ Campuri disponibile:
 
 Reguli importante:
 
-- abonamentele gratuite pot fi activate fara plata;
-- abonamentele platite raman in asteptare pana la o plata confirmata;
+- serviciile gratuite pot fi activate fara plata;
+- serviciile platite raman in asteptare pana la o plata confirmata;
 - activarea este facuta de backend si seteaza automat datele lifecycle.
 
 ## 11. Anunturi / articole
@@ -384,7 +384,7 @@ Audiente posibile:
 
 ### Feed si confirmare vizualizare
 
-Backend-ul poate livra feed personalizat pentru utilizator si poate marca articolul ca vizualizat. Vizibilitatea depinde de status, perioada, organizatie, grupuri, locatii, abonamente si segment.
+Backend-ul poate livra feed personalizat pentru utilizator si poate marca articolul ca vizualizat. Vizibilitatea depinde de status, perioada, organizatie, grupuri, locatii, servicii si segment.
 
 ## 12. Campanii
 
@@ -446,7 +446,7 @@ Functii:
 
 - listare SMS-uri;
 - filtrare dupa utilizator;
-- filtrare dupa abonament;
+- filtrare dupa serviciu;
 - filtrare dupa status;
 - filtrare dupa perioada;
 - cautare;
@@ -482,7 +482,7 @@ Utilizatorul poate:
 
 O plata poate fi asociata cu:
 
-- assignment de abonament (`subscription_user`);
+- assignment de serviciu (`service_user`);
 - model operational asociat, daca este disponibil in sistem.
 
 Campuri uzuale:
@@ -498,7 +498,7 @@ Reguli importante:
 
 - platile cash sunt confirmate imediat;
 - cardul si transferul pot incepe ca initiate/pending si sunt confirmate prin callback;
-- o plata confirmata pentru abonament poate activa abonamentul asociat;
+- o plata confirmata pentru serviciu poate activa serviciul asociat;
 - chitanta este disponibila doar pentru plati confirmate cu numar de chitanta.
 
 ## 15. Rapoarte si segmente
@@ -514,7 +514,7 @@ Filtre disponibile:
 - grupare pe zi sau luna;
 - status plata;
 - tip plata;
-- tip abonament;
+- tip serviciu;
 - locatie;
 - administrator;
 - segment.
@@ -551,7 +551,7 @@ Criterii disponibile in UI:
 - expirat;
 - expira in N zile;
 - locatie;
-- tip abonament.
+- tip serviciu.
 
 Functii:
 
@@ -576,9 +576,9 @@ Pagina afiseaza:
 - locatii;
 - campuri custom.
 
-### Abonamentele mele
+### Serviciile mele
 
-Pagina arata abonamentele utilizatorului autentificat:
+Pagina arata serviciile utilizatorului autentificat:
 
 - nume;
 - pret;
@@ -626,7 +626,7 @@ Exemple:
 
 - pentru membri: `users.view`, `users.manage`;
 - pentru documentele membrilor: `user-documents.view`, `user-documents.upload`, `user-documents.delete`;
-- pentru abonamente: `subscriptions.view`, `subscriptions.manage`;
+- pentru servicii: `services.view`, `services.manage`;
 - pentru articole: `articles.view`, `articles.manage`;
 - pentru plati: `payments.view`, `payments.manage`;
 - pentru rapoarte: `reports.view`, `reports.export`;
@@ -660,12 +660,12 @@ Unele actiuni sunt procesate automat de backend:
 
 - publicarea articolelor programate;
 - expirarea articolelor vechi;
-- notificari de lifecycle abonament;
-- SMS-uri de expirare abonament;
+- notificari de lifecycle serviciu;
+- SMS-uri de expirare serviciu;
 - trimiterea campaniilor programate;
 - exporturi financiare;
 - exporturi GDPR;
-- activarea abonamentelor dupa confirmarea platilor.
+- activarea serviciilor dupa confirmarea platilor.
 
 Utilizatorul vede rezultatul in UI prin statusuri, refresh sau descarcarea fisierelor generate.
 
@@ -674,6 +674,6 @@ Utilizatorul vede rezultatul in UI prin statusuri, refresh sau descarcarea fisie
 - Verificati drepturile utilizatorului daca un modul nu apare in meniu.
 - Folositi `Refresh` dupa operatii asincrone, cum ar fi exporturile.
 - Pentru campanii, folositi `Preview` inainte de programare.
-- Pentru abonamente platite, verificati ca plata este confirmata si legata de assignment-ul corect.
+- Pentru servicii platite, verificati ca plata este confirmata si legata de assignment-ul corect.
 - Pentru cereri GDPR, folositi exportul inainte de stergere daca utilizatorul solicita o copie a datelor.
 - Pentru segmente, testati cu `Preview membri` inainte de folosirea lor in rapoarte sau campanii.

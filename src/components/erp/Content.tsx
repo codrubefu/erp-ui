@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import type { Announcement, FormType, Payment } from '../../types/erp';
 import { GroupsRightsView } from './access/GroupsRightsView';
 import { AdminsView } from './admins/AdminsView';
@@ -12,22 +12,22 @@ import { EventsModuleRoutes } from './events/EventsModule';
 import { LocationGroupsView } from './location-groups/LocationGroupsView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
-import { ProfileAnnouncementsPage, ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileSubscriptionsPage } from './profile/ProfilePages';
+import { ProfileAnnouncementsPage, ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileServicesPage } from './profile/ProfilePages';
 import { ReportsView } from './reports/ReportsView';
 import { CampaignsView } from './campaigns/CampaignsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
 import type { ContentProps } from './shared/types';
 import { SmsView } from './sms/SmsView';
-import { SubscriptionsView } from './subscriptions/SubscriptionsView';
+import { ServicesView } from './services/ServicesView';
 import { UsersView } from './users/UsersView';
 
-export default function Content({ current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess }: ContentProps) {
+export default function Content({ current, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
       return <UsersView />;
     }
-    if (page.section === 'subscriptionForm') {
-      return <SubscriptionsView openOnMount={page.mode === 'create'} />;
+    if (page.section === 'serviceForm') {
+      return <ServicesView openOnMount={page.mode === 'create'} />;
     }
     if (page.section === 'announcementForm') {
       return <AnnouncementFormPage mode={page.mode ?? 'create'} data={announcementForm} onChange={(field, value) => setAnnouncementForm((prev) => ({ ...prev, [field]: value } as Announcement))} onBack={() => goBackToList('announcements')} onSave={saveAnnouncement} onSaveAndClose={saveAnnouncementAndClose} successMessage={formSuccess} />;
@@ -47,8 +47,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <ProfileAnnouncementsPage />;
       case 'profile-events':
         return <ProfileEventsPage />;
-      case 'profile-subscriptions':
-        return <ProfileSubscriptionsPage />;
+      case 'profile-services':
+        return <ProfileServicesPage />;
       case 'members':
         return <UsersView />;
       case 'branches':
@@ -61,8 +61,8 @@ export default function Content({ current, page, membersData, subscriptionsData,
         return <GroupsRightsView />;
       case 'custom-fields':
         return <CustomFieldsView />;
-      case 'subscriptions':
-        return <SubscriptionsView />;
+      case 'services':
+        return <ServicesView />;
       case 'events':
         return <EventsModuleRoutes />;
       case 'articles':
@@ -76,16 +76,16 @@ export default function Content({ current, page, membersData, subscriptionsData,
       case 'payments':
         return <PaymentsView items={paymentsData} onCreate={() => navigateToForm('payment', 'create')} onEdit={(item: Payment) => navigateToForm('payment', 'edit', item)} />;
       case 'reports':
-        return <ReportsView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} announcementsData={announcementsData} />;
+        return <ReportsView membersData={membersData} servicesData={servicesData} paymentsData={paymentsData} announcementsData={announcementsData} />;
       default:
         return (
           <div className="space-y-6">
             <QuickCreateMenu onNavigate={(type: FormType) => navigateToForm(type, 'create')} />
-            <DashboardView membersData={membersData} subscriptionsData={subscriptionsData} paymentsData={paymentsData} activityData={activityData} />
+            <DashboardView membersData={membersData} servicesData={servicesData} paymentsData={paymentsData} activityData={activityData} />
           </div>
         );
     }
-  }, [current, page, membersData, subscriptionsData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess]);
+  }, [current, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess]);
 
   return <main className="mx-auto w-full max-w-[1600px] space-y-6 p-4 md:p-7 xl:px-10 xl:py-8">{view}</main>;
 }
