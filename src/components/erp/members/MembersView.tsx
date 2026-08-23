@@ -344,7 +344,9 @@ function hasActiveService(user: ApiUser) {
 }
 
 function formatDate(value?: string | null) {
-  return value ? value.slice(0, 10) : '-';
+  if (!value) return '-';
+  const [year, month, day] = value.slice(0, 10).split('-');
+  return year && month && day ? `${day}/${month}/${year}` : value;
 }
 
 function addDays(date: string | undefined, days: number | null | undefined) {
@@ -946,8 +948,7 @@ export function UserManagementView({
     setError('');
     setSuccess('');
     try {
-      const nextForm = { ...form, services: nextServices };
-      await erpApiService.update<ApiUser>(resource, editing.id, buildPayload(nextForm));
+      await erpApiService.syncUserServices<ApiUser>(editing.id, nextServices);
       const savedUser = await erpApiService.get<ApiUser>('users', editing.id);
       const customFieldValues = await loadUserCustomFieldValues(savedUser);
       const savedForm = { ...formFromUser(savedUser), custom_fields: customFieldValues };
@@ -1706,7 +1707,7 @@ export function UserManagementView({
                                 disabled={serviceSaving}
                               />
                             </td>
-                            <td className="px-4 py-3 text-slate-600">{expiresAt ?? t('services.noAutoExpiry')}</td>
+                            <td className="px-4 py-3 text-slate-600">{expiresAt ? formatDate(expiresAt) : t('services.noAutoExpiry')}</td>
                             <td className="px-4 py-3">
                               <StatusBadge status={assignmentStatusLabel(lifecycleStatus, t)} />
                               <div className="mt-2 space-y-1 text-xs text-slate-500">

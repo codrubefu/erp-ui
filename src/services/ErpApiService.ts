@@ -488,6 +488,18 @@ export class ErpApiService {
     });
   }
 
+  async syncUserServices<T>(userId: number, services: ApiUserServiceAssignment[]) {
+    return this.request<T>(`/users/service/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        services: services.map((service) => ({
+          id: service.id,
+          start_date: service.start_date,
+        })),
+      }),
+    });
+  }
+
   async attachPaymentModel<T>(paymentId: number, data: { model_type: ApiPayment['model_type']; model_id: number }) {
     return this.request<T>(`/payments/${paymentId}/attach-model`, {
       method: 'PATCH',
