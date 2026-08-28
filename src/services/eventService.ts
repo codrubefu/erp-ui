@@ -123,6 +123,9 @@ export type OccurrenceFilters = {
   date_from?: string;
   date_to?: string;
   status?: string;
+  category_id?: string;
+  page?: number;
+  per_page?: number;
 };
 
 export type AddParticipantPayload = {
@@ -207,6 +210,7 @@ export const eventService = {
   updateEvent: (id: number, payload: EventPayload) => request<EventItem>(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteEvent: (id: number) => request<void>(`/events/${id}`, { method: 'DELETE' }),
   getEventOccurrences: (eventId: number, params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>(`/events/${eventId}/occurrences`, {}, params),
+  getAllOccurrences: (params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>('/event-occurrences', {}, params),
   getOccurrence: (id: number) => request<EventOccurrence>(`/event-occurrences/${id}`),
   cancelOccurrence: (id: number) => {
     void id;

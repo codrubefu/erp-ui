@@ -17,6 +17,7 @@ Utilizatorul poate:
 - filtra evenimente platite;
 - sorta dupa data creare, data start sau titlu;
 - vedea detalii;
+- deschide calendarul lunar sau saptamanal;
 - edita eveniment;
 - vedea aparitiile;
 - sterge eveniment.
@@ -57,6 +58,19 @@ Pentru categorii se pot face urmatoarele actiuni:
 - stergere categorie.
 
 Stergerea unei categorii nu sterge evenimentele existente. Evenimentele asociate raman in sistem fara categorie.
+
+## Calendar evenimente
+
+Calendarul incarca dinamic aparitiile evenimentelor pentru intervalul afisat. In modul lunar, request-ul API este facut strict pentru luna selectata si se repeta cand utilizatorul schimba luna.
+
+Utilizatorul poate:
+
+- comuta intre vedere lunara si vedere saptamanala;
+- naviga la luna sau saptamana anterioara/urmatoare;
+- reveni rapid la perioada curenta;
+- filtra aparitiile dupa categorie;
+- filtra aparitiile dupa status;
+- deschide participantii unei aparitii direct din calendar.
 
 ## Aparitii eveniment
 

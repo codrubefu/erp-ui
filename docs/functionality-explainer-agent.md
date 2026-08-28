@@ -209,7 +209,7 @@ Main files:
 - `src/components/erp/events/hooks.ts`
 - `src/services/eventService.ts`
 
-Events include category CRUD, category filtering, occurrence and participant workflows, with participant payments handled by the event-specific modal/service flow. The sidebar exposes `/erp/events/categories` for users with `events.manage`; event list and form screens load categories through `eventService.getCategories()`.
+Events include category CRUD, category filtering, a dynamic monthly/weekly calendar, occurrence and participant workflows, with participant payments handled by the event-specific modal/service flow. The sidebar exposes `/erp/events/calendar` for users with `events.view` or `events.manage` and `/erp/events/categories` for users with `events.manage`; event list and form screens load categories through `eventService.getCategories()`.
 
 ### Articles And Announcements
 

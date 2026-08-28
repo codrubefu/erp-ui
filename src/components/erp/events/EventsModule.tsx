@@ -3,7 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { eventService, type ApiValidationError, type EventCategory, type EventCategoryPayload, type EventItem, type EventParticipant, type EventPayload, type EventStatus, type EventService, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
+import { eventService, type ApiValidationError, type EventCategory, type EventCategoryPayload, type EventItem, type EventOccurrence, type EventParticipant, type EventPayload, type EventStatus, type EventService, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
 import { SectionCard } from '../../primitives';
@@ -18,6 +18,7 @@ const weekdayLabelKeys: Record<Weekday, string> = { monday: 'events.weekdays.mon
 const eventStatuses: EventStatus[] = ['active', 'inactive', 'cancelled'];
 const occurrenceStatuses: OccurrenceStatus[] = ['scheduled', 'cancelled', 'completed'];
 const participantStatuses: ParticipantStatus[] = ['registered', 'attended', 'cancelled', 'no_show'];
+type CalendarMode = 'month' | 'week';
 
 function usePermissions() {
   const { hasAnyRight } = useAuth();
@@ -35,11 +36,56 @@ function fieldError(errors?: Record<string, string[]>, name?: string) {
 }
 
 function timeToHourMinute(value?: string | null) {
-  return value ? value.slice(0, 5) : '';
+  if (!value) return '';
+  const timePart = value.includes('T') ? value.split('T')[1] : value;
+  return timePart.slice(0, 5);
 }
 
 function dateToDateInput(value?: string | null) {
   return value ? value.slice(0, 10) : null;
+}
+
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function startOfWeek(date: Date) {
+  const next = new Date(date);
+  const day = next.getDay() || 7;
+  next.setDate(next.getDate() - day + 1);
+  return next;
+}
+
+function startOfMonthGrid(date: Date) {
+  return startOfWeek(new Date(date.getFullYear(), date.getMonth(), 1));
+}
+
+function calendarRange(anchor: Date, mode: CalendarMode) {
+  if (mode === 'week') {
+    const start = startOfWeek(anchor);
+    return { start, end: addDays(start, 6) };
+  }
+
+  const start = startOfMonthGrid(anchor);
+  return { start, end: addDays(start, 41) };
+}
+
+function calendarFetchRange(anchor: Date, mode: CalendarMode) {
+  if (mode === 'week') return calendarRange(anchor, mode);
+
+  return {
+    start: new Date(anchor.getFullYear(), anchor.getMonth(), 1),
+    end: new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0),
+  };
 }
 
 function TextField({ label, error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }) {
@@ -145,7 +191,7 @@ function EventsPage() {
   return (
     <div className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <SectionCard title={t('events.managementTitle')} action={<div className="flex flex-wrap gap-2">{permissions.canManageEvents ? <Link to="categories" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><Tags className="h-4 w-4" />Categorii</Link> : null}{permissions.canManageEvents ? <Link to="new" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />{t('events.create')}</Link> : null}</div>}>
+      <SectionCard title={t('events.managementTitle')} action={<div className="flex flex-wrap gap-2"><Link to="calendar" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><CalendarClock className="h-4 w-4" />Calendar</Link>{permissions.canManageEvents ? <Link to="categories" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><Tags className="h-4 w-4" />Categorii</Link> : null}{permissions.canManageEvents ? <Link to="new" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />{t('events.create')}</Link> : null}</div>}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-9">
           <TextField label={t('events.searchTitle')} value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value, page: 1 }))} />
           <SelectField label="Categorie" value={filters.category_id} onChange={(e) => setFilters((p) => ({ ...p, category_id: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
@@ -537,6 +583,118 @@ function EventCategoriesPage() {
   );
 }
 
+function EventCalendarPage() {
+  const [mode, setMode] = useState<CalendarMode>('month');
+  const [anchor, setAnchor] = useState(() => new Date());
+  const [categoryId, setCategoryId] = useState('');
+  const [status, setStatus] = useState('');
+  const [categories, setCategories] = useState<EventCategory[]>([]);
+  const [occurrences, setOccurrences] = useState<EventOccurrence[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const range = useMemo(() => calendarRange(anchor, mode), [anchor, mode]);
+  const fetchRange = useMemo(() => calendarFetchRange(anchor, mode), [anchor, mode]);
+  const days = useMemo(() => Array.from({ length: mode === 'month' ? 42 : 7 }, (_, index) => addDays(range.start, index)), [mode, range.start]);
+  const occurrencesByDate = useMemo(() => {
+    const grouped = new Map<string, EventOccurrence[]>();
+    occurrences.forEach((occurrence) => {
+      const key = dateToDateInput(occurrence.occurrence_date) ?? dateToDateInput(occurrence.start_datetime);
+      if (!key) return;
+      grouped.set(key, [...(grouped.get(key) ?? []), occurrence]);
+    });
+    return grouped;
+  }, [occurrences]);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const payload = await eventService.getAllOccurrences({
+        date_from: formatDateKey(fetchRange.start),
+        date_to: formatDateKey(fetchRange.end),
+        category_id: categoryId,
+        status,
+        per_page: 500,
+      });
+      setOccurrences(payload.data ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nu am putut incarca evenimentele din calendar.');
+    } finally {
+      setLoading(false);
+    }
+  }, [categoryId, fetchRange.end, fetchRange.start, status]);
+
+  useEffect(() => {
+    eventService.getCategories({ per_page: 100, is_active: '1' }).then((payload) => setCategories(payload.data ?? [])).catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  const move = (direction: -1 | 1) => {
+    setAnchor((current) => {
+      const next = new Date(current);
+      if (mode === 'month') next.setMonth(next.getMonth() + direction);
+      else next.setDate(next.getDate() + direction * 7);
+      return next;
+    });
+  };
+
+  const title = mode === 'month'
+    ? anchor.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })
+    : `${formatDateKey(range.start)} - ${formatDateKey(range.end)}`;
+
+  return (
+    <SectionCard title="Calendar evenimente" action={<div className="flex flex-wrap gap-2"><Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">Lista</Link><Link to="/erp/events/new" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Eveniment</Link></div>}>
+      <div className="mb-5 grid grid-cols-1 gap-3 lg:grid-cols-[auto_auto_1fr_180px_180px_auto]">
+        <div className="flex rounded-lg border border-slate-200 bg-white p-1">
+          <button type="button" onClick={() => setMode('month')} className={`rounded-md px-3 py-2 text-sm font-semibold ${mode === 'month' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Lunar</button>
+          <button type="button" onClick={() => setMode('week')} className={`rounded-md px-3 py-2 text-sm font-semibold ${mode === 'week' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Saptamanal</button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => move(-1)} className="rounded-lg border border-slate-200 p-2"><ChevronLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => setAnchor(new Date())} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Azi</button>
+          <button type="button" onClick={() => move(1)} className="rounded-lg border border-slate-200 p-2"><ChevronRight className="h-4 w-4" /></button>
+        </div>
+        <div className="flex items-center text-lg font-bold capitalize text-slate-900">{title}</div>
+        <SelectField label="Categorie" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Toate</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
+        <SelectField label="Status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Toate</option>{occurrenceStatuses.map((item) => <option key={item}>{item}</option>)}</SelectField>
+        <button type="button" onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">Refresh</button>
+      </div>
+
+      {error ? <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
+      <div className="grid grid-cols-7 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        {weekdays.map((day) => <div key={day} className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-slate-500">{day.slice(0, 3)}</div>)}
+        {days.map((day) => {
+          const key = formatDateKey(day);
+          const items = occurrencesByDate.get(key) ?? [];
+          const outsideMonth = mode === 'month' && day.getMonth() !== anchor.getMonth();
+          return (
+            <div key={key} className={`min-h-32 border-b border-r border-slate-100 p-2 ${outsideMonth ? 'bg-slate-50 text-slate-400' : 'bg-white text-slate-900'}`}>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-bold">{day.getDate()}</span>
+                {items.length ? <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.6875rem] font-semibold text-slate-500">{items.length}</span> : null}
+              </div>
+              <div className="space-y-1">
+                {items.slice(0, mode === 'month' ? 4 : 10).map((occurrence) => (
+                  <Link key={occurrence.id} to={`/erp/events/${occurrence.event_id}/occurrences/${occurrence.id}/participants`} className="block rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs hover:border-indigo-200 hover:bg-indigo-50">
+                    <div className="flex items-center gap-1.5 font-semibold text-slate-900"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: occurrence.event?.category?.color ?? '#64748b' }} />{timeToHourMinute(occurrence.start_datetime)}</div>
+                    <div className="mt-0.5 truncate text-slate-700">{occurrence.event?.title ?? `Event #${occurrence.event_id}`}</div>
+                    <div className="mt-0.5 truncate text-slate-500">{occurrence.event?.location ?? '-'}</div>
+                  </Link>
+                ))}
+                {items.length > (mode === 'month' ? 4 : 10) ? <div className="text-xs font-semibold text-slate-500">+{items.length - (mode === 'month' ? 4 : 10)} mai multe</div> : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {loading ? <p className="mt-4 text-sm font-medium text-slate-500">Se incarca evenimentele...</p> : null}
+    </SectionCard>
+  );
+}
+
 function EventOccurrencesPage() {
   const { t } = useTranslation();
   const { eventId } = useParams();
@@ -880,6 +1038,8 @@ export function EventsModuleRoutes() {
     <Routes>
       <Route path="" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventsPage /></ProtectedRoute>} />
       <Route path="events" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventsPage /></ProtectedRoute>} />
+      <Route path="calendar" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventCalendarPage /></ProtectedRoute>} />
+      <Route path="events/calendar" element={<ProtectedRoute requiredRights={['events.view', 'events.manage']}><EventCalendarPage /></ProtectedRoute>} />
       <Route path="categories" element={<ProtectedRoute requiredRights={['events.manage']}><EventCategoriesPage /></ProtectedRoute>} />
       <Route path="events/categories" element={<ProtectedRoute requiredRights={['events.manage']}><EventCategoriesPage /></ProtectedRoute>} />
       <Route path="new" element={<ProtectedRoute requiredRights={['events.manage']}><EventForm mode="create" /></ProtectedRoute>} />
