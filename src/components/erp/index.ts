@@ -5,6 +5,7 @@ export { ArticlesModuleRoutes } from './articles/ArticlesModule';
 export { BranchesView } from './branches/BranchesView';
 export { LocationGroupsView } from './location-groups/LocationGroupsView';
 export { CustomFieldsView } from './custom-fields/CustomFieldsView';
+export { GradesView } from './grades/GradesView';
 export { DashboardView } from './dashboard/DashboardView';
 export { EventsModuleRoutes } from './events/EventsModule';
 export { MemberFormPage } from './members/MemberFormPage';

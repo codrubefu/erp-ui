@@ -12,6 +12,7 @@ import {
   EventsModuleRoutes,
   CampaignsView,
   GroupsRightsView,
+  GradesView,
   LocationGroupsView,
   PaymentFormPage,
   PaymentsView,
@@ -109,6 +110,7 @@ export default function ERPContentRoutes({
       <Route path="admins" element={<ProtectedRoute requiredRights={['users.view', 'users.manage']}><AdminsView /></ProtectedRoute>} />
       <Route path="access" element={<ProtectedRoute requiredRights={['groups.view', 'groups.manage']}><GroupsRightsView /></ProtectedRoute>} />
       <Route path="custom-fields" element={<ProtectedRoute requiredRights={['custom-fields.view', 'custom-fields.manage']}><CustomFieldsView /></ProtectedRoute>} />
+      <Route path="grades" element={<ProtectedRoute requiredRights={['grades.view', 'grades.manage']}><GradesView /></ProtectedRoute>} />
 
       <Route path="members" element={<UsersView />} />
       <Route path="members/:id" element={<UsersView />} />

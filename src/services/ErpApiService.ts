@@ -15,9 +15,36 @@ export type ApiUser = {
   services?: ApiUserService[];
   active_services?: ApiUserService[];
   service_history?: ApiUserServiceHistory[];
+  active_grade?: ApiGrade | null;
+  grade_history?: ApiUserGrade[];
   has_active_service?: boolean;
   custom_fields?: Record<string, unknown> | ApiCustomFieldValue[];
   custom_field_values?: Record<string, unknown> | ApiCustomFieldValue[];
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ApiGrade = {
+  id: number;
+  organization_id?: number;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  users_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+};
+
+export type ApiUserGrade = {
+  id: number;
+  organization_id?: number;
+  user_id: number;
+  grade_id: number;
+  grade?: ApiGrade | null;
+  obtained_at: string;
+  description: string | null;
+  created_by?: number | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -486,6 +513,18 @@ export class ErpApiService {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  async listGrades(params: Record<string, string | number | undefined> = {}) {
+    return this.listPaginated<ApiGrade>('grades', params);
+  }
+
+  async listGradeUsers(gradeId: number, params: Record<string, string | number | undefined> = {}) {
+    return this.listPaginated<ApiUser>(`grades/${gradeId}/users`, params);
+  }
+
+  async listUserGrades(userId: number, params: Record<string, string | number | undefined> = {}) {
+    return this.listPaginated<ApiUserGrade>(`users/${userId}/grades`, params);
   }
 
   async syncUserServices<T>(userId: number, services: ApiUserServiceAssignment[]) {

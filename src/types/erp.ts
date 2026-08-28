@@ -17,6 +17,7 @@ export type SectionId =
   | 'admins'
   | 'access'
   | 'custom-fields'
+  | 'grades'
   | 'members'
   | 'services'
   | 'events'

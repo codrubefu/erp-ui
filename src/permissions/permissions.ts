@@ -5,6 +5,7 @@ const impliedRights: Record<string, string[]> = {
   'articles.manage': ['articles.view', 'articles.create', 'articles.update', 'articles.delete'],
   'services.manage': ['services.view', 'services.create', 'services.update', 'services.delete', 'services.restore'],
   'groups.manage': ['groups.view'],
+  'grades.manage': ['grades.view'],
   'rights.manage': ['rights.view'],
   'locations.manage': ['locations.view'],
   'location_groups.manage': ['location_groups.view'],
