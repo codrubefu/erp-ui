@@ -128,8 +128,21 @@ export type OccurrenceFilters = {
   per_page?: number;
 };
 
+export type EligibleParticipantFilters = {
+  search?: string;
+  page?: number;
+  per_page?: number;
+};
+
 export type AddParticipantPayload = {
   user_id: number;
+  status?: ParticipantStatus;
+  registered_at?: string | null;
+  notes?: string | null;
+};
+
+export type BulkAddParticipantsPayload = {
+  user_ids: number[];
   status?: ParticipantStatus;
   registered_at?: string | null;
   notes?: string | null;
@@ -216,8 +229,10 @@ export const eventService = {
     void id;
     return Promise.reject(new Error('Swagger nu expune un endpoint pentru anularea aparitiei.'));
   },
+  getEligibleOccurrenceParticipants: (occurrenceId: number, params: EligibleParticipantFilters = {}) => request<Paginated<EventUser> | EventUser[]>(`/event-occurrences/${occurrenceId}/eligible-participants`, {}, params),
   getOccurrenceParticipants: (occurrenceId: number) => request<Paginated<EventParticipant> | EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`, {}, { per_page: 100 }),
   addOccurrenceParticipant: (occurrenceId: number, payload: AddParticipantPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants`, { method: 'POST', body: JSON.stringify(payload) }),
+  bulkAddOccurrenceParticipants: (occurrenceId: number, payload: BulkAddParticipantsPayload) => request<EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants/bulk`, { method: 'POST', body: JSON.stringify(payload) }),
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
   updateOccurrenceParticipantStatus: (occurrenceId: number, userId: number, payload: UpdateParticipantStatusPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   searchUsers: (search: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, page, per_page: perPage }),

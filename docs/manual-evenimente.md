@@ -87,10 +87,24 @@ Utilizatorul poate:
 Pentru o aparitie, utilizatorul poate:
 
 - lista participantii;
-- adauga participant;
+- adauga rapid unul sau mai multi participanti din lista de useri eligibili;
+- cauta useri eligibili dupa nume, email, telefon sau cod user;
 - actualiza status participant;
 - sterge participant;
 - inregistra plata participantului, daca evenimentul este platit.
+
+Fluxul Adauga rapid se deschide ca zona de lucru in pagina participantilor pentru aparitia selectata, nu ca popup. Lista afiseaza doar userii care pot fi adaugati la acea aparitie: useri vizibili in organizatia curenta, care nu sunt deja participanti si care indeplinesc conditia de serviciu activ daca evenimentul o cere. Utilizatorul poate selecta mai multi useri, inclusiv toti userii din pagina curenta de rezultate, apoi ii poate salva intr-o singura actiune. Statusul initial propus este `registered`, dar poate fi schimbat inainte de salvare.
+
+Pasi pentru adaugare rapida:
+
+- deschide aparitia evenimentului si intra in pagina de participanti;
+- apasa Adauga participant;
+- cauta userii dupa nume, email, telefon sau cod user, daca lista initiala este prea mare;
+- selecteaza unul sau mai multi useri din lista;
+- optional, schimba statusul sau completeaza note comune;
+- apasa butonul de adaugare pentru a salva toti userii selectati.
+
+Daca aparitia nu mai are locuri disponibile pentru statusuri active (`registered` sau `attended`), salvarea este blocata. Pentru evenimentele care cer serviciu activ, lista afiseaza doar userii care indeplinesc conditia.
 
 Statusuri participant:
 
