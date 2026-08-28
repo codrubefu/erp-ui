@@ -1,4 +1,5 @@
 import { getRuntimeConfig } from '../config/runtimeConfig';
+import i18n from '../i18n';
 
 export const API_BASE_URL = '/api';
 export const TOKEN_KEY = 'master-erp-api-token';
@@ -51,11 +52,24 @@ export function apiHeaders(options: RequestInit = {}) {
 export function extractErrorMessage(payload: unknown, fallback: string) {
   if (payload && typeof payload === 'object') {
     const body = payload as ApiEnvelope<unknown>;
-    if (body.message) return body.message;
+    if (body.message) return translateApiError(body.message);
     const first = body.errors ? Object.values(body.errors)[0]?.[0] : '';
-    if (first) return first;
+    if (first) return translateApiError(first);
   }
   return fallback;
+}
+
+function translateApiError(message: string) {
+  const deleteBlockedMatch = message.match(/^Cannot delete (.+) because it still has related (.+)\.$/);
+  if (deleteBlockedMatch) {
+    return i18n.t('apiErrors.deleteBlockedByRelated', {
+      model: deleteBlockedMatch[1],
+      relation: deleteBlockedMatch[2],
+    });
+  }
+
+  const translationKey = `apiErrors.${message}`;
+  return i18n.exists(translationKey) ? i18n.t(translationKey) : message;
 }
 
 export function unwrapApiPayload<T>(payload: T | ApiEnvelope<T>): T {
