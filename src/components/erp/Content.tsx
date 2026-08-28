@@ -64,6 +64,7 @@ export default function Content({ current, page, membersData, servicesData, anno
       case 'services':
         return <ServicesView />;
       case 'events':
+      case 'events/categories':
         return <EventsModuleRoutes />;
       case 'articles':
         return <ArticlesModuleRoutes />;

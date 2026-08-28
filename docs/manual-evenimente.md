@@ -10,6 +10,7 @@ Utilizatorul poate:
 
 - lista evenimente;
 - cauta dupa titlu;
+- filtra dupa categorie;
 - filtra dupa status;
 - filtra dupa recurenta;
 - filtra evenimente care cer serviciu activ;
@@ -24,6 +25,7 @@ Utilizatorul poate:
 
 Campuri disponibile:
 
+- categorie eveniment;
 - titlu;
 - descriere;
 - locatie;
@@ -40,6 +42,21 @@ Campuri disponibile:
 - suma si moneda pentru plata;
 - numar maxim de participanti;
 - status: activ, inactiv sau anulat.
+
+## Categorii evenimente
+
+Utilizatorii cu dreptul `events.manage` pot deschide meniul Categorii evenimente.
+
+Pentru categorii se pot face urmatoarele actiuni:
+
+- listare cu paginare;
+- cautare dupa nume sau descriere;
+- filtrare dupa status activ/inactiv;
+- creare categorie cu nume, culoare, descriere si status;
+- editare categorie;
+- stergere categorie.
+
+Stergerea unei categorii nu sterge evenimentele existente. Evenimentele asociate raman in sistem fara categorie.
 
 ## Aparitii eveniment
 
@@ -67,4 +84,3 @@ Statusuri participant:
 - attended;
 - cancelled;
 - no_show.
-

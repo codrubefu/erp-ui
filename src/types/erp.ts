@@ -20,6 +20,7 @@ export type SectionId =
   | 'members'
   | 'services'
   | 'events'
+  | 'events/categories'
   | 'articles'
   | 'campaigns'
   | 'announcements'

@@ -28,6 +28,18 @@ export type EventService = {
   name: string;
 };
 
+export type EventCategory = {
+  id: number;
+  name: string;
+  color: string | null;
+  description: string | null;
+  is_active: boolean;
+  events_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+};
+
 export type EventUser = {
   id: number;
   user_code?: string | null;
@@ -42,6 +54,8 @@ export type EventUser = {
 
 export type EventItem = {
   id: number;
+  category_id: number | null;
+  category?: EventCategory | null;
   title: string;
   description: string | null;
   location: string | null;
@@ -66,7 +80,7 @@ export type EventItem = {
   updated_at?: string | null;
 };
 
-export type EventPayload = Omit<EventItem, 'id' | 'created_at' | 'updated_at' | 'required_service'>;
+export type EventPayload = Omit<EventItem, 'id' | 'created_at' | 'updated_at' | 'required_service' | 'category'>;
 
 export type EventOccurrence = {
   id: number;
@@ -96,6 +110,7 @@ export type EventFilters = {
   page?: number;
   per_page?: number;
   search?: string;
+  category_id?: string;
   status?: string;
   recurrence_type?: string;
   requires_active_service?: string;
@@ -120,6 +135,13 @@ export type AddParticipantPayload = {
 export type UpdateParticipantStatusPayload = {
   status: ParticipantStatus;
   notes?: string | null;
+};
+
+export type EventCategoryPayload = {
+  name: string;
+  color?: string | null;
+  description?: string | null;
+  is_active?: boolean;
 };
 
 export type ApiValidationError = Error & {
@@ -174,6 +196,11 @@ async function request<T>(path: string, options: RequestInit = {}, params?: Reco
 }
 
 export const eventService = {
+  getCategories: (params: { page?: number; per_page?: number; search?: string; is_active?: string } = {}) => request<Paginated<EventCategory>>('/event-categories', {}, params),
+  getCategory: (id: number) => request<EventCategory>(`/event-categories/${id}`),
+  createCategory: (payload: EventCategoryPayload) => request<EventCategory>('/event-categories', { method: 'POST', body: JSON.stringify(payload) }),
+  updateCategory: (id: number, payload: EventCategoryPayload) => request<EventCategory>(`/event-categories/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  deleteCategory: (id: number) => request<void>(`/event-categories/${id}`, { method: 'DELETE' }),
   getEvents: (params: EventFilters = {}) => request<Paginated<EventItem>>('/events', {}, params),
   getEvent: (id: number) => request<EventItem>(`/events/${id}`),
   createEvent: (payload: EventPayload) => request<EventItem>('/events', { method: 'POST', body: JSON.stringify(payload) }),
