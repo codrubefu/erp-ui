@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { erpApiService } from '../../../services/ErpApiService';
 import { Input, SectionCard, Select, SuccessMessage, Textarea } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
+import { formatDeviceDate } from '../../../utils/erp/formatters';
 
 type CustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'email' | 'phone' | 'select' | 'multi_select' | 'checkbox' | 'boolean' | 'file';
 
@@ -103,11 +104,6 @@ function buildPayload(form: CustomFieldForm) {
     is_required: form.is_required,
     sort_order: Number(form.sort_order) || 0,
   };
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return '-';
-  return value.slice(0, 10);
 }
 
 export function CustomFieldsView() {
@@ -294,7 +290,7 @@ export function CustomFieldsView() {
                 </td>
                 <td className="py-4 text-slate-600">{field.is_required ? t('common.yes') : t('common.no')}</td>
                 <td className="py-4 text-slate-600">{field.sort_order ?? 0}</td>
-                <td className="py-4 text-slate-600">{formatDate(field.updated_at)}</td>
+                <td className="py-4 text-slate-600">{formatDeviceDate(field.updated_at)}</td>
                 <td className="py-4 text-right">
                   <div className="flex justify-end gap-2">
                     <button onClick={() => startEdit(field)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"><Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}</button>

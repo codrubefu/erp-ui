@@ -9,6 +9,7 @@ import { eventService, type EventOccurrence } from '../../../services/eventServi
 import { Alert, Button, SectionCard, StatCard } from '../../primitives';
 import { useAuth } from '../../../context/useAuth';
 import type { DashboardViewProps } from '../shared/types';
+import { deviceLocale } from '../../../utils/erp/formatters';
 
 const statusColors: Record<string, string> = {
   active: '#4f46e5',
@@ -254,7 +255,7 @@ export function DashboardView(props: DashboardViewProps) {
           return (
             <div key={key} className={`min-h-40 rounded-lg border p-3 ${isToday ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/70'}`}>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase text-slate-500">{day.toLocaleDateString('ro-RO', { weekday: 'short' })}</span>
+                <span className="text-xs font-bold uppercase text-slate-500">{day.toLocaleDateString(deviceLocale(), { weekday: 'short' })}</span>
                 <span className="text-sm font-bold text-slate-900">{day.getDate()}</span>
               </div>
               <div className="space-y-2">

@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiService, type ApiServiceUser, type ServiceExpirationRule, type ServiceType } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
+import { formatDeviceDate } from '../../../utils/erp/formatters';
 import { Can } from '../../Can';
 import { useAuth } from '../../../context/useAuth';
 import { apiClient } from '../../../api/apiClient';
@@ -80,11 +81,6 @@ function formFromService(service: ApiService): ServiceForm {
     max_users: service.max_users ? String(service.max_users) : '',
     is_active: Boolean(service.is_active),
   };
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return '-';
-  return value.slice(0, 10);
 }
 
 function userName(user: ApiServiceUser) {
@@ -489,14 +485,14 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
                 <tr key={service.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
                   <td className="max-w-[320px] px-5 py-3">
                     <p className="font-semibold text-slate-900">{service.name}</p>
-                    <p className="text-xs text-slate-500">#{service.id} - {t('branches.updated')} {formatDate(service.updated_at)}</p>
+                    <p className="text-xs text-slate-500">#{service.id} - {t('branches.updated')} {formatDeviceDate(service.updated_at)}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-500">{serviceTypeLabel(service.type, t)} - {expirationRuleLabel(service.expiration_rule, t)}</p>
                     <p className="mt-1 text-sm text-slate-600">{service.description || '-'}</p>
                   </td>
                   <td className="px-4 py-3 font-semibold text-slate-900">{service.price} {service.currency}</td>
                   <td className="px-4 py-3 text-slate-600">
                     <p>{t('services.duration')}: {service.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
-                    {service.expiration_rule === 'fixed_date' ? <p>{t('services.fixedExpiresAt')}: {formatDate(service.fixed_expires_at)}</p> : null}
+                    {service.expiration_rule === 'fixed_date' ? <p>{t('services.fixedExpiresAt')}: {formatDeviceDate(service.fixed_expires_at)}</p> : null}
                     <p>{t('services.gracePeriodDays')}: {service.grace_period_days ?? 0}</p>
                     <p>{t('services.maxAccesses')}: {service.max_accesses ?? '-'}</p>
                     <p>{t('branches.users')}: {service.max_users ?? '-'}</p>

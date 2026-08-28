@@ -49,6 +49,23 @@ export type ApiUserGrade = {
   updated_at?: string | null;
 };
 
+export type ApiUserEvent = {
+  id: number;
+  event_id: number;
+  occurrence_date: string;
+  start_datetime: string;
+  end_datetime: string;
+  status: string;
+  participant_status?: string | null;
+  registered_at?: string | null;
+  notes?: string | null;
+  event?: {
+    id?: number;
+    title?: string;
+    category?: { name?: string; color?: string | null } | null;
+  } | null;
+};
+
 export type ApiNotificationConsents = {
   sms?: boolean;
   mail?: boolean;
@@ -525,6 +542,10 @@ export class ErpApiService {
 
   async listUserGrades(userId: number, params: Record<string, string | number | undefined> = {}) {
     return this.listPaginated<ApiUserGrade>(`users/${userId}/grades`, params);
+  }
+
+  async listUserEvents(userId: number, params: Record<string, string | number | undefined> = {}) {
+    return this.listPaginated<ApiUserEvent>(`users/${userId}/events`, params);
   }
 
   async syncUserServices<T>(userId: number, services: ApiUserServiceAssignment[]) {

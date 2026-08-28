@@ -9,7 +9,7 @@ import { paymentService } from '../../../services/paymentService';
 import { SectionCard } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
 import { useAuth } from '../../../context/useAuth';
-import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
+import { deviceLocale, formatApiDate, formatCurrency, formatDeviceDate, paymentMethodLabel } from '../../../utils/erp/formatters';
 import { ParticipantPaymentModal } from './ParticipantPaymentModal';
 import { ProtectedRoute } from '../../ProtectedRoute';
 
@@ -211,7 +211,7 @@ function EventsPage() {
               <tr key={event.id} className="border-b border-slate-100 align-top">
                 <td className="py-4 font-semibold text-slate-900">{event.title}<p className="text-xs font-normal text-slate-500">{event.location || '-'}</p></td>
                 <td className="py-4"><CategoryBadge category={event.category} /></td>
-                <td className="py-4 text-slate-600">{event.start_date} {event.start_time}-{event.end_time}</td>
+                <td className="py-4 text-slate-600">{formatDeviceDate(event.start_date)} {event.start_time}-{event.end_time}</td>
                 <td className="py-4"><RecurrenceBadge type={event.recurrence_type} /></td>
                 <td className="py-4"><ServiceRequirementBadge event={event} /></td>
                 <td className="py-4">{event.requires_payment ? <span className="font-semibold text-slate-900">{event.payment_amount ?? '-'} {event.payment_type ?? ''}</span> : '-'}</td>
@@ -642,7 +642,7 @@ function EventCalendarPage() {
   };
 
   const title = mode === 'month'
-    ? anchor.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })
+    ? anchor.toLocaleDateString(deviceLocale(), { month: 'long', year: 'numeric' })
     : `${formatDateKey(range.start)} - ${formatDateKey(range.end)}`;
 
   return (

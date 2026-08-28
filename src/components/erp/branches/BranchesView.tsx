@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell } from '../../primitives';
 import { erpApiService, type ApiLocation, type ApiLocationGroup } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
+import { formatDeviceDate } from '../../../utils/erp/formatters';
 
 type LocationForm = {
   name: string;
@@ -42,11 +43,6 @@ function formFromLocation(location: ApiLocation): LocationForm {
     location_group_id: String(location.location_group_id ?? location.location_group?.id ?? ''),
     user_ids: '',
   };
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return '-';
-  return value.slice(0, 10);
 }
 
 export function BranchesView() {
@@ -244,7 +240,7 @@ export function BranchesView() {
                   <TableCell className="max-w-[360px] text-slate-600">{location.description || t('branches.defaultDescription')}</TableCell>
                   <TableCell className="text-slate-600">{location.location_group?.name ?? t('branches.noLocationGroup')}</TableCell>
                   <TableCell className="text-slate-600">{location.users_count ?? 0}</TableCell>
-                  <TableCell className="text-slate-600">{formatDate(location.updated_at)}</TableCell>
+                  <TableCell className="text-slate-600">{formatDeviceDate(location.updated_at)}</TableCell>
                   <TableCell align="right">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => startEdit(location)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
