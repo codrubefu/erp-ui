@@ -55,6 +55,9 @@
     "administrator": "Administrator",
     "fullAccess": "Full access to modules and reports",
     "language": "Language",
+    "section": "Section",
+    "mobileTableHint": "Swipe horizontally to see all columns.",
+    "scrollableTable": "Horizontally scrollable table",
     "localFormData": "Data entered here is saved locally and remains available."
   },
   "header": {

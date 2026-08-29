@@ -55,6 +55,9 @@
     "administrator": "Administrator",
     "fullAccess": "Acces complet module si rapoarte",
     "language": "Limba",
+    "section": "Sectiune",
+    "mobileTableHint": "Gliseaza orizontal pentru a vedea toate coloanele.",
+    "scrollableTable": "Tabel cu derulare orizontala",
     "localFormData": "Datele completate aici sunt salvate local si raman valabile."
   },
   "header": {

@@ -356,7 +356,18 @@ export function ReportsView(props: ReportsViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
+      <label className="block sm:hidden">
+        <span className="mb-2 block text-sm font-semibold text-slate-700">{t('common.section', 'Sectiune')}</span>
+        <select
+          value={activeSubmenu}
+          onChange={(event) => setActiveSubmenu(event.target.value as ReportSubmenu)}
+          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base font-semibold text-slate-800 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+        >
+          <option value="summary">{t('reports.summaryTab')}</option>
+          <option value="payments">{t('reports.paymentsTab')}</option>
+        </select>
+      </label>
+      <div className="hidden flex-wrap gap-2 sm:flex">
         <Button onClick={() => setActiveSubmenu('summary')} variant={activeSubmenu === 'summary' ? 'primary' : undefined}><BarChart3 className="h-4 w-4" />{t('reports.summaryTab')}</Button>
         <Button onClick={() => setActiveSubmenu('payments')} variant={activeSubmenu === 'payments' ? 'primary' : undefined}><FileText className="h-4 w-4" />{t('reports.paymentsTab')}</Button>
       </div>
