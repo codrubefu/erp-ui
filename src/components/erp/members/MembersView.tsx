@@ -1556,7 +1556,17 @@ export function UserManagementView({
             </button>
           }
         >
-          <div className="mb-5 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+          <label className="mb-5 block sm:hidden">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">{t('common.section', 'Sectiune')}</span>
+            <select
+              value={activeFormTab}
+              onChange={(event) => setActiveFormTab(event.target.value as UserFormTab)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base font-semibold text-slate-800 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+            >
+              {formTabs.map(([tab, label]) => <option key={tab} value={tab}>{label}</option>)}
+            </select>
+          </label>
+          <div className="mb-5 hidden flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:flex">
             {formTabs.map(([tab, label]) => (
               <button
                 key={tab}

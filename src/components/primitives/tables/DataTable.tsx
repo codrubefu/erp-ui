@@ -1,8 +1,20 @@
 import type React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../utils/ui/cn';
 
 export function TableShell({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn('overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm', className)}><div className="overflow-x-auto">{children}</div></div>;
+  const { t } = useTranslation();
+
+  return (
+    <div className={cn('overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm', className)}>
+      <p className="border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500 sm:hidden">
+        {t('common.mobileTableHint')}
+      </p>
+      <div className="overflow-x-auto focus:outline-none focus:ring-4 focus:ring-inset focus:ring-indigo-100" role="region" aria-label={t('common.scrollableTable')} tabIndex={0}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function DataTable({ className, children }: { className?: string; children: React.ReactNode }) {
