@@ -323,6 +323,7 @@
   },
   "events": {
     "title": "Evenimente",
+    "eventCategories": "Categorii evenimente",
     "managementTitle": "Management evenimente",
     "event": "Eveniment",
     "create": "Creeaza",
@@ -407,10 +408,19 @@
     "summaryTab": "Sumar",
     "paymentsTab": "Plati",
     "paymentsDocumentsTitle": "Documente plati",
+    "serviceExpirationsTab": "Expirari servicii",
+    "eventParticipationTab": "Participare evenimente",
+    "serviceExpirationsTitle": "Expirari servicii",
+    "eventParticipationTitle": "Participare evenimente",
     "missingViewRight": "Nu ai dreptul reports.view.",
     "financialLoadError": "Nu am putut incarca raportul financiar.",
+    "serviceExpirationsLoadError": "Nu am putut incarca raportul de expirari servicii.",
+    "serviceExpirationsExportError": "Nu am putut descarca exportul de expirari servicii.",
+    "eventParticipationLoadError": "Nu am putut incarca raportul de participare la evenimente.",
     "applyFilters": "Aplica filtre",
     "noFinancialData": "Nu exista date financiare pentru filtrele curente.",
+    "noServiceExpirations": "Nu exista servicii in raport pentru filtrele curente.",
+    "noEventParticipation": "Nu exista participare la evenimente pentru filtrele curente.",
     "noRevenue": "Nu exista venituri pentru perioada selectata.",
     "revenueByPeriod": "Venituri pe perioada",
     "bankReconciliation": "Reconciliere bancara",
@@ -421,6 +431,12 @@
     "downloadAllDocuments": "Descarca toate",
     "documentType": "Tip document",
     "documentNumber": "Numar",
+    "daysUntilExpiration": "Zile pana la expirare",
+    "lastNotification": "Ultima notificare",
+    "timeInterval": "Interval orar",
+    "occupancy": "Ocupare",
+    "utilization": "Utilizare",
+    "noCategory": "Fara categorie",
     "documentsLoadError": "Nu am putut incarca documentele de plata.",
     "documentDownloadError": "Nu am putut descarca documentul.",
     "documentsDownloadError": "Nu am putut descarca arhiva cu documente.",
@@ -451,7 +467,15 @@
       "serviceType": "Tip serviciu",
       "location": "Locatie",
       "admin": "Operator",
-      "segment": "Segment"
+      "segment": "Segment",
+      "assignmentStatus": "Status serviciu",
+      "expirationCategory": "Categorie expirare",
+      "daysFrom": "Zile de la",
+      "daysTo": "Zile pana la",
+      "eventLocation": "Locatie eveniment",
+      "timeFrom": "Ora de la",
+      "timeTo": "Ora pana la",
+      "underutilizedBelow": "Subutilizat sub %"
     },
     "groupBy": {
       "day": "Zi",
@@ -469,6 +493,25 @@
       "total": "Total",
       "reconciled": "Reconciliat",
       "unreconciled": "Nereconciliat"
+    },
+    "serviceExpirationCategories": {
+      "expiring_soon": "Expira curand",
+      "expired": "Expirate",
+      "suspended": "Suspendate",
+      "not_renewed": "Nereinnoite"
+    },
+    "eventParticipationKpis": {
+      "sessions": "Sesiuni",
+      "capacity": "Capacitate",
+      "registrations": "Inscrieri",
+      "attendances": "Prezente",
+      "averageOccupancy": "Ocupare medie"
+    },
+    "utilizationStatuses": {
+      "capacity_not_set": "Capacitate nesetata",
+      "full": "Plin",
+      "underutilized": "Subutilizat",
+      "normal": "Normal"
     },
     "criteria": {
       "title": "Criterii",
