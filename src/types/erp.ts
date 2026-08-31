@@ -6,6 +6,7 @@ export type PaymentMethod = 'Card' | 'Numerar' | 'Transfer';
 
 export type SectionId =
   | 'dashboard'
+  | 'check-in'
   | 'profile-info'
   | 'profile-security'
   | 'profile-privacy'

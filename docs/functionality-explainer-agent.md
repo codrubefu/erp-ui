@@ -145,6 +145,18 @@ Main files:
 
 The dashboard is API-driven and calls `GET /api/dashboard` through `/dashboard` in `dashboardService` for KPI cards, revenue by period, member status, activity, and automation indicators. Those operational widgets require `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. The announcements feed is loaded separately from `articlesService.feed()` and remains visible to authenticated users even when they do not have dashboard/reporting rights.
 
+### Rapid Check-In
+
+- `src/components/erp/check-in/CheckInView.tsx`
+- `src/services/checkInService.ts`
+- `src/components/layout/Sidebar.tsx`
+- `src/pages/erp/ERPContentRoutes.tsx`
+- `src/i18n/locales/ro.json`, `en.json`, `uk.json`
+
+The reception screen is available at `/erp/check-in` from the sidebar for users with `event_participants.manage` or `checkins.manage`. It loads all scheduled classes for the current day from `GET /api/check-ins/occurrences/current`, lets the operator choose the class, searches members through `POST /api/check-ins/search`, and confirms attendance through `POST /api/check-ins/confirm`.
+
+The UI is optimized for keyboard-scanner input: the operator focuses one large input, scans or types a code/phone/email, presses Enter, then confirms attendance when the API verdict allows it. It displays the backend verdict directly (`allowed`, `refused`, `requires_payment`, `document_expired`, `already_present`, `not_found`) and does not recalculate subscription eligibility client-side. Operators with `checkins.override` see an explicit exception action for refused verdicts.
+
 ### Members
 
 Main files:

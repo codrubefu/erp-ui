@@ -7,6 +7,7 @@ export { LocationGroupsView } from './location-groups/LocationGroupsView';
 export { CustomFieldsView } from './custom-fields/CustomFieldsView';
 export { GradesView } from './grades/GradesView';
 export { DashboardView } from './dashboard/DashboardView';
+export { CheckInView } from './check-in/CheckInView';
 export { EventsModuleRoutes } from './events/EventsModule';
 export { MemberFormPage } from './members/MemberFormPage';
 export { MembersView } from './members/MembersView';

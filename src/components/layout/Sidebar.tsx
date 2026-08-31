@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CalendarClock,
   Tags,
+  ScanLine,
   Megaphone,
   FileBarChart2,
   FolderTree,
@@ -68,6 +69,7 @@ const navGroups: readonly NavGroup[] = [
   {
     id: 'management',
     items: [
+      { id: 'check-in', labelKey: 'menu.checkIn', icon: ScanLine, rights: ['event_participants.manage', 'checkins.manage'] },
       { id: 'members', labelKey: 'menu.users', icon: Users, rights: ['users.view', 'users.manage'] },
       { id: 'services', labelKey: 'menu.services', icon: BadgeEuro, rights: ['services.view', 'services.manage'] },
       {
