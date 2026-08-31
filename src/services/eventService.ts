@@ -1,3 +1,4 @@
+import { endpoint, extractErrorMessage, parseJsonResponse } from '../api/apiCore';
 import { TOKEN_KEY, erpApiService, getApiBaseUrl } from './ErpApiService';
 
 export type EventStatus = 'active' | 'inactive' | 'cancelled';
@@ -96,6 +97,7 @@ export type EventOccurrence = {
 
 export type EventParticipant = {
   id?: number;
+  pivot_id?: number | null;
   user_id?: number;
   first_name?: string;
   last_name?: string;
@@ -211,6 +213,20 @@ async function request<T>(path: string, options: RequestInit = {}, params?: Reco
   }
 }
 
+async function downloadOccurrenceParticipantsPdf(occurrenceId: number) {
+  const response = await fetch(endpoint(`/event-occurrences/${occurrenceId}/participants/download/pdf`), {
+    headers: {
+      Accept: 'application/pdf',
+      ...(window.localStorage.getItem(TOKEN_KEY) ? { Authorization: `Bearer ${window.localStorage.getItem(TOKEN_KEY)}` } : {}),
+    },
+  });
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+  }
+  return response.blob();
+}
+
 export const eventService = {
   getCategories: (params: { page?: number; per_page?: number; search?: string; is_active?: string } = {}) => request<Paginated<EventCategory>>('/event-categories', {}, params),
   getCategory: (id: number) => request<EventCategory>(`/event-categories/${id}`),
@@ -235,6 +251,7 @@ export const eventService = {
   bulkAddOccurrenceParticipants: (occurrenceId: number, payload: BulkAddParticipantsPayload) => request<EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants/bulk`, { method: 'POST', body: JSON.stringify(payload) }),
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
   updateOccurrenceParticipantStatus: (occurrenceId: number, userId: number, payload: UpdateParticipantStatusPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  downloadOccurrenceParticipantsPdf,
   searchUsers: (search: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, page, per_page: perPage }),
   searchUsersByCard: (cardCode: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users/search/user-code', {}, { search: cardCode, page, per_page: perPage }),
   getServices: () => request<EventService[] | Paginated<EventService>>('/services', {}, { per_page: 100, is_active: 1 }),

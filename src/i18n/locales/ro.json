@@ -380,6 +380,8 @@
     "paymentSaveError": "Nu am putut salva plata.",
     "paymentsLoadError": "Nu am putut incarca platile occurrence-ului.",
     "refreshPayments": "Refresh payments",
+    "downloadAttendancePdf": "Download PDF",
+    "attendancePdfDownloadError": "Nu am putut descarca PDF-ul de prezenta.",
     "noPayments": "Fara plati.",
     "loadingPayments": "Se incarca platile...",
     "savePayment": "Salveaza plata",

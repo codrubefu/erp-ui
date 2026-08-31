@@ -116,6 +116,10 @@ export type EventParticipationFilters = {
 export type EventUtilization = 'capacity_not_set' | 'full' | 'underutilized' | 'normal';
 
 export type EventParticipationGroup = {
+  event: {
+    id: number;
+    title: string;
+  };
   category: {
     id: number | null;
     name?: string | null;

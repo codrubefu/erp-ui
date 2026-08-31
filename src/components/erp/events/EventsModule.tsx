@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarClock, ChevronLeft, ChevronRight, CreditCard, Edit3, Eye, Plus, RefreshCw, Save, Search, Tags, Trash2, Users, X } from 'lucide-react';
+import { AlertTriangle, CalendarClock, ChevronLeft, ChevronRight, CreditCard, Download, Edit3, Eye, Plus, RefreshCw, Save, Search, Tags, Trash2, Users, X } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
@@ -33,6 +33,17 @@ function usePermissions() {
 function fieldError(errors?: Record<string, string[]>, name?: string) {
   if (!errors || !name) return '';
   return errors[name]?.[0] ?? '';
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 function timeToHourMinute(value?: string | null) {
@@ -732,7 +743,7 @@ function participantUserId(participant: { id?: number; user_id?: number }) {
 }
 
 function participantPaymentModelId(participant: EventParticipant) {
-  return participant.id ?? null;
+  return participant.pivot_id ?? null;
 }
 
 function participantName(participant: EventParticipant) {
@@ -892,6 +903,8 @@ function EventParticipantsPage() {
   const [occurrencePayments, setOccurrencePayments] = useState<ApiPayment[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [paymentsError, setPaymentsError] = useState('');
+  const [attendancePdfLoading, setAttendancePdfLoading] = useState(false);
+  const [attendancePdfError, setAttendancePdfError] = useState('');
   const [savingParticipantId, setSavingParticipantId] = useState<number | null>(null);
   const [participantDrafts, setParticipantDrafts] = useState<Record<number, { status: ParticipantStatus; notes: string }>>({});
   const permissions = usePermissions();
@@ -962,18 +975,40 @@ function EventParticipantsPage() {
     paymentsByParticipant.set(payment.model_id, [...current, payment]);
   });
 
+  const downloadAttendancePdf = async () => {
+    setAttendancePdfLoading(true);
+    setAttendancePdfError('');
+    try {
+      downloadBlob(await eventService.downloadOccurrenceParticipantsPdf(id), `prezenta-eveniment-${id}.pdf`);
+    } catch (err) {
+      setAttendancePdfError(err instanceof Error ? err.message : t('events.attendancePdfDownloadError'));
+    } finally {
+      setAttendancePdfLoading(false);
+    }
+  };
+
   return (
     <SectionCard
       title="Occurrence Participants"
-      action={permissions.canManageParticipants ? (
-        <button onClick={() => setShowAdd(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
-          <Plus className="mr-2 inline h-4 w-4" />Add participant
-        </button>
-      ) : null}
+      action={(
+        <div className="flex flex-wrap justify-end gap-2">
+          {permissions.canViewParticipants ? (
+            <button onClick={() => void downloadAttendancePdf()} disabled={attendancePdfLoading} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60">
+              <Download className="mr-2 inline h-4 w-4" />{attendancePdfLoading ? t('common.loading') : t('events.downloadAttendancePdf')}
+            </button>
+          ) : null}
+          {permissions.canManageParticipants ? (
+            <button onClick={() => setShowAdd(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+              <Plus className="mr-2 inline h-4 w-4" />Add participant
+            </button>
+          ) : null}
+        </div>
+      )}
     >
       {showAdd ? <AddParticipantsPanel occurrenceId={id} event={occurrence?.event} availableSlots={occurrence?.available_places} onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); void reload(); }} /> : null}
       {permissions.canManageParticipants ? <ScanParticipantPanel occurrenceId={id} availableSlots={occurrence?.available_places} existingParticipants={participants} onSaved={() => void reload()} /> : null}
       {error ? <p className="text-red-600">{error}</p> : null}
+      {attendancePdfError ? <p className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{attendancePdfError}</p> : null}
       {paymentsError ? <p className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{paymentsError}</p> : null}
 
       <div className="mb-3 flex justify-end">
