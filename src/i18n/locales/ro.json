@@ -18,7 +18,8 @@
     "campaigns": "Campanii",
     "sms": "SMS si notificari",
     "payments": "Plati si facturare",
-    "reports": "Rapoarte"
+    "reports": "Rapoarte",
+    "smtpSettings": "Setari SMTP"
   },
   "common": {
     "actions": "Actiuni",
@@ -61,11 +62,13 @@
     "language": "Limba",
     "section": "Sectiune",
     "mobileTableHint": "Gliseaza orizontal pentru a vedea toate coloanele.",
+    "swipeHint": "Gliseaza pentru a vedea toate zilele saptamanii.",
     "scrollableTable": "Tabel cu derulare orizontala",
     "localFormData": "Datele completate aici sunt salvate local si raman valabile."
   },
   "header": {
-    "searchPlaceholder": "Cauta membri, facturi, anunturi..."
+    "searchPlaceholder": "Cauta membri, facturi, anunturi...",
+    "search": "Cauta"
   },
   "quick": {
     "title": "Actiuni rapide",
@@ -109,7 +112,8 @@
     "password": "Parola",
     "passwordPlaceholder": "password",
     "loading": "Se conecteaza...",
-    "submit": "Intra in aplicatie"
+    "submit": "Intra in aplicatie",
+    "forgotPassword": "Ai uitat parola?"
   },
   "auth": {
     "loadUserError": "Nu am putut incarca utilizatorul autentificat."
@@ -146,7 +150,11 @@
     "Event retrieved successfully.": "Evenimentul a fost incarcat.",
     "Event updated successfully.": "Evenimentul a fost actualizat.",
     "Event deleted successfully.": "Evenimentul a fost sters.",
-    "Event occurrence retrieved successfully.": "Aparitia evenimentului a fost incarcata."
+    "Event occurrence retrieved successfully.": "Aparitia evenimentului a fost incarcata.",
+    "Dacă adresa de email este asociată unui cont, vei primi un link de resetare a parolei.": "Daca adresa de email este asociata unui cont, vei primi un link de resetare a parolei.",
+    "Linkul de resetare este invalid sau a expirat.": "Linkul de resetare este invalid sau a expirat.",
+    "Parola a fost setată cu succes.": "Parola a fost setata cu succes.",
+    "Setările SMTP există deja pentru această organizație. Folosește PUT/PATCH pentru actualizare.": "Setarile SMTP exista deja pentru aceasta organizatie. Foloseste PUT/PATCH pentru actualizare."
   },
   "profile": {
     "unknownUser": "Utilizator",
@@ -1039,5 +1047,48 @@
     "deleteConfirm": "Esti sigur ca vrei sa stergi acest anunt?",
     "loadingList": "Se incarca anunturile...",
     "loadingOne": "Se incarca anuntul..."
+  },
+  "passwordReset": {
+    "forgotTitle": "Reseteaza parola",
+    "forgotSubtitle": "Introdu adresa de email a contului tau si iti vom trimite un link pentru a seta o parola noua.",
+    "email": "Adresa de email",
+    "emailPlaceholder": "tu@exemplu.com",
+    "sendLink": "Trimite linkul de resetare",
+    "sending": "Se trimite...",
+    "backToLogin": "Inapoi la autentificare",
+    "genericSent": "Daca acest email este asociat unui cont, vei primi in scurt timp un link de resetare a parolei.",
+    "setTitle": "Seteaza parola",
+    "setSubtitle": "Alege o parola pentru contul tau.",
+    "newPassword": "Parola noua",
+    "confirmPassword": "Confirma parola",
+    "mismatch": "Parolele nu coincid.",
+    "setPassword": "Seteaza parola",
+    "settingPassword": "Se salveaza...",
+    "success": "Parola a fost setata. Te poti autentifica acum.",
+    "missingLink": "Acest link este invalid deoarece lipseste tokenul de resetare sau adresa de email.",
+    "goToLogin": "Mergi la autentificare"
+  },
+  "smtpSettings": {
+    "title": "Setari SMTP",
+    "subtitle": "Configureaza serverul de email folosit pentru a trimite emailuri in numele acestei organizatii.",
+    "host": "Server SMTP (host)",
+    "port": "Port",
+    "username": "Utilizator",
+    "password": "Parola",
+    "passwordHint": "Lasa necompletat pentru a pastra parola curenta.",
+    "currentlySet": "O parola este deja setata.",
+    "encryption": "Criptare",
+    "encryptionNone": "Fara",
+    "fromAddress": "Adresa expeditor",
+    "fromName": "Nume expeditor",
+    "active": "Activ",
+    "save": "Salveaza setarile",
+    "deleteConfirm": "Stergi setarile SMTP pentru aceasta organizatie?",
+    "deleted": "Setarile SMTP au fost sterse.",
+    "notConfigured": "Setarile SMTP nu au fost configurate inca pentru aceasta organizatie.",
+    "loadError": "Nu am putut incarca setarile SMTP.",
+    "saveError": "Nu am putut salva setarile SMTP.",
+    "deleteError": "Nu am putut sterge setarile SMTP.",
+    "viewOnlyNotice": "Ai doar permisiunea de a vizualiza aceste setari."
   }
 }

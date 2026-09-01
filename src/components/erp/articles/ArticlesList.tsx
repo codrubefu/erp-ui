@@ -1,7 +1,7 @@
 import { Edit3, Eye, Plus, Search, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { SectionCard } from '../../primitives';
+import { Modal, SectionCard } from '../../primitives';
 import { articlesService, type Article, type ArticleRelation } from '../../../services/articlesService';
 import { names, normalizeList } from './articleUiUtils';
 import { Toast } from './ui';
@@ -137,7 +137,15 @@ export default function ArticlesList() {
           </table>
         </div>
       </SectionCard>
-      {deleting && hasAnyRight(['articles.delete', 'articles.manage']) ? <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4"><div className="mx-auto grid min-h-full place-items-center"><div className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-xl"><h3 className="text-lg font-semibold text-slate-900">{t('articles.deleteConfirmTitle')}</h3><p className="mt-2 text-sm text-slate-600">{t('articles.deleteConfirm')}</p><div className="mt-6 flex justify-end gap-2"><button onClick={() => setDeleting(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button><button onClick={() => void remove()} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">{t('common.delete')}</button></div></div></div></div> : null}
+      {deleting && hasAnyRight(['articles.delete', 'articles.manage']) ? (
+        <Modal open onClose={() => setDeleting(null)} title={t('articles.deleteConfirmTitle')} maxWidthClassName="max-w-md">
+          <p className="text-sm text-slate-600">{t('articles.deleteConfirm')}</p>
+          <div className="mt-6 flex justify-end gap-2">
+            <button onClick={() => setDeleting(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button>
+            <button onClick={() => void remove()} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">{t('common.delete')}</button>
+          </div>
+        </Modal>
+      ) : null}
       </div>
     </ProtectedRoute>
   );

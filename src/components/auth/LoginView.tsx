@@ -1,6 +1,7 @@
 import React from 'react';
 import { Lock, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 type Credentials = {
   username: string;
@@ -77,6 +78,11 @@ export function LoginView({ credentials, onChange, onSubmit, loading = false, er
                   placeholder={t('login.passwordPlaceholder')}
                   className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                 />
+              </div>
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+                  {t('login.forgotPassword')}
+                </Link>
               </div>
               {error ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
               <button type="submit" disabled={loading} className="w-full rounded-xl bg-[#5b45f0] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#4c38d6] disabled:cursor-not-allowed disabled:opacity-60">

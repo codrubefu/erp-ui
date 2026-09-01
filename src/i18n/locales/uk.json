@@ -18,7 +18,8 @@
     "sms": "SMS та сповіщення",
     "payments": "Платежі та рахунки",
     "reports": "Звіти",
-    "campaigns": "Кампанії"
+    "campaigns": "Кампанії",
+    "smtpSettings": "Налаштування SMTP"
   },
   "common": {
     "actions": "Дії",
@@ -58,6 +59,7 @@
     "language": "Мова",
     "section": "Розділ",
     "mobileTableHint": "Проведіть горизонтально, щоб переглянути всі стовпці.",
+    "swipeHint": "Проведіть, щоб переглянути всі дні тижня.",
     "scrollableTable": "Таблиця з горизонтальним прокручуванням",
     "localFormData": "Дані, введені тут, зберігаються локально і залишаються доступними.",
     "next": "Далі",
@@ -65,7 +67,8 @@
     "today": "Сьогодні"
   },
   "header": {
-    "searchPlaceholder": "Пошук учасників, рахунків, оголошень..."
+    "searchPlaceholder": "Пошук учасників, рахунків, оголошень...",
+    "search": "Пошук"
   },
   "quick": {
     "title": "Швидкі дії",
@@ -109,7 +112,8 @@
     "password": "Пароль",
     "passwordPlaceholder": "password",
     "loading": "Вхід...",
-    "submit": "Увійти в застосунок"
+    "submit": "Увійти в застосунок",
+    "forgotPassword": "Забули пароль?"
   },
   "auth": {
     "loadUserError": "Не вдалося завантажити автентифікованого користувача."
@@ -146,7 +150,11 @@
     "Event retrieved successfully.": "Подію завантажено.",
     "Event updated successfully.": "Подію оновлено.",
     "Event deleted successfully.": "Подію видалено.",
-    "Event occurrence retrieved successfully.": "Появу події завантажено."
+    "Event occurrence retrieved successfully.": "Появу події завантажено.",
+    "Dacă adresa de email este asociată unui cont, vei primi un link de resetare a parolei.": "Якщо ця адреса електронної пошти пов'язана з обліковим записом, ви незабаром отримаєте посилання для скидання пароля.",
+    "Linkul de resetare este invalid sau a expirat.": "Посилання для скидання пароля недійсне або застаріло.",
+    "Parola a fost setată cu succes.": "Пароль успішно встановлено.",
+    "Setările SMTP există deja pentru această organizație. Folosește PUT/PATCH pentru actualizare.": "Налаштування SMTP для цієї організації вже існують. Використовуйте PUT/PATCH для оновлення."
   },
   "profile": {
     "unknownUser": "Користувач",
@@ -1037,5 +1045,48 @@
     "deleteConfirm": "Ви впевнені, що хочете видалити це оголошення?",
     "loadingList": "Завантаження оголошень...",
     "loadingOne": "Завантаження оголошення..."
+  },
+  "passwordReset": {
+    "forgotTitle": "Скидання пароля",
+    "forgotSubtitle": "Введіть електронну адресу свого облікового запису, і ми надішлемо посилання для встановлення нового пароля.",
+    "email": "Електронна адреса",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "Надіслати посилання",
+    "sending": "Надсилання...",
+    "backToLogin": "Повернутися до входу",
+    "genericSent": "Якщо ця адреса пов'язана з обліковим записом, ви незабаром отримаєте посилання для скидання пароля.",
+    "setTitle": "Встановіть пароль",
+    "setSubtitle": "Виберіть пароль для свого облікового запису.",
+    "newPassword": "Новий пароль",
+    "confirmPassword": "Підтвердіть пароль",
+    "mismatch": "Паролі не збігаються.",
+    "setPassword": "Встановити пароль",
+    "settingPassword": "Збереження...",
+    "success": "Пароль встановлено. Тепер ви можете увійти.",
+    "missingLink": "Це посилання недійсне, оскільки відсутній токен скидання або електронна адреса.",
+    "goToLogin": "Перейти до входу"
+  },
+  "smtpSettings": {
+    "title": "Налаштування SMTP",
+    "subtitle": "Налаштуйте сервер вихідної пошти, який використовується для надсилання листів від імені цієї організації.",
+    "host": "SMTP-сервер",
+    "port": "Порт",
+    "username": "Ім'я користувача",
+    "password": "Пароль",
+    "passwordHint": "Залиште порожнім, щоб зберегти поточний пароль.",
+    "currentlySet": "Пароль наразі встановлено.",
+    "encryption": "Шифрування",
+    "encryptionNone": "Немає",
+    "fromAddress": "Адреса відправника",
+    "fromName": "Ім'я відправника",
+    "active": "Активно",
+    "save": "Зберегти налаштування",
+    "deleteConfirm": "Видалити налаштування SMTP для цієї організації?",
+    "deleted": "Налаштування SMTP видалено.",
+    "notConfigured": "Налаштування SMTP ще не задані для цієї організації.",
+    "loadError": "Не вдалося завантажити налаштування SMTP.",
+    "saveError": "Не вдалося зберегти налаштування SMTP.",
+    "deleteError": "Не вдалося видалити налаштування SMTP.",
+    "viewOnlyNotice": "Ви маєте лише право переглядати ці налаштування."
   }
 }

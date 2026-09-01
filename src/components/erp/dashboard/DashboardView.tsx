@@ -25,6 +25,10 @@ function money(value: number) {
   return new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(value);
 }
 
+function compactMoney(value: number) {
+  return new Intl.NumberFormat('ro-RO', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+
 function automationTitle(automation: DashboardAutomation, t: ReturnType<typeof useTranslation>['t']) {
   const values = { count: automation.count ?? 0 };
   const translated = t(`dashboard.automationLabels.${automation.key}`, values);
@@ -246,14 +250,14 @@ export function DashboardView(props: DashboardViewProps) {
     >
       <div className="mb-3 text-sm font-semibold text-slate-700">{formatDateKey(weekRange.start)} - {formatDateKey(weekRange.end)}</div>
       {weekError ? <Alert tone="error" className="mb-3">{weekError}</Alert> : null}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-7">
+      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 lg:mx-0 lg:grid lg:grid-cols-7 lg:gap-3 lg:overflow-visible lg:px-0 lg:pb-0">
         {weekDays.map((day) => {
           const key = formatDateKey(day);
           const items = weekOccurrencesByDate.get(key) ?? [];
           const isToday = key === formatDateKey(new Date());
 
           return (
-            <div key={key} className={`min-h-40 rounded-lg border p-3 ${isToday ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/70'}`}>
+            <div key={key} className={`min-h-40 w-[78%] shrink-0 snap-start rounded-lg border p-3 min-[480px]:w-[45%] sm:w-[30%] lg:w-auto lg:shrink lg:snap-none ${isToday ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/70'}`}>
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-bold uppercase text-slate-500">{day.toLocaleDateString(deviceLocale(), { weekday: 'short' })}</span>
                 <span className="text-sm font-bold text-slate-900">{day.getDate()}</span>
@@ -275,6 +279,7 @@ export function DashboardView(props: DashboardViewProps) {
           );
         })}
       </div>
+      <p className="mt-2 text-xs text-slate-400 lg:hidden">{t('common.swipeHint', 'Glisează pentru a vedea toate zilele saptamanii')}</p>
     </SectionCard>
   ) : null;
 
@@ -326,10 +331,10 @@ export function DashboardView(props: DashboardViewProps) {
           <SectionCard title={t('dashboard.savedTransactionsRevenue')} action={<Button type="button" size="sm" onClick={() => void loadDashboard()} disabled={loading}><RefreshCw size={16} />{t('common.refresh')}</Button>}>
             <div className="h-72 w-full xl:h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData.length ? revenueData : [{ period: t('dashboard.noData'), revenue: 0 }]}>
+                <BarChart data={revenueData.length ? revenueData : [{ period: t('dashboard.noData'), revenue: 0 }]} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="period" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} interval="preserveStartEnd" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis tickLine={false} axisLine={false} width={40} tickFormatter={compactMoney} tick={{ fill: '#64748b', fontSize: 11 }} />
                   <Tooltip cursor={{ fill: '#f8fafc' }} />
                   <Bar dataKey="revenue" radius={[6, 6, 0, 0]} fill="#4f46e5" />
                 </BarChart>
@@ -369,10 +374,10 @@ export function DashboardView(props: DashboardViewProps) {
           <SectionCard title={t('dashboard.weeklyActivity')}>
             <div className="h-64 w-full xl:h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activityData.length ? activityData : [{ period: t('dashboard.noData'), active: 0, messages: 0 }]}>
+                <LineChart data={activityData.length ? activityData : [{ period: t('dashboard.noData'), active: 0, messages: 0 }]} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="period" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} interval="preserveStartEnd" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis tickLine={false} axisLine={false} width={32} tick={{ fill: '#64748b', fontSize: 11 }} />
                   <Tooltip />
                   <Line type="monotone" dataKey="active" stroke="#4f46e5" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="messages" stroke="#0891b2" strokeWidth={2.5} dot={{ r: 3 }} />

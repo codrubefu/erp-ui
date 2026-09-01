@@ -1,5 +1,5 @@
-import { BadgeEuro, Bell, CalendarDays, ChevronDown, Info, KeyRound, LogOut, Menu, Search, ShieldCheck, UserCircle } from 'lucide-react';
-import { useState } from 'react';
+import { BadgeEuro, Bell, CalendarDays, ChevronDown, Info, KeyRound, LogOut, Menu, Search, ShieldCheck, UserCircle, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { LanguageSelector } from '../LanguageSelector';
@@ -16,6 +16,40 @@ export function Header({ onToggleSidebar, onLogout, currentUser, organizationNam
   const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent | TouchEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    document.addEventListener('touchstart', closeOnOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+      document.removeEventListener('touchstart', closeOnOutsideClick);
+    };
+  }, [userMenuOpen]);
+
+  useEffect(() => {
+    if (mobileSearchOpen) mobileSearchInputRef.current?.focus();
+  }, [mobileSearchOpen]);
+
+  useEffect(() => {
+    if (!userMenuOpen && !mobileSearchOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setUserMenuOpen(false);
+      setMobileSearchOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [userMenuOpen, mobileSearchOpen]);
+
   const profileItems = [
     { to: '/erp/profile-info', label: t('profile.info'), icon: Info },
     { to: '/erp/profile-security', label: t('profile.security'), icon: KeyRound },
@@ -42,8 +76,17 @@ export function Header({ onToggleSidebar, onLogout, currentUser, organizationNam
           <Search className="h-4 w-4 text-slate-400" />
           <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder={t('header.searchPlaceholder')} />
         </div>
+        <button
+          type="button"
+          onClick={() => setMobileSearchOpen((value) => !value)}
+          aria-label={mobileSearchOpen ? t('common.close', 'Inchide') : t('header.search', 'Cauta')}
+          aria-expanded={mobileSearchOpen}
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm md:hidden"
+        >
+          {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+        </button>
         <div className="hidden md:block"><LanguageSelector /></div>
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <button
             type="button"
             onClick={() => setUserMenuOpen((value) => !value)}
@@ -93,6 +136,21 @@ export function Header({ onToggleSidebar, onLogout, currentUser, organizationNam
         </button>
       </div>
       </div>
+      {mobileSearchOpen ? (
+        <div className="border-t border-slate-100 bg-white px-4 py-3 sm:px-5 md:hidden">
+          <div className="flex h-11 items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-100/70">
+            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+            <input
+              ref={mobileSearchInputRef}
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+              placeholder={t('header.searchPlaceholder')}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setMobileSearchOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }

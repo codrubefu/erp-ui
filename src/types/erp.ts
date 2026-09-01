@@ -19,6 +19,7 @@ export type SectionId =
   | 'access'
   | 'custom-fields'
   | 'grades'
+  | 'smtp-settings'
   | 'members'
   | 'services'
   | 'events'

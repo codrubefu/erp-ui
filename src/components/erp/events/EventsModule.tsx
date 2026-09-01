@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { eventService, type ApiValidationError, type EventCategory, type EventCategoryPayload, type EventItem, type EventOccurrence, type EventParticipant, type EventPayload, type EventStatus, type EventService, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
-import { ButtonLink, SectionCard, Toast } from '../../primitives';
+import { ButtonLink, Modal, SectionCard, Toast } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
 import { useAuth } from '../../../context/useAuth';
 import { deviceLocale, formatApiDate, formatCurrency, formatDeviceDate, paymentMethodLabel } from '../../../utils/erp/formatters';
@@ -141,18 +141,13 @@ export function ServiceRequirementBadge({ event }: { event: Pick<EventItem, 'req
 function DeleteConfirmModal({ label, loading, onCancel, onConfirm }: { label: string; loading?: boolean; onCancel: () => void; onConfirm: () => void }) {
   const { t } = useTranslation();
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4">
-      <div className="mx-auto grid min-h-full place-items-center">
-        <div className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-slate-900">{t('events.deleteConfirmTitle')}</h3>
-        <p className="mt-2 text-sm text-slate-600">{t('events.deleteConfirm', { label })}</p>
-        <div className="mt-6 flex justify-end gap-2">
-          <button onClick={onCancel} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button>
-          <button onClick={onConfirm} disabled={loading} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{t('common.delete')}</button>
-        </div>
-        </div>
+    <Modal open onClose={onCancel} title={t('events.deleteConfirmTitle')} maxWidthClassName="max-w-md">
+      <p className="text-sm text-slate-600">{t('events.deleteConfirm', { label })}</p>
+      <div className="mt-6 flex justify-end gap-2">
+        <button onClick={onCancel} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button>
+        <button onClick={onConfirm} disabled={loading} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{t('common.delete')}</button>
       </div>
-    </div>
+    </Modal>
   );
 }
 

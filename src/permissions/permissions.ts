@@ -19,6 +19,7 @@ const impliedRights: Record<string, string[]> = {
   'segments.manage': ['segments.view'],
   'campaigns.manage': ['campaigns.view'],
   'gdpr.process': ['gdpr.export'],
+  'smtp_settings.manage': ['smtp_settings.view'],
 };
 
 export function expandRights(rights: Iterable<RightName>) {

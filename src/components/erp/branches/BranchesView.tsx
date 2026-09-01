@@ -1,7 +1,7 @@
 import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell } from '../../primitives';
+import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableRow, TableShell } from '../../primitives';
 import { erpApiService, type ApiLocation, type ApiLocationGroup } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { formatDeviceDate } from '../../../utils/erp/formatters';
@@ -235,14 +235,14 @@ export function BranchesView() {
             </thead>
             <tbody>
               {locations.map((location) => (
-                <tr key={location.id} className="group transition-colors hover:bg-indigo-50/30">
-                  <TableCell className="font-semibold text-slate-900">{location.name}</TableCell>
-                  <TableCell className="max-w-[360px] text-slate-600">{location.description || t('branches.defaultDescription')}</TableCell>
-                  <TableCell className="text-slate-600">{location.location_group?.name ?? t('branches.noLocationGroup')}</TableCell>
-                  <TableCell className="text-slate-600">{location.users_count ?? 0}</TableCell>
-                  <TableCell className="text-slate-600">{formatDeviceDate(location.updated_at)}</TableCell>
-                  <TableCell align="right">
-                    <div className="flex justify-end gap-2">
+                <TableRow key={location.id}>
+                  <TableCell label={t('branches.name')} className="font-semibold text-slate-900">{location.name}</TableCell>
+                  <TableCell label={t('branches.description')} className="max-w-[360px] text-slate-600">{location.description || t('branches.defaultDescription')}</TableCell>
+                  <TableCell label={t('branches.locationGroup')} className="text-slate-600">{location.location_group?.name ?? t('branches.noLocationGroup')}</TableCell>
+                  <TableCell label={t('branches.users')} className="text-slate-600">{location.users_count ?? 0}</TableCell>
+                  <TableCell label={t('branches.updated')} className="text-slate-600">{formatDeviceDate(location.updated_at)}</TableCell>
+                  <TableCell label={t('common.actions')} align="right">
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button onClick={() => startEdit(location)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
                         <Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}
                       </button>
@@ -251,7 +251,7 @@ export function BranchesView() {
                       </button>
                     </div>
                   </TableCell>
-                </tr>
+                </TableRow>
               ))}
               {!loading && locations.length === 0 ? <EmptyTableRow colSpan={6}>{t('branches.empty')}</EmptyTableRow> : null}
               {loading ? <EmptyTableRow colSpan={6}>{t('branches.loadingList')}</EmptyTableRow> : null}

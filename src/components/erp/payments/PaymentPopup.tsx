@@ -1,7 +1,7 @@
-import { Save, X } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, Input, Select, Textarea } from '../../primitives';
+import { Alert, Button, Input, Modal, Select, Textarea } from '../../primitives';
 
 export type PaymentPopupValues = {
   first_name: string;
@@ -50,17 +50,7 @@ export function PaymentPopup({ title, subtitle, values, maxAmount, error, succes
   };
 
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/40 p-4">
-      <div className="mx-auto grid min-h-full place-items-center">
-        <div className="w-full max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-            {subtitle ? <p className="text-sm text-slate-500">{subtitle}</p> : null}
-          </div>
-          <Button onClick={onClose} size="icon"><X className="h-4 w-4" /></Button>
-        </div>
-
+    <Modal open onClose={onClose} title={title} subtitle={subtitle}>
         {success ? <Alert tone="success" className="mb-4">{success}</Alert> : null}
         {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
         {amountTooHigh ? <Alert tone="error" className="mb-4">Suma platita nu poate depasi suma ramasa pentru serviciu ({maxAmountLabel}).</Alert> : null}
@@ -96,8 +86,6 @@ export function PaymentPopup({ title, subtitle, values, maxAmount, error, succes
             <Save className="h-4 w-4" />{saving ? t('common.saving') : t('payments.save')}
           </Button>
         </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
