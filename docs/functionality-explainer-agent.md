@@ -92,7 +92,7 @@ Rights expansion and checks live in:
 - `src/components/ProtectedRoute.tsx`
 - `src/components/layout/Sidebar.tsx`
 
-`permissions.ts` defines implied rights, for example `reports.manage` implies `reports.view` and `reports.export`, and `dashboard.manage` implies `dashboard.view`. UI visibility must use the rights from `useAuth()` and should match the backend middleware for the same endpoint.
+`permissions.ts` defines implied rights, for example `reports.manage` implies `reports.view` and `reports.export`, and `dashboard.manage` implies `dashboard.view`. If the authenticated user has no explicit rights in any group, the UI gives them `profile.view` by default so the self-profile sidebar section remains available. UI visibility must use the rights from `useAuth()` and should match the backend middleware for the same endpoint.
 
 When documenting a page, mention both:
 

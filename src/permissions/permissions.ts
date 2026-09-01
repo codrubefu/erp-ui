@@ -60,5 +60,10 @@ export function extractUserRights(user: { groups?: Array<{ rights?: Array<{ name
       if (right.name) baseRights.add(right.name);
     });
   });
+
+  if (user && baseRights.size === 0) {
+    baseRights.add('profile.view');
+  }
+
   return expandRights(baseRights);
 }

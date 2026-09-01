@@ -166,8 +166,17 @@ export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId
     };
   }, [open, onClose]);
 
+  const isItemAllowed = (item: NavItem) => !item.rights || hasAnyRight(item.rights);
+  const visibleChildrenFor = (item: NavItem): NavItem[] => item.children
+    ?.map((child) => ({ ...child, children: visibleChildrenFor(child) }))
+    .filter((child) => isItemAllowed(child) || (child.children?.length ?? 0) > 0) ?? [];
+  const visibleItemsFor = (items: readonly NavItem[]) => items
+    .map((item) => ({ ...item, children: visibleChildrenFor(item) }))
+    .filter((item) => isItemAllowed(item) || (item.children?.length ?? 0) > 0);
+
   const renderItems = (items: readonly NavItem[], level = 0) => items.map((item) => {
-    const visibleChildren = item.children?.filter((child) => !child.rights || hasAnyRight(child.rights)) ?? [];
+    const itemAllowed = isItemAllowed(item);
+    const visibleChildren = item.children ?? [];
     const hasChildren = visibleChildren.length > 0;
     const isOpen = openGroups[item.id] ?? true;
     const Icon = item.icon;
@@ -178,8 +187,14 @@ export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId
         <div className="flex items-center gap-1">
           <button
             onClick={() => {
-              setCurrent(item.id);
-              onClose();
+              if (itemAllowed) {
+                setCurrent(item.id);
+                onClose();
+                return;
+              }
+              if (hasChildren) {
+                setOpenGroups((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+              }
             }}
             className={cn(
               'flex min-w-0 flex-1 items-center justify-between rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors duration-150',
@@ -283,7 +298,7 @@ export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId
           ) : null}
 
           {navGroups.map((group) => {
-            const visibleItems = group.items.filter((item) => !item.rights || hasAnyRight(item.rights));
+            const visibleItems = visibleItemsFor(group.items);
             if (visibleItems.length === 0) return null;
             const GroupIcon = group.icon ?? Building2;
             const isGrouped = Boolean(group.labelKey);

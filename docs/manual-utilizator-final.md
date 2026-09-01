@@ -636,6 +636,7 @@ Regula generala:
 - drepturile `*.view` permit vizualizarea;
 - drepturile `*.manage` permit administrarea;
 - unele functii au drepturi dedicate, cum ar fi `reports.export` sau `gdpr.process`.
+- daca un utilizator nu are niciun drept explicit in grupuri, primeste implicit doar acces la profilul propriu (`profile.view`); modulele operationale raman ascunse.
 
 Exemple:
 
