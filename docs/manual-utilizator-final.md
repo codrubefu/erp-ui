@@ -44,7 +44,7 @@ Meniul principal contine modulele operationale:
 - Plati si facturare
 - Rapoarte
 
-In partea de sus exista meniul profilului, cu acces la:
+La finalul meniului principal exista randurile de profil pentru utilizatorul autentificat si, daca exista, pentru copiii asociati. Aceste randuri sunt inchise implicit si pot fi extinse pentru acces la:
 
 - informatii cont;
 - securitate;
@@ -67,7 +67,9 @@ Utilizatorul poate vedea anunturile publicate pentru el direct pe dashboard. Dac
 - activitate recenta;
 - starea automatizarilor, cum ar fi notificari de expirare servicii.
 
-Dashboard-ul permite marcarea anunturilor ca citite. Butoanele `Refresh` reincarca datele din API pentru grafice sau pentru feed.
+Dashboard-ul afiseaza calendarul saptamanii pentru toti utilizatorii autentificati. Utilizatorul poate naviga intre saptamani si poate apasa pe un eveniment pentru a vedea detalii precum ora, locatia, categoria, statusul, locurile disponibile, descrierea si eventualele conditii de serviciu activ sau plata.
+
+Dashboard-ul permite marcarea anunturilor ca citite. Butoanele `Refresh` reincarca datele din API pentru grafice, calendar sau feed.
 
 ## 5. Organizatii, locatii si filiale
 
@@ -193,6 +195,7 @@ Utilizatorul poate:
 - vedea lista de membri;
 - cauta dupa nume, e-mail sau cod;
 - controla numarul de rezultate pe pagina;
+- vedea tutorele sub numele membrului, daca membrul are un tutore asociat;
 - vedea statusul contului;
 - vedea serviciile asociate;
 - vedea locatiile asociate;

@@ -145,7 +145,7 @@ function toggleIds(value: string, idsToToggle: number[], checked: boolean) {
 }
 
 function userName(user: ApiUser) {
-  return `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim() || user.email;
+  return `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim() || user.email || `#${user.id}`;
 }
 
 function todayDate() {
@@ -2219,6 +2219,9 @@ export function UserManagementView({
                 <tr key={user.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
                   <td className="px-5 py-3">
                     <p className="font-semibold text-slate-900">{userName(user)}</p>
+                    {user.parent ? (
+                      <p className="mt-1 text-xs text-slate-500">{t('users.parentUser')}: {userName(user.parent)}</p>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     <p>{user.email}</p>

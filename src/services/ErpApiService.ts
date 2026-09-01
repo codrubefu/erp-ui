@@ -11,6 +11,7 @@ export type ApiUser = {
   email: string | null;
   email_verified_at?: string | null;
   parent_user_id?: number | null;
+  parent?: ApiUser | null;
   groups?: ApiGroup[];
   locations?: ApiLocation[];
   services?: ApiUserService[];

@@ -143,7 +143,7 @@ Main files:
 - `src/components/erp/dashboard/DashboardView.tsx`
 - `src/services/dashboardService.ts`
 
-The dashboard is API-driven and calls `GET /api/dashboard` through `/dashboard` in `dashboardService` for KPI cards, revenue by period, member status, activity, and automation indicators. Those operational widgets require `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. The announcements feed is loaded separately from `articlesService.feed()` and remains visible to authenticated users even when they do not have dashboard/reporting rights.
+The dashboard is API-driven and calls `GET /api/dashboard` through `/dashboard` in `dashboardService` for KPI cards, revenue by period, member status, activity, and automation indicators. Those operational widgets require `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. The announcements feed is loaded separately from `articlesService.feed()` and remains visible to authenticated users even when they do not have dashboard/reporting rights. The weekly calendar is also visible to every logged-in user, loads read-only occurrences from `GET /api/event-occurrences`, and opens event details in a dashboard modal instead of routing users without event rights into the administrative Events module.
 
 ### Rapid Check-In
 
@@ -168,7 +168,7 @@ Main files:
 - `src/services/paymentService.ts`
 - `src/services/serviceLifecycleService.ts`
 
-The members module manages users, profile fields, locations, service assignments, assignment lifecycle actions, related payments, and private member documents. Service assignment status should come from the API payload (`service.status` or `service.pivot.status`) and not be recalculated only from dates.
+The members module manages users, profile fields, locations, service assignments, assignment lifecycle actions, related payments, and private member documents. In the users table, a member's guardian/tutor is shown under the member name when the API returns the `parent` relation. Service assignment status should come from the API payload (`service.status` or `service.pivot.status`) and not be recalculated only from dates.
 
 Member documents are shown in a dedicated edit tab when the authenticated operator has `user-documents.view`, `user-documents.upload`, `user-documents.delete`, or `users.manage`. Upload and replace use `multipart/form-data`; download first requests a temporary signed URL and then fetches the blob with the bearer token. The UI supports the backend categories `membership_request`, `identity_document`, `gdpr_agreement`, `certificate`, `contract`, `photo`, and `other`.
 
@@ -221,7 +221,7 @@ Main files:
 - `src/components/erp/events/hooks.ts`
 - `src/services/eventService.ts`
 
-Events include category CRUD, category filtering, a dynamic monthly/weekly calendar, occurrence and participant workflows, with participant payments handled by the event-specific modal/service flow. Quick participant add opens inline on the selected occurrence participants page, loads eligible users from `GET /api/event-occurrences/{occurrence}/eligible-participants`, supports search and multi-select, saves through `POST /api/event-occurrences/{occurrence}/participants/bulk`, and defaults the participant status to `registered`. The sidebar exposes `/erp/events/calendar` for users with `events.view` or `events.manage` and `/erp/events/categories` for users with `events.manage`; event list and form screens load categories through `eventService.getCategories()`.
+Events include category CRUD, category filtering, a dynamic monthly/weekly calendar, occurrence and participant workflows, with participant payments handled by the event-specific modal/service flow. Quick participant add opens inline on the selected occurrence participants page, loads eligible users from `GET /api/event-occurrences/{occurrence}/eligible-participants`, supports search and multi-select, saves through `POST /api/event-occurrences/{occurrence}/participants/bulk`, and defaults the participant status to `registered`. The dashboard exposes a read-only weekly calendar for all authenticated users. The sidebar exposes `/erp/events/calendar` for users with `events.view` or `events.manage` and `/erp/events/categories` for users with `events.manage`; event list and form screens load categories through `eventService.getCategories()`.
 
 ### Articles And Announcements
 
@@ -267,7 +267,7 @@ Main files:
 - `src/context/AuthContext.tsx`
 - `src/services/ErpApiService.ts`
 
-Profile pages show the authenticated user's data, security area, event participation, and service status. Service badges should use the lifecycle status returned by the API, with `is_currently_active` only as an active fallback.
+Profile pages show the authenticated user's data, security area, event participation, and service status. In the sidebar, the self-profile row and any child rows are rendered after the operational navigation groups and are collapsed by default; expanding one row closes the previously open profile row. Service badges should use the lifecycle status returned by the API, with `is_currently_active` only as an active fallback.
 
 ## Local Cache And Demo Data
 

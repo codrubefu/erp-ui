@@ -126,7 +126,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 
 export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId, open, onClose }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: false, events: true });
-  const [openProfileRow, setOpenProfileRow] = useState<'self' | number>('self');
+  const [openProfileRow, setOpenProfileRow] = useState<'self' | number | null>(null);
   const [children, setChildren] = useState<AuthenticatedUserChild[]>([]);
   const { hasAnyRight, user } = useAuth();
   const { t } = useTranslation();
@@ -241,8 +241,42 @@ export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId
         </div>
 
         <nav className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
+          {navGroups.map((group) => {
+            const visibleItems = visibleItemsFor(group.items);
+            if (visibleItems.length === 0) return null;
+            const GroupIcon = group.icon ?? Building2;
+            const isGrouped = Boolean(group.labelKey);
+            const isOpen = openGroups[group.id] ?? true;
+            const groupLabel = group.labelKey ? t(group.labelKey) : '';
+
+            return (
+              <div key={group.id} className="space-y-1">
+                {isGrouped ? (
+                  <button
+                    onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
+                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span className="rounded-md bg-slate-100 p-1.5 text-slate-600 ring-1 ring-slate-200">
+                        <GroupIcon className="h-4 w-4" />
+                      </span>
+                      <span className="truncate">{groupLabel}</span>
+                    </span>
+                    <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
+                  </button>
+                ) : null}
+
+                {(!isGrouped || isOpen) && (
+                  <div className={cn('space-y-1', isGrouped && 'ml-3 border-l border-slate-200 pl-2')}>
+                    {renderItems(visibleItems)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
           {showProfileSection ? (
-            <div className="space-y-1 border-b border-slate-100 pb-3">
+            <div className="space-y-1 border-t border-slate-100 pt-3">
               {profileRows.map((row) => {
                 const isOpen = openProfileRow === row.id;
                 const subItems = row.id === 'self' ? profileSelfSubItems : profileChildSubItems;
@@ -250,7 +284,7 @@ export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId
                 return (
                   <div key={row.id} className="space-y-1">
                     <button
-                      onClick={() => setOpenProfileRow(row.id)}
+                      onClick={() => setOpenProfileRow((currentRow) => (currentRow === row.id ? null : row.id))}
                       className={cn(
                         'flex w-full items-center justify-between rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors duration-150',
                         isOpen ? 'border border-indigo-100 bg-indigo-50 text-indigo-700 shadow-sm' : 'border border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950'
@@ -296,40 +330,6 @@ export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId
               })}
             </div>
           ) : null}
-
-          {navGroups.map((group) => {
-            const visibleItems = visibleItemsFor(group.items);
-            if (visibleItems.length === 0) return null;
-            const GroupIcon = group.icon ?? Building2;
-            const isGrouped = Boolean(group.labelKey);
-            const isOpen = openGroups[group.id] ?? true;
-            const groupLabel = group.labelKey ? t(group.labelKey) : '';
-
-            return (
-              <div key={group.id} className="space-y-1">
-                {isGrouped ? (
-                  <button
-                    onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
-                  >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="rounded-md bg-slate-100 p-1.5 text-slate-600 ring-1 ring-slate-200">
-                        <GroupIcon className="h-4 w-4" />
-                      </span>
-                      <span className="truncate">{groupLabel}</span>
-                    </span>
-                    <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
-                  </button>
-                ) : null}
-
-                {(!isGrouped || isOpen) && (
-                  <div className={cn('space-y-1', isGrouped && 'ml-3 border-l border-slate-200 pl-2')}>
-                    {renderItems(visibleItems)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </nav>
       </div>
     </aside>

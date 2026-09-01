@@ -63,10 +63,10 @@ and no changes needed to the existing `/me`, `/me/events`, `/me/services`, `/me/
 - `src/services/gdprService.ts`: give `access()` an optional `childId` (hits `/me/privacy/data?child_id=`), leave the write actions (`createExport`, `rectify`, `consent`, `requestErasure`) untouched.
 
 **Sidebar (main menu)** — `src/components/layout/Sidebar.tsx`
-- New section, visible only when `hasAnyRight(['profile.view'])`, rendered alongside the existing `navGroups` (not merged into them, since its rows aren't rights-gated `NavItem`s but data-driven person rows).
+- New section, visible only when `hasAnyRight(['profile.view'])`, rendered after the existing `navGroups` (not merged into them, since its rows aren't rights-gated `NavItem`s but data-driven person rows).
 - Fetch `getAuthenticatedUserChildren()` once on mount (only when the section is visible).
 - Rows: `{ id: 'self', label: '${user.first_name} ${user.last_name}' }` followed by one row per child (`{ id: child.id, label: '${child.first_name} ${child.last_name}' }`).
-- Local state `openProfileRow: 'self' | number` defaulting to `'self'` — this is a true accordion (opening one row sets the others closed), distinct from the existing `openGroups` behavior which allows multiple groups open at once.
+- Local state `openProfileRow: 'self' | number | null` defaulting to `null` — this is a true accordion (opening one row sets the others closed, clicking it again closes it), distinct from the existing `openGroups` behavior which allows multiple groups open at once.
 - Expanded row shows sub-items: Info, Security, Privacy, Announcements, Events, Services, Cod, Grade, Documente — **no Activity**. The `'self'` row includes Security; child rows omit it (children don't log in, no password to change).
 - Clicking a sub-item calls `setCurrent('profile-info' | ... )` plus a new `setProfileChildId(rowId === 'self' ? null : rowId)` — mirroring how `AppLayout`/`ERPPage` already lifts state for the existing `current`/`page` (this app does not route sub-navigation through the URL; state is lifted in `ERPPage.tsx` and threaded through `ContentProps`, same pattern as the rest of the app).
 
@@ -94,7 +94,7 @@ and no changes needed to the existing `/me`, `/me/events`, `/me/services`, `/me/
 ## Verification
 - Backend: `php artisan test` (or the relevant Feature test suite for `Users`/`Me`/`Gdpr`) after adding migrations; manually hit `POST /users` with `parent_user_id` set and no email/phone to confirm it now passes validation, and without `parent_user_id` to confirm email is still required.
 - Frontend: `npm run typecheck` / `npm run build` for type safety across the `ApiUser`/`SectionId` changes.
-- Manual/browser check via the `run` skill: log in as a user with `profile.view`, confirm the header dropdown is gone (Logout still reachable on mobile width), confirm the sidebar shows an accordion row with your name expanded by default showing Info/Security/Privacy/Announcements/Events/Services/Cod/Grade/Documente (no Activity); create a test child user (`parent_user_id` pointing at the logged-in user, no email/phone), confirm a second row appears for the child, expanding it collapses your own row, and all child data renders read-only with no editable fields/buttons.
+- Manual/browser check via the `run` skill: log in as a user with `profile.view`, confirm the header dropdown is gone (Logout still reachable on mobile width), confirm the sidebar shows collapsed accordion rows at the bottom for your name and any children, expanding a row shows Info/Security/Privacy/Announcements/Events/Services/Cod/Grade/Documente (no Activity), create a test child user (`parent_user_id` pointing at the logged-in user, no email/phone), confirm a second row appears for the child, expanding it collapses your own row, and all child data renders read-only with no editable fields/buttons.
 
 ## Implementation status (as of 2026-09-01)
 

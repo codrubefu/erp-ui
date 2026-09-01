@@ -1,12 +1,11 @@
 import { BadgeEuro, Bell, Building2, CalendarClock, Check, ChevronLeft, ChevronRight, RefreshCw, UserCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { dashboardService, type DashboardAutomation, type DashboardPayload } from '../../../services/dashboardService';
 import { articlesService, type Article } from '../../../services/articlesService';
 import { eventService, type EventOccurrence } from '../../../services/eventService';
-import { Alert, Button, SectionCard, StatCard } from '../../primitives';
+import { Alert, Button, Modal, SectionCard, StatCard } from '../../primitives';
 import { useAuth } from '../../../context/useAuth';
 import type { DashboardViewProps } from '../shared/types';
 import { deviceLocale } from '../../../utils/erp/formatters';
@@ -85,11 +84,11 @@ export function DashboardView(props: DashboardViewProps) {
   const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const canViewDashboard = hasAnyRight(['dashboard.view', 'dashboard.manage', 'reports.view', 'reports.manage']);
-  const canViewEvents = hasAnyRight(['events.view', 'events.manage']);
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [announcements, setAnnouncements] = useState<Article[]>([]);
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [weekOccurrences, setWeekOccurrences] = useState<EventOccurrence[]>([]);
+  const [selectedOccurrence, setSelectedOccurrence] = useState<EventOccurrence | null>(null);
   const [loading, setLoading] = useState(false);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const [weekLoading, setWeekLoading] = useState(false);
@@ -151,7 +150,6 @@ export function DashboardView(props: DashboardViewProps) {
   }, [weekOccurrences]);
 
   const loadWeekOccurrences = useCallback(async () => {
-    if (!canViewEvents) return;
     setWeekLoading(true);
     setWeekError('');
     try {
@@ -167,7 +165,7 @@ export function DashboardView(props: DashboardViewProps) {
     } finally {
       setWeekLoading(false);
     }
-  }, [canViewEvents, weekRange.end, weekRange.start]);
+  }, [weekRange.end, weekRange.start]);
 
   useEffect(() => {
     void loadWeekOccurrences();
@@ -235,7 +233,8 @@ export function DashboardView(props: DashboardViewProps) {
     </SectionCard>
   );
 
-  const weekCalendarPanel = canViewEvents ? (
+  const weekCalendarPanel = (
+    <>
     <SectionCard
       title="Calendarul saptamanii"
       action={(
@@ -244,7 +243,6 @@ export function DashboardView(props: DashboardViewProps) {
           <button type="button" onClick={() => setWeekAnchor(new Date())} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">Azi</button>
           <button type="button" onClick={() => setWeekAnchor((current) => addDays(current, 7))} className="rounded-lg border border-slate-200 p-2 text-slate-700"><ChevronRight className="h-4 w-4" /></button>
           <Button type="button" size="sm" onClick={() => void loadWeekOccurrences()} disabled={weekLoading}><RefreshCw size={16} />{t('common.refresh')}</Button>
-          <Link to="/erp/events/calendar" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">Calendar complet</Link>
         </div>
       )}
     >
@@ -264,16 +262,16 @@ export function DashboardView(props: DashboardViewProps) {
               </div>
               <div className="space-y-2">
                 {items.length ? items.slice(0, 5).map((occurrence) => (
-                  <Link key={occurrence.id} to={`/erp/events/${occurrence.event_id}/occurrences/${occurrence.id}/participants`} className="block rounded-md border border-slate-200 bg-white px-2 py-2 text-xs shadow-sm hover:border-indigo-200 hover:bg-indigo-50">
+                  <button key={occurrence.id} type="button" onClick={() => setSelectedOccurrence(occurrence)} className="block w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-left text-xs shadow-sm hover:border-indigo-200 hover:bg-indigo-50">
                     <div className="flex items-center gap-1.5 font-semibold text-slate-900">
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: occurrence.event?.category?.color ?? '#64748b' }} />
                       {timeToHourMinute(occurrence.start_datetime)}
                     </div>
                     <div className="mt-1 truncate text-slate-700">{occurrence.event?.title ?? `Event #${occurrence.event_id}`}</div>
                     <div className="mt-0.5 truncate text-slate-500">{occurrence.event?.location ?? '-'}</div>
-                  </Link>
+                  </button>
                 )) : <p className="text-xs text-slate-400">{weekLoading ? 'Se incarca...' : 'Fara evenimente'}</p>}
-                {items.length > 5 ? <Link to="/erp/events/calendar" className="block text-xs font-semibold text-indigo-700">+{items.length - 5} mai multe</Link> : null}
+                {items.length > 5 ? <p className="text-xs font-semibold text-indigo-700">+{items.length - 5} mai multe</p> : null}
               </div>
             </div>
           );
@@ -281,7 +279,44 @@ export function DashboardView(props: DashboardViewProps) {
       </div>
       <p className="mt-2 text-xs text-slate-400 lg:hidden">{t('common.swipeHint', 'Glisează pentru a vedea toate zilele saptamanii')}</p>
     </SectionCard>
-  ) : null;
+    <Modal
+      open={Boolean(selectedOccurrence)}
+      onClose={() => setSelectedOccurrence(null)}
+      title={selectedOccurrence?.event?.title ?? 'Detalii eveniment'}
+      subtitle={selectedOccurrence ? `${formatDateKey(new Date(selectedOccurrence.occurrence_date))} ${timeToHourMinute(selectedOccurrence.start_datetime)}-${timeToHourMinute(selectedOccurrence.end_datetime)}` : undefined}
+    >
+      {selectedOccurrence ? (
+        <div className="space-y-4 text-sm text-slate-700">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs font-semibold uppercase text-slate-500">Locatie</p>
+              <p className="mt-1 font-medium text-slate-900">{selectedOccurrence.event?.location || '-'}</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs font-semibold uppercase text-slate-500">Categorie</p>
+              <p className="mt-1 font-medium text-slate-900">{selectedOccurrence.event?.category?.name || '-'}</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
+              <p className="mt-1 font-medium text-slate-900">{selectedOccurrence.status}</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs font-semibold uppercase text-slate-500">Locuri disponibile</p>
+              <p className="mt-1 font-medium text-slate-900">{selectedOccurrence.available_places ?? 'Nelimitat'}</p>
+            </div>
+          </div>
+          {selectedOccurrence.event?.description ? <p className="leading-6">{selectedOccurrence.event.description}</p> : null}
+          {selectedOccurrence.event?.requires_active_service ? (
+            <Alert tone="info">Necesita serviciu activ{selectedOccurrence.event.required_service?.name ? `: ${selectedOccurrence.event.required_service.name}` : ''}.</Alert>
+          ) : null}
+          {selectedOccurrence.event?.requires_payment ? (
+            <Alert tone="info">Eveniment cu plata{selectedOccurrence.event.payment_amount ? `: ${selectedOccurrence.event.payment_amount} ${selectedOccurrence.event.payment_type ?? ''}` : ''}.</Alert>
+          ) : null}
+        </div>
+      ) : null}
+    </Modal>
+    </>
+  );
 
   if (!canViewDashboard) {
     return (
