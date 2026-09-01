@@ -59,7 +59,10 @@
     "section": "Section",
     "mobileTableHint": "Swipe horizontally to see all columns.",
     "scrollableTable": "Horizontally scrollable table",
-    "localFormData": "Data entered here is saved locally and remains available."
+    "localFormData": "Data entered here is saved locally and remains available.",
+    "next": "Next",
+    "previous": "Previous",
+    "today": "Today"
   },
   "header": {
     "searchPlaceholder": "Search members, invoices, announcements..."
@@ -287,7 +290,22 @@
       "Plătit": "Paid",
       "În așteptare": "Pending",
       "Eșuat": "Failed"
-    }
+    },
+    "admin": "Operator",
+    "empty": "No payments found.",
+    "lifecycle": "Lifecycle",
+    "linkedModel": "Linked to",
+    "loadError": "Could not load the payments.",
+    "loadingList": "Loading payments...",
+    "missingRight": "You do not have the payments.view permission.",
+    "noDirectRoute": "No direct route for this model",
+    "openServiceMembers": "Open members for service #{{id}}",
+    "paidAt": "Paid at",
+    "paymentType": "Payment type",
+    "provider": "Provider",
+    "receiptDownloadError": "Could not download the receipt.",
+    "showingCount": "Showing {{count}} of {{total}} payments.",
+    "viewService": "View service"
   },
   "sms": {
     "title": "SMS and notifications",
@@ -394,7 +412,30 @@
       "friday": "Friday",
       "saturday": "Saturday",
       "sunday": "Sunday"
-    }
+    },
+    "attendancePdfDownloadError": "Could not download the attendance PDF.",
+    "backToEvents": "Back to events",
+    "calendar": "Calendar",
+    "calendarTitle": "Events calendar",
+    "categoryDeleteError": "Could not delete the category.",
+    "categoryDeleted": "Category deleted.",
+    "categorySaveError": "Could not save the category.",
+    "categorySaved": "Category saved.",
+    "downloadAttendancePdf": "Download PDF",
+    "endDatetime": "End",
+    "eventCategories": "Event categories",
+    "eventDetailsTitle": "Event details",
+    "list": "List",
+    "noCategories": "No categories found.",
+    "noOccurrences": "No occurrences found.",
+    "notFound": "This event does not exist.",
+    "occurrenceCancelled": "Occurrence cancelled.",
+    "occurrenceDate": "Occurrence date",
+    "participants": "Participants",
+    "places": "Places",
+    "startDatetime": "Start",
+    "unlimited": "Unlimited",
+    "viewOccurrences": "View occurrences"
   },
   "reports": {
     "members": "Members report",
@@ -454,7 +495,15 @@
       "serviceType": "Service type",
       "location": "Location",
       "admin": "Operator",
-      "segment": "Segment"
+      "segment": "Segment",
+      "assignmentStatus": "Service status",
+      "daysFrom": "Days from",
+      "daysTo": "Days to",
+      "eventLocation": "Event location",
+      "expirationCategory": "Expiration category",
+      "timeFrom": "Time from",
+      "timeTo": "Time to",
+      "underutilizedBelow": "Underutilized below %"
     },
     "groupBy": {
       "day": "Day",
@@ -480,6 +529,40 @@
       "expiresInDays": "Expires in days",
       "location": "Location",
       "serviceType": "Service type"
+    },
+    "daysUntilExpiration": "Days until expiration",
+    "eventParticipationKpis": {
+      "attendances": "Attendances",
+      "averageOccupancy": "Average occupancy",
+      "capacity": "Capacity",
+      "registrations": "Registrations",
+      "sessions": "Sessions"
+    },
+    "eventParticipationLoadError": "Could not load the event participation report.",
+    "eventParticipationTab": "Event participation",
+    "eventParticipationTitle": "Event participation",
+    "lastNotification": "Last notification",
+    "noCategory": "No category",
+    "noEventParticipation": "No event participation for the current filters.",
+    "noServiceExpirations": "No services in the report for the current filters.",
+    "occupancy": "Occupancy",
+    "serviceExpirationCategories": {
+      "expired": "Expired",
+      "expiring_soon": "Expiring soon",
+      "not_renewed": "Not renewed",
+      "suspended": "Suspended"
+    },
+    "serviceExpirationsExportError": "Could not download the service expirations export.",
+    "serviceExpirationsLoadError": "Could not load the service expirations report.",
+    "serviceExpirationsTab": "Service expirations",
+    "serviceExpirationsTitle": "Service expirations",
+    "timeInterval": "Time interval",
+    "utilization": "Utilization",
+    "utilizationStatuses": {
+      "capacity_not_set": "Capacity not set",
+      "full": "Full",
+      "normal": "Normal",
+      "underutilized": "Underutilized"
     }
   },
   "members": {
@@ -587,7 +670,6 @@
     "noMembers": "No members are attached to this service.",
     "searchPlaceholder": "Search by name or description",
     "showingCount": "Showing {{count}} services from API",
-    "duration": "Duration",
     "days": "{{count}} days",
     "noAutoExpiry": "No automatic expiry",
     "missingViewRight": "You do not have permission to view services.",

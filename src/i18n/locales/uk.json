@@ -17,7 +17,8 @@
     "articles": "Оголошення",
     "sms": "SMS та сповіщення",
     "payments": "Платежі та рахунки",
-    "reports": "Звіти"
+    "reports": "Звіти",
+    "campaigns": "Кампанії"
   },
   "common": {
     "actions": "Дії",
@@ -58,7 +59,10 @@
     "section": "Розділ",
     "mobileTableHint": "Проведіть горизонтально, щоб переглянути всі стовпці.",
     "scrollableTable": "Таблиця з горизонтальним прокручуванням",
-    "localFormData": "Дані, введені тут, зберігаються локально і залишаються доступними."
+    "localFormData": "Дані, введені тут, зберігаються локально і залишаються доступними.",
+    "next": "Далі",
+    "previous": "Назад",
+    "today": "Сьогодні"
   },
   "header": {
     "searchPlaceholder": "Пошук учасників, рахунків, оголошень..."
@@ -178,7 +182,16 @@
     "passwordMinLength": "Новий пароль має містити щонайменше 8 символів.",
     "passwordMismatch": "Підтвердження пароля не збігається.",
     "passwordUpdated": "Пароль оновлено.",
-    "passwordUpdateError": "Не вдалося оновити пароль."
+    "passwordUpdateError": "Не вдалося оновити пароль.",
+    "announcementRead": "Прочитано",
+    "announcementUnread": "Непрочитано",
+    "announcementViewError": "Не вдалося позначити оголошення як прочитане.",
+    "announcements": "Оголошення",
+    "announcementsLoadError": "Не вдалося завантажити оголошення.",
+    "announcementsTitle": "Мої оголошення",
+    "markAnnouncementRead": "Позначити прочитаним",
+    "noAnnouncements": "Для вас немає оголошень.",
+    "privacy": "Конфіденційність"
   },
   "dashboard": {
     "activeMembers": "Активні учасники",
@@ -277,7 +290,22 @@
       "Plătit": "Оплачено",
       "În așteptare": "Очікує",
       "Eșuat": "Не вдалося"
-    }
+    },
+    "admin": "Оператор",
+    "empty": "Платежів не знайдено.",
+    "lifecycle": "Життєвий цикл",
+    "linkedModel": "Пов'язано з",
+    "loadError": "Не вдалося завантажити платежі.",
+    "loadingList": "Завантаження платежів...",
+    "missingRight": "У вас немає дозволу payments.view.",
+    "noDirectRoute": "Немає прямого посилання для цієї моделі",
+    "openServiceMembers": "Відкрити учасників для послуги #{{id}}",
+    "paidAt": "Дата оплати",
+    "paymentType": "Тип платежу",
+    "provider": "Провайдер",
+    "receiptDownloadError": "Не вдалося завантажити квитанцію.",
+    "showingCount": "Показано {{count}} з {{total}} платежів.",
+    "viewService": "Переглянути послугу"
   },
   "sms": {
     "title": "SMS та сповіщення",
@@ -384,7 +412,30 @@
       "friday": "П'ятниця",
       "saturday": "Субота",
       "sunday": "Неділя"
-    }
+    },
+    "attendancePdfDownloadError": "Не вдалося завантажити PDF відвідуваності.",
+    "backToEvents": "Назад до подій",
+    "calendar": "Календар",
+    "calendarTitle": "Календар подій",
+    "categoryDeleteError": "Не вдалося видалити категорію.",
+    "categoryDeleted": "Категорію видалено.",
+    "categorySaveError": "Не вдалося зберегти категорію.",
+    "categorySaved": "Категорію збережено.",
+    "downloadAttendancePdf": "Завантажити PDF",
+    "endDatetime": "Кінець",
+    "eventCategories": "Категорії подій",
+    "eventDetailsTitle": "Деталі події",
+    "list": "Список",
+    "noCategories": "Категорій не знайдено.",
+    "noOccurrences": "Записів не знайдено.",
+    "notFound": "Ця подія не існує.",
+    "occurrenceCancelled": "Захід скасовано.",
+    "occurrenceDate": "Дата заходу",
+    "participants": "Учасники",
+    "places": "Місця",
+    "startDatetime": "Початок",
+    "unlimited": "Необмежено",
+    "viewOccurrences": "Переглянути заходи"
   },
   "reports": {
     "members": "Звіт учасників",
@@ -444,7 +495,15 @@
       "serviceType": "Тип послуги",
       "location": "Локація",
       "admin": "Оператор",
-      "segment": "Сегмент"
+      "segment": "Сегмент",
+      "assignmentStatus": "Статус послуги",
+      "daysFrom": "Днів від",
+      "daysTo": "Днів до",
+      "eventLocation": "Місце проведення",
+      "expirationCategory": "Категорія закінчення",
+      "timeFrom": "Час від",
+      "timeTo": "Час до",
+      "underutilizedBelow": "Недовикористано нижче %"
     },
     "groupBy": {
       "day": "День",
@@ -470,6 +529,40 @@
       "expiresInDays": "Завершується через днів",
       "location": "Локація",
       "serviceType": "Тип послуги"
+    },
+    "daysUntilExpiration": "Днів до закінчення",
+    "eventParticipationKpis": {
+      "attendances": "Відвідування",
+      "averageOccupancy": "Середнє заповнення",
+      "capacity": "Місткість",
+      "registrations": "Реєстрації",
+      "sessions": "Сесії"
+    },
+    "eventParticipationLoadError": "Не вдалося завантажити звіт про участь у подіях.",
+    "eventParticipationTab": "Участь у подіях",
+    "eventParticipationTitle": "Участь у подіях",
+    "lastNotification": "Останнє сповіщення",
+    "noCategory": "Без категорії",
+    "noEventParticipation": "Немає участі у подіях за поточними фільтрами.",
+    "noServiceExpirations": "Немає послуг у звіті за поточними фільтрами.",
+    "occupancy": "Заповненість",
+    "serviceExpirationCategories": {
+      "expired": "Закінчилися",
+      "expiring_soon": "Скоро закінчаться",
+      "not_renewed": "Не поновлено",
+      "suspended": "Призупинено"
+    },
+    "serviceExpirationsExportError": "Не вдалося завантажити експорт закінчення послуг.",
+    "serviceExpirationsLoadError": "Не вдалося завантажити звіт про закінчення послуг.",
+    "serviceExpirationsTab": "Закінчення послуг",
+    "serviceExpirationsTitle": "Закінчення послуг",
+    "timeInterval": "Часовий інтервал",
+    "utilization": "Використання",
+    "utilizationStatuses": {
+      "capacity_not_set": "Місткість не встановлена",
+      "full": "Повний",
+      "normal": "Нормальний",
+      "underutilized": "Недовикористаний"
     }
   },
   "members": {

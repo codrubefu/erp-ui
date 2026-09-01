@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { eventService, type ApiValidationError, type EventCategory, type EventCategoryPayload, type EventItem, type EventOccurrence, type EventParticipant, type EventPayload, type EventStatus, type EventService, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
-import { SectionCard } from '../../primitives';
+import { ButtonLink, SectionCard, Toast } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
 import { useAuth } from '../../../context/useAuth';
 import { deviceLocale, formatApiDate, formatCurrency, formatDeviceDate, paymentMethodLabel } from '../../../utils/erp/formatters';
@@ -119,10 +119,6 @@ function SelectField({ label, error, children, ...props }: React.SelectHTMLAttri
   );
 }
 
-function Toast({ type, message, onClose }: { type: 'success' | 'error'; message: string; onClose: () => void }) {
-  return <div className={`fixed right-4 top-4 z-50 rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}><button onClick={onClose} className="mr-3"><X className="inline h-4 w-4" /></button>{message}</div>;
-}
-
 export function StatusBadge({ status }: { status: string }) {
   const tone = status.includes('cancel') || status === 'inactive' ? 'bg-red-50 text-red-700' : status === 'active' || status === 'scheduled' || status === 'registered' || status === 'attended' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700';
   return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>{status}</span>;
@@ -202,7 +198,7 @@ function EventsPage() {
   return (
     <div className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <SectionCard title={t('events.managementTitle')} action={<div className="flex flex-wrap gap-2"><Link to="calendar" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><CalendarClock className="h-4 w-4" />Calendar</Link>{permissions.canManageEvents ? <Link to="categories" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"><Tags className="h-4 w-4" />Categorii</Link> : null}{permissions.canManageEvents ? <Link to="new" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />{t('events.create')}</Link> : null}</div>}>
+      <SectionCard title={t('events.managementTitle')} action={<div className="flex flex-wrap gap-2"><ButtonLink to="calendar" variant="secondary"><CalendarClock className="h-4 w-4" />{t('events.calendar')}</ButtonLink>{permissions.canManageEvents ? <ButtonLink to="categories" variant="secondary"><Tags className="h-4 w-4" />{t('events.eventCategories')}</ButtonLink> : null}{permissions.canManageEvents ? <ButtonLink to="new" variant="primary"><Plus className="h-4 w-4" />{t('events.create')}</ButtonLink> : null}</div>}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-9">
           <TextField label={t('events.searchTitle')} value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value, page: 1 }))} />
           <SelectField label="Categorie" value={filters.category_id} onChange={(e) => setFilters((p) => ({ ...p, category_id: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
@@ -410,7 +406,7 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <SectionCard title={mode === 'create' ? t('events.createEvent') : t('events.editEvent')} action={<Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.back')}</Link>}>
+      <SectionCard title={mode === 'create' ? t('events.createEvent') : t('events.editEvent')} action={<ButtonLink to="/erp/events" variant="secondary">{t('common.back')}</ButtonLink>}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <TextField label={t('common.title')} value={form.title} onChange={(e) => updateField('title', e.target.value)} error={clientErrors.title || fieldError(serverErrors, 'title')} />
           <SelectField label="Categorie" value={form.category_id ?? ''} onChange={(e) => updateField('category_id', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'category_id')}><option value="">Fara categorie</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
@@ -443,10 +439,10 @@ function EventDetailsPage() {
   const { eventId } = useParams();
   const { event, loading, error } = useEvent(Number(eventId));
   const permissions = usePermissions();
-  if (loading) return <SectionCard title="Event Details"><p>Se incarca...</p></SectionCard>;
-  if (error || !event) return <SectionCard title="Event Details"><p className="text-red-600">{error || 'Evenimentul nu exista.'}</p></SectionCard>;
+  if (loading) return <SectionCard title={t('events.eventDetailsTitle')}><p>{t('common.loading')}</p></SectionCard>;
+  if (error || !event) return <SectionCard title={t('events.eventDetailsTitle')}><p className="text-red-600">{error || t('events.notFound')}</p></SectionCard>;
   return (
-    <SectionCard title={event.title} action={<div className="flex gap-2">{permissions.canManageEvents ? <Link to="edit" className="rounded-lg border px-4 py-2 text-sm font-semibold">Edit</Link> : null}<Link to="occurrences" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">View Occurrences</Link></div>}>
+    <SectionCard title={event.title} action={<div className="flex gap-2">{permissions.canManageEvents ? <ButtonLink to="edit" variant="secondary">{t('common.edit')}</ButtonLink> : null}<ButtonLink to="occurrences" variant="dark">{t('events.viewOccurrences')}</ButtonLink></div>}>
       <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
         <p><b>descriere:</b> {event.description || '-'}</p><p><b>locatie:</b> {event.location || '-'}</p><p><b>categorie:</b> <CategoryBadge category={event.category} /></p>
         <p><b>interval orar:</b> {event.start_date} {event.start_time}-{event.end_time}</p><p><b>tip recurență:</b> <RecurrenceBadge type={event.recurrence_type} /></p>
@@ -467,6 +463,7 @@ const emptyCategoryForm: EventCategoryPayload = {
 };
 
 function EventCategoriesPage() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState({ page: 1, per_page: 15, search: '', is_active: '' });
   const [categories, setCategories] = useState<EventCategory[]>([]);
   const [meta, setMeta] = useState({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
@@ -526,14 +523,14 @@ function EventCategoriesPage() {
       const payload = { ...form, name: form.name.trim(), color: form.color || null, description: form.description || null };
       if (editing) await eventService.updateCategory(editing.id, payload);
       else await eventService.createCategory(payload);
-      setToast({ type: 'success', message: 'Categoria a fost salvata.' });
+      setToast({ type: 'success', message: t('events.categorySaved') });
       resetForm();
       await reload();
     } catch (err) {
       const apiError = err as ApiValidationError;
       setServerErrors(apiError.errors);
-      setError(apiError.message || 'Nu am putut salva categoria.');
-      setToast({ type: 'error', message: apiError.message || 'Nu am putut salva categoria.' });
+      setError(apiError.message || t('events.categorySaveError'));
+      setToast({ type: 'error', message: apiError.message || t('events.categorySaveError') });
     } finally {
       setSaving(false);
     }
@@ -543,18 +540,18 @@ function EventCategoriesPage() {
     if (!deleting) return;
     try {
       await eventService.deleteCategory(deleting.id);
-      setToast({ type: 'success', message: 'Categoria a fost stearsa.' });
+      setToast({ type: 'success', message: t('events.categoryDeleted') });
       setDeleting(null);
       await reload();
     } catch (err) {
-      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Nu am putut sterge categoria.' });
+      setToast({ type: 'error', message: err instanceof Error ? err.message : t('events.categoryDeleteError') });
     }
   };
 
   return (
     <div className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <SectionCard title="Categorii evenimente" action={<Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">Inapoi la evenimente</Link>}>
+      <SectionCard title={t('events.eventCategories')} action={<ButtonLink to="/erp/events" variant="secondary">{t('events.backToEvents')}</ButtonLink>}>
         <form onSubmit={(eventSubmit) => { eventSubmit.preventDefault(); void save(); }} className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_140px_1fr_auto]">
           <TextField label="Nume" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} error={clientErrors.name || fieldError(serverErrors, 'name')} />
           <TextField label="Culoare" type="color" value={form.color ?? '#2563eb'} onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))} error={fieldError(serverErrors, 'color')} />
@@ -584,7 +581,7 @@ function EventCategoriesPage() {
                 <td className="py-4"><StatusBadge status={category.is_active ? 'active' : 'inactive'} /></td>
                 <td className="py-4"><div className="flex justify-end gap-2"><button onClick={() => startEdit(category)} className="rounded-lg border px-3 py-2"><Edit3 className="h-4 w-4" /></button><button onClick={() => setDeleting(category)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div></td>
               </tr>
-            )) : <tr><td colSpan={5} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista categorii.'}</td></tr>}</tbody>
+            )) : <tr><td colSpan={5} className="py-10 text-center text-slate-500">{loading ? t('common.loading') : t('events.noCategories')}</td></tr>}</tbody>
           </table>
         </div>
         <div className="mt-4"><Pagination page={meta.current_page} lastPage={meta.last_page} onPage={(page) => setFilters((prev) => ({ ...prev, page }))} /></div>
@@ -595,6 +592,7 @@ function EventCategoriesPage() {
 }
 
 function EventCalendarPage() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<CalendarMode>('month');
   const [anchor, setAnchor] = useState(() => new Date());
   const [categoryId, setCategoryId] = useState('');
@@ -657,7 +655,7 @@ function EventCalendarPage() {
     : `${formatDateKey(range.start)} - ${formatDateKey(range.end)}`;
 
   return (
-    <SectionCard title="Calendar evenimente" action={<div className="flex flex-wrap gap-2"><Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">Lista</Link><Link to="/erp/events/new" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Eveniment</Link></div>}>
+    <SectionCard title={t('events.calendarTitle')} action={<div className="flex flex-wrap gap-2"><ButtonLink to="/erp/events" variant="secondary">{t('events.list')}</ButtonLink><ButtonLink to="/erp/events/new" variant="primary"><Plus className="h-4 w-4" />{t('events.event')}</ButtonLink></div>}>
       <div className="mb-5 grid grid-cols-1 gap-3 lg:grid-cols-[auto_auto_1fr_180px_180px_auto]">
         <div className="flex rounded-lg border border-slate-200 bg-white p-1">
           <button type="button" onClick={() => setMode('month')} className={`rounded-md px-3 py-2 text-sm font-semibold ${mode === 'month' ? 'bg-indigo-600 text-white' : 'text-slate-600'}`}>Lunar</button>
@@ -665,7 +663,7 @@ function EventCalendarPage() {
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => move(-1)} className="rounded-lg border border-slate-200 p-2"><ChevronLeft className="h-4 w-4" /></button>
-          <button type="button" onClick={() => setAnchor(new Date())} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Azi</button>
+          <button type="button" onClick={() => setAnchor(new Date())} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">{t('common.today')}</button>
           <button type="button" onClick={() => move(1)} className="rounded-lg border border-slate-200 p-2"><ChevronRight className="h-4 w-4" /></button>
         </div>
         <div className="flex items-center text-lg font-bold capitalize text-slate-900">{title}</div>
@@ -701,7 +699,7 @@ function EventCalendarPage() {
           );
         })}
       </div>
-      {loading ? <p className="mt-4 text-sm font-medium text-slate-500">Se incarca evenimentele...</p> : null}
+      {loading ? <p className="mt-4 text-sm font-medium text-slate-500">{t('events.loadingList')}</p> : null}
     </SectionCard>
   );
 }
@@ -718,18 +716,18 @@ function EventOccurrencesPage() {
   const cancelOccurrence = async (occurrenceId: number) => {
     try {
       await eventService.cancelOccurrence(occurrenceId);
-      setToast({ type: 'success', message: 'Aparitia a fost anulata.' });
+      setToast({ type: 'success', message: t('events.occurrenceCancelled') });
       await reload();
     } catch (err) {
       setToast({ type: 'error', message: err instanceof Error ? err.message : t('events.cancelOccurrenceError') });
     }
   };
   return (
-    <SectionCard title={t('events.occurrencesFor', { title: event?.title ?? '' })} action={<Link to="/erp/events" className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.back')}</Link>}>
+    <SectionCard title={t('events.occurrencesFor', { title: event?.title ?? '' })} action={<ButtonLink to="/erp/events" variant="secondary">{t('common.back')}</ButtonLink>}>
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><TextField label={t('events.dateFrom')} type="date" value={filters.date_from} onChange={(e) => setFilters((p) => ({ ...p, date_from: e.target.value }))} /><TextField label={t('events.dateTo')} type="date" value={filters.date_to} onChange={(e) => setFilters((p) => ({ ...p, date_to: e.target.value }))} /><SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}><option value="">{t('common.all')}</option>{occurrenceStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><button onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><RefreshCw className="mr-2 inline h-4 w-4" />{t('events.filter')}</button></div>
       {error ? <p className="mt-4 text-red-600">{error}</p> : null}
-      <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">occurrence_date</th><th className="pb-3">start_datetime</th><th className="pb-3">end_datetime</th><th className="pb-3">status</th><th className="pb-3">participants</th><th className="pb-3">places</th><th className="pb-3 text-right">Actiuni</th></tr></thead><tbody>{occurrences.length ? occurrences.map((o) => <tr key={o.id} className="border-b border-slate-100"><td className="py-4">{o.occurrence_date}</td><td>{o.start_datetime}</td><td>{o.end_datetime}</td><td><StatusBadge status={o.status} /></td><td>{o.participants_count}</td><td>{o.available_places ?? 'nelimitat'}</td><td><div className="flex justify-end gap-2">{permissions.canViewParticipants ? <Link to={`${o.id}/participants`} className="rounded-lg border px-3 py-2"><Users className="h-4 w-4" /></Link> : null}{permissions.canManageParticipants ? <Link to={`${o.id}/participants?add=1`} className="rounded-lg border px-3 py-2"><Plus className="h-4 w-4" /></Link> : null}{permissions.canManageEvents ? <button onClick={() => void cancelOccurrence(o.id)} className="rounded-lg border px-3 py-2 text-red-600"><X className="h-4 w-4" /></button> : null}</div></td></tr>) : <tr><td colSpan={7} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista aparitii.'}</td></tr>}</tbody></table></div>
+      <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">{t('events.occurrenceDate')}</th><th className="pb-3">{t('events.startDatetime')}</th><th className="pb-3">{t('events.endDatetime')}</th><th className="pb-3">{t('common.status')}</th><th className="pb-3">{t('events.participants')}</th><th className="pb-3">{t('events.places')}</th><th className="pb-3 text-right">{t('common.actions')}</th></tr></thead><tbody>{occurrences.length ? occurrences.map((o) => <tr key={o.id} className="border-b border-slate-100"><td className="py-4">{o.occurrence_date}</td><td>{o.start_datetime}</td><td>{o.end_datetime}</td><td><StatusBadge status={o.status} /></td><td>{o.participants_count}</td><td>{o.available_places ?? t('events.unlimited')}</td><td><div className="flex justify-end gap-2">{permissions.canViewParticipants ? <Link to={`${o.id}/participants`} className="rounded-lg border px-3 py-2"><Users className="h-4 w-4" /></Link> : null}{permissions.canManageParticipants ? <Link to={`${o.id}/participants?add=1`} className="rounded-lg border px-3 py-2"><Plus className="h-4 w-4" /></Link> : null}{permissions.canManageEvents ? <button onClick={() => void cancelOccurrence(o.id)} className="rounded-lg border px-3 py-2 text-red-600"><X className="h-4 w-4" /></button> : null}</div></td></tr>) : <tr><td colSpan={7} className="py-10 text-center text-slate-500">{loading ? t('common.loading') : t('events.noOccurrences')}</td></tr>}</tbody></table></div>
     </SectionCard>
   );
 }
