@@ -19,7 +19,7 @@ import type {
   Service,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-services', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'grades', 'smtp-settings', 'check-in', 'members', 'services', 'events', 'events/calendar', 'events/categories', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-services', 'profile-code', 'profile-grades', 'profile-documents', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'grades', 'smtp-settings', 'check-in', 'members', 'services', 'events', 'events/calendar', 'events/categories', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
 const USE_LOCAL_ERP_CACHE = import.meta.env.VITE_USE_LOCAL_ERP_CACHE === 'true';
 const USE_LOCAL_ERP_SEED = import.meta.env.VITE_USE_LOCAL_ERP_SEED === 'true';
 
@@ -132,6 +132,7 @@ export default function ERPAdminPanel() {
   const [authError, setAuthError] = useState('');
 
   const [current, setCurrent] = useState<SectionId>(resolvedRouteSection);
+  const [profileChildId, setProfileChildId] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [page, setPage] = useState<AppPage>({ section: 'list', mode: null });
 
@@ -353,7 +354,7 @@ export default function ERPAdminPanel() {
   return (
     <div className="min-h-screen bg-[#f3f6fb] text-slate-900">
       <div className="flex min-h-screen">
-        <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar current={current} setCurrent={handleSidebarChange} profileChildId={profileChildId} setProfileChildId={setProfileChildId} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         {sidebarOpen ? (
           <button
             aria-label="Close navigation"
@@ -362,9 +363,10 @@ export default function ERPAdminPanel() {
           />
         ) : null}
         <div className="min-w-0 flex-1">
-          <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} currentUser={currentUser} organizationName={organizationName} />
+          <Header onToggleSidebar={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} organizationName={organizationName} />
           <Content
             current={current}
+            profileChildId={profileChildId}
             page={page}
             membersData={membersData}
             servicesData={servicesData}

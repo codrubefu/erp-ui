@@ -108,6 +108,7 @@ export type QuickCreateMenuProps = {
 
 export type ContentProps = {
   current: SectionId;
+  profileChildId: number | null;
   page: AppPage;
   membersData: Member[];
   servicesData: Service[];

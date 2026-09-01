@@ -1,5 +1,6 @@
 import { apiClient } from './apiClient';
-import type { ApiCustomFieldValue, ApiPaginated, ApiService, AuthenticatedUser } from '../services/ErpApiService';
+import { apiHeaders, endpoint, extractErrorMessage, parseJsonResponse } from './apiCore';
+import type { ApiCustomFieldValue, ApiPaginated, ApiService, ApiUserDocument, ApiUserGrade, AuthenticatedUser } from '../services/ErpApiService';
 
 type MeResponse = AuthenticatedUser | {
   user?: AuthenticatedUser;
@@ -11,8 +12,12 @@ export type UpdateAuthenticatedUserPasswordPayload = {
   password_confirmation: string;
 };
 
-export function getAuthenticatedUser() {
-  return apiClient<MeResponse>('/me').then((payload) => {
+function withChildId(path: string, childId?: number) {
+  return childId ? `${path}?child_id=${childId}` : path;
+}
+
+export function getAuthenticatedUser(childId?: number) {
+  return apiClient<MeResponse>(withChildId('/me', childId)).then((payload) => {
     if (payload && typeof payload === 'object' && 'user' in payload && payload.user) {
       return payload.user;
     }
@@ -45,14 +50,46 @@ export type AuthenticatedUserEvent = {
   } | null;
 };
 
-export function getAuthenticatedUserEvents() {
-  return apiClient<ApiPaginated<AuthenticatedUserEvent> | AuthenticatedUserEvent[]>('/me/events');
+export function getAuthenticatedUserEvents(childId?: number) {
+  return apiClient<ApiPaginated<AuthenticatedUserEvent> | AuthenticatedUserEvent[]>(withChildId('/me/events', childId));
 }
 
-export function getAuthenticatedUserServices() {
-  return apiClient<ApiPaginated<ApiService> | ApiService[]>('/me/services');
+export function getAuthenticatedUserServices(childId?: number) {
+  return apiClient<ApiPaginated<ApiService> | ApiService[]>(withChildId('/me/services', childId));
 }
 
-export function getAuthenticatedUserCustomFields() {
-  return apiClient<ApiCustomFieldValue[]>('/me/custom-fields');
+export function getAuthenticatedUserCustomFields(childId?: number) {
+  return apiClient<ApiCustomFieldValue[]>(withChildId('/me/custom-fields', childId));
+}
+
+export type AuthenticatedUserChild = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  active?: boolean;
+};
+
+export function getAuthenticatedUserChildren() {
+  return apiClient<ApiPaginated<AuthenticatedUserChild> | AuthenticatedUserChild[]>('/me/children').then((payload) =>
+    Array.isArray(payload) ? payload : payload.data ?? []
+  );
+}
+
+export function getAuthenticatedUserGrades(childId?: number) {
+  return apiClient<ApiPaginated<ApiUserGrade> | ApiUserGrade[]>(withChildId('/me/grades', childId));
+}
+
+export function getAuthenticatedUserDocuments(childId?: number) {
+  return apiClient<ApiPaginated<ApiUserDocument> | ApiUserDocument[]>(withChildId('/me/documents', childId));
+}
+
+export async function downloadAuthenticatedUserDocument(documentId: number, childId?: number) {
+  const response = await fetch(endpoint(withChildId(`/me/documents/${documentId}/download`, childId)), {
+    headers: apiHeaders(),
+  });
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+  }
+  return response.blob();
 }

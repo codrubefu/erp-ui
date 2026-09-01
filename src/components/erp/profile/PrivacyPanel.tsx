@@ -7,6 +7,7 @@ import { formatDeviceDateTime } from '../../../utils/erp/formatters';
 
 type PrivacyPanelProps = {
   userId?: number;
+  childId?: number;
   administrative?: boolean;
   canExport?: boolean;
   canProcess?: boolean;
@@ -29,7 +30,10 @@ function formatDate(value?: string | null) {
   return formatDeviceDateTime(value);
 }
 
-export function PrivacyPanel({ userId, administrative = false, canExport = true, canProcess = true }: PrivacyPanelProps) {
+export function PrivacyPanel({ userId, childId, administrative = false, canExport = true, canProcess = true }: PrivacyPanelProps) {
+  const readOnly = Boolean(childId);
+  canExport = readOnly ? false : canExport;
+  canProcess = readOnly ? false : canProcess;
   const [data, setData] = useState<GdprDataAccess | null>(null);
   const [exportRecord, setExportRecord] = useState<GdprExport | null>(null);
   const [erasureRequest, setErasureRequest] = useState<GdprRequest | null>(null);
@@ -49,7 +53,7 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
     setLoading(true);
     setError('');
     try {
-      const nextData = await gdprService.access(userId);
+      const nextData = await gdprService.access(userId, childId);
       setData(nextData);
       setRectification({
         first_name: nextData.profile.first_name ?? '',
@@ -62,7 +66,7 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, childId]);
 
   useEffect(() => {
     void loadData();
@@ -182,16 +186,18 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
 
       <SectionCard title={administrative ? 'GDPR utilizator' : 'Confidentialitate'} action={<Button type="button" onClick={() => void loadData()} disabled={loading}><RefreshCw className="h-4 w-4" />Refresh</Button>}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input label="Prenume" value={rectification.first_name} onChange={(event) => setRectification((prev) => ({ ...prev, first_name: event.target.value }))} />
-          <Input label="Nume" value={rectification.last_name} onChange={(event) => setRectification((prev) => ({ ...prev, last_name: event.target.value }))} />
-          <Input label="Email" type="email" value={rectification.email} onChange={(event) => setRectification((prev) => ({ ...prev, email: event.target.value }))} />
-          <Input label="Telefon" value={rectification.phone} onChange={(event) => setRectification((prev) => ({ ...prev, phone: event.target.value }))} />
+          <Input label="Prenume" value={rectification.first_name} disabled={readOnly} onChange={(event) => setRectification((prev) => ({ ...prev, first_name: event.target.value }))} />
+          <Input label="Nume" value={rectification.last_name} disabled={readOnly} onChange={(event) => setRectification((prev) => ({ ...prev, last_name: event.target.value }))} />
+          <Input label="Email" type="email" value={rectification.email} disabled={readOnly} onChange={(event) => setRectification((prev) => ({ ...prev, email: event.target.value }))} />
+          <Input label="Telefon" value={rectification.phone} disabled={readOnly} onChange={(event) => setRectification((prev) => ({ ...prev, phone: event.target.value }))} />
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button type="button" onClick={() => void saveRectification()} disabled={loading} variant="primary"><Save className="h-4 w-4" />Rectifica date</Button>
-          {canExport ? <Button type="button" onClick={() => void createExport()} disabled={loading}><Download className="h-4 w-4" />Creeaza export</Button> : null}
-          <Button type="button" onClick={() => void requestErasure()} disabled={loading} variant="danger"><Trash2 className="h-4 w-4" />Cerere stergere</Button>
-        </div>
+        {!readOnly ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" onClick={() => void saveRectification()} disabled={loading} variant="primary"><Save className="h-4 w-4" />Rectifica date</Button>
+            {canExport ? <Button type="button" onClick={() => void createExport()} disabled={loading}><Download className="h-4 w-4" />Creeaza export</Button> : null}
+            <Button type="button" onClick={() => void requestErasure()} disabled={loading} variant="danger"><Trash2 className="h-4 w-4" />Cerere stergere</Button>
+          </div>
+        ) : null}
       </SectionCard>
 
       {exportRecord ? (
@@ -207,18 +213,20 @@ export function PrivacyPanel({ userId, administrative = false, canExport = true,
       ) : null}
 
       <SectionCard title="Consimtaminte">
-        <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-5">
-          <Input label="Scop" value={consent.purpose} onChange={(event) => setConsent((prev) => ({ ...prev, purpose: event.target.value }))} />
-          <Select label="Canal" value={consent.channel} onChange={(event) => setConsent((prev) => ({ ...prev, channel: event.target.value as NotificationChannel }))}>
-            {channels.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
-          </Select>
-          <Input label="Versiune politica" value={consent.policy_version} onChange={(event) => setConsent((prev) => ({ ...prev, policy_version: event.target.value }))} />
-          <Select label="Status" value={String(consent.granted)} onChange={(event) => setConsent((prev) => ({ ...prev, granted: event.target.value === 'true' }))}>
-            <option value="true">Granted</option>
-            <option value="false">Withdrawn</option>
-          </Select>
-          <div className="flex items-end"><Button type="button" onClick={() => void recordConsent()} disabled={loading} className="w-full"><ShieldCheck className="h-4 w-4" />Inregistreaza</Button></div>
-        </div>
+        {!readOnly ? (
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-5">
+            <Input label="Scop" value={consent.purpose} onChange={(event) => setConsent((prev) => ({ ...prev, purpose: event.target.value }))} />
+            <Select label="Canal" value={consent.channel} onChange={(event) => setConsent((prev) => ({ ...prev, channel: event.target.value as NotificationChannel }))}>
+              {channels.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
+            </Select>
+            <Input label="Versiune politica" value={consent.policy_version} onChange={(event) => setConsent((prev) => ({ ...prev, policy_version: event.target.value }))} />
+            <Select label="Status" value={String(consent.granted)} onChange={(event) => setConsent((prev) => ({ ...prev, granted: event.target.value === 'true' }))}>
+              <option value="true">Granted</option>
+              <option value="false">Withdrawn</option>
+            </Select>
+            <div className="flex items-end"><Button type="button" onClick={() => void recordConsent()} disabled={loading} className="w-full"><ShieldCheck className="h-4 w-4" />Inregistreaza</Button></div>
+          </div>
+        ) : null}
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
           <table className="min-w-[760px] w-full text-left text-sm text-slate-700 [&_tbody_tr:nth-child(even)]:bg-slate-50/45">
