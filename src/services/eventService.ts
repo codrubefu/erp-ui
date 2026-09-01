@@ -1,3 +1,4 @@
+import { endpoint, extractErrorMessage, parseJsonResponse } from '../api/apiCore';
 import { TOKEN_KEY, erpApiService, getApiBaseUrl } from './ErpApiService';
 
 export type EventStatus = 'active' | 'inactive' | 'cancelled';
@@ -28,6 +29,18 @@ export type EventService = {
   name: string;
 };
 
+export type EventCategory = {
+  id: number;
+  name: string;
+  color: string | null;
+  description: string | null;
+  is_active: boolean;
+  events_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+};
+
 export type EventUser = {
   id: number;
   user_code?: string | null;
@@ -42,6 +55,8 @@ export type EventUser = {
 
 export type EventItem = {
   id: number;
+  category_id: number | null;
+  category?: EventCategory | null;
   title: string;
   description: string | null;
   location: string | null;
@@ -66,7 +81,7 @@ export type EventItem = {
   updated_at?: string | null;
 };
 
-export type EventPayload = Omit<EventItem, 'id' | 'created_at' | 'updated_at' | 'required_service'>;
+export type EventPayload = Omit<EventItem, 'id' | 'created_at' | 'updated_at' | 'required_service' | 'category'>;
 
 export type EventOccurrence = {
   id: number;
@@ -82,6 +97,7 @@ export type EventOccurrence = {
 
 export type EventParticipant = {
   id?: number;
+  pivot_id?: number | null;
   user_id?: number;
   first_name?: string;
   last_name?: string;
@@ -96,6 +112,7 @@ export type EventFilters = {
   page?: number;
   per_page?: number;
   search?: string;
+  category_id?: string;
   status?: string;
   recurrence_type?: string;
   requires_active_service?: string;
@@ -108,6 +125,15 @@ export type OccurrenceFilters = {
   date_from?: string;
   date_to?: string;
   status?: string;
+  category_id?: string;
+  page?: number;
+  per_page?: number;
+};
+
+export type EligibleParticipantFilters = {
+  search?: string;
+  page?: number;
+  per_page?: number;
 };
 
 export type AddParticipantPayload = {
@@ -117,9 +143,23 @@ export type AddParticipantPayload = {
   notes?: string | null;
 };
 
+export type BulkAddParticipantsPayload = {
+  user_ids: number[];
+  status?: ParticipantStatus;
+  registered_at?: string | null;
+  notes?: string | null;
+};
+
 export type UpdateParticipantStatusPayload = {
   status: ParticipantStatus;
   notes?: string | null;
+};
+
+export type EventCategoryPayload = {
+  name: string;
+  color?: string | null;
+  description?: string | null;
+  is_active?: boolean;
 };
 
 export type ApiValidationError = Error & {
@@ -173,22 +213,45 @@ async function request<T>(path: string, options: RequestInit = {}, params?: Reco
   }
 }
 
+async function downloadOccurrenceParticipantsPdf(occurrenceId: number) {
+  const response = await fetch(endpoint(`/event-occurrences/${occurrenceId}/participants/download/pdf`), {
+    headers: {
+      Accept: 'application/pdf',
+      ...(window.localStorage.getItem(TOKEN_KEY) ? { Authorization: `Bearer ${window.localStorage.getItem(TOKEN_KEY)}` } : {}),
+    },
+  });
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+  }
+  return response.blob();
+}
+
 export const eventService = {
+  getCategories: (params: { page?: number; per_page?: number; search?: string; is_active?: string } = {}) => request<Paginated<EventCategory>>('/event-categories', {}, params),
+  getCategory: (id: number) => request<EventCategory>(`/event-categories/${id}`),
+  createCategory: (payload: EventCategoryPayload) => request<EventCategory>('/event-categories', { method: 'POST', body: JSON.stringify(payload) }),
+  updateCategory: (id: number, payload: EventCategoryPayload) => request<EventCategory>(`/event-categories/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  deleteCategory: (id: number) => request<void>(`/event-categories/${id}`, { method: 'DELETE' }),
   getEvents: (params: EventFilters = {}) => request<Paginated<EventItem>>('/events', {}, params),
   getEvent: (id: number) => request<EventItem>(`/events/${id}`),
   createEvent: (payload: EventPayload) => request<EventItem>('/events', { method: 'POST', body: JSON.stringify(payload) }),
   updateEvent: (id: number, payload: EventPayload) => request<EventItem>(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   deleteEvent: (id: number) => request<void>(`/events/${id}`, { method: 'DELETE' }),
   getEventOccurrences: (eventId: number, params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>(`/events/${eventId}/occurrences`, {}, params),
+  getAllOccurrences: (params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>('/event-occurrences', {}, params),
   getOccurrence: (id: number) => request<EventOccurrence>(`/event-occurrences/${id}`),
   cancelOccurrence: (id: number) => {
     void id;
     return Promise.reject(new Error('Swagger nu expune un endpoint pentru anularea aparitiei.'));
   },
+  getEligibleOccurrenceParticipants: (occurrenceId: number, params: EligibleParticipantFilters = {}) => request<Paginated<EventUser> | EventUser[]>(`/event-occurrences/${occurrenceId}/eligible-participants`, {}, params),
   getOccurrenceParticipants: (occurrenceId: number) => request<Paginated<EventParticipant> | EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`, {}, { per_page: 100 }),
   addOccurrenceParticipant: (occurrenceId: number, payload: AddParticipantPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants`, { method: 'POST', body: JSON.stringify(payload) }),
+  bulkAddOccurrenceParticipants: (occurrenceId: number, payload: BulkAddParticipantsPayload) => request<EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants/bulk`, { method: 'POST', body: JSON.stringify(payload) }),
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
   updateOccurrenceParticipantStatus: (occurrenceId: number, userId: number, payload: UpdateParticipantStatusPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  downloadOccurrenceParticipantsPdf,
   searchUsers: (search: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users', {}, { search, page, per_page: perPage }),
   searchUsersByCard: (cardCode: string, page = 1, perPage = 10) => request<Paginated<EventUser> | EventUser[]>('/users/search/user-code', {}, { search: cardCode, page, per_page: perPage }),
   getServices: () => request<EventService[] | Paginated<EventService>>('/services', {}, { per_page: 100, is_active: 1 }),

@@ -3,15 +3,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
-import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
+import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGrade, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserEvent, type ApiUserGrade, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 import { serviceLifecycleService } from '../../../services/serviceLifecycleService';
 import { useAuth } from '../../../context/useAuth';
 import { PrivacyPanel } from '../profile/PrivacyPanel';
 import { UserDocumentsPanel } from './UserDocumentsPanel';
+import { formatDeviceDate, formatDeviceDateTime } from '../../../utils/erp/formatters';
 
-type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'services' | 'documents' | 'privacy' | 'activity';
+type UserFormTab = 'details' | 'code' | 'information' | 'groups' | 'locations' | 'services' | 'grades' | 'events' | 'documents' | 'privacy' | 'activity';
 
 type UserForm = {
   user_code: string;
@@ -147,6 +148,10 @@ function userName(user: ApiUser) {
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formatDate(value?: string | null) {
+  return formatDeviceDate(value);
 }
 
 function normalizeDateInput(value: string) {
@@ -341,12 +346,6 @@ function serviceUserIdForAssignment(
 
 function hasActiveService(user: ApiUser) {
   return user.has_active_service ?? Boolean(user.active_services?.length);
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return '-';
-  const [year, month, day] = value.slice(0, 10).split('-');
-  return year && month && day ? `${day}/${month}/${year}` : value;
 }
 
 function addDays(date: string | undefined, days: number | null | undefined) {
@@ -546,6 +545,17 @@ export function UserManagementView({
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [services, setServices] = useState<ApiService[]>([]);
+  const [grades, setGrades] = useState<ApiGrade[]>([]);
+  const [gradeHistory, setGradeHistory] = useState<ApiUserGrade[]>([]);
+  const [gradeForm, setGradeForm] = useState({ grade_id: '', obtained_at: todayDate(), description: '' });
+  const [editingGrade, setEditingGrade] = useState<ApiUserGrade | null>(null);
+  const [gradeSaving, setGradeSaving] = useState(false);
+  const [gradeError, setGradeError] = useState('');
+  const [userEvents, setUserEvents] = useState<ApiUserEvent[]>([]);
+  const [userEventsPage, setUserEventsPage] = useState(1);
+  const [userEventsLastPage, setUserEventsLastPage] = useState(1);
+  const [userEventsLoading, setUserEventsLoading] = useState(false);
+  const [userEventsError, setUserEventsError] = useState('');
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [perPage, setPerPage] = useState(15);
@@ -633,6 +643,9 @@ export function UserManagementView({
   const canViewDocuments = hasAnyRight(['user-documents.view', 'user-documents.upload', 'user-documents.delete', 'users.manage']);
   const canUploadDocuments = hasAnyRight(['user-documents.upload', 'users.manage']);
   const canDeleteDocuments = hasAnyRight(['user-documents.delete', 'users.manage']);
+  const canViewGrades = hasAnyRight(['grades.view', 'grades.manage']);
+  const canManageGrades = hasAnyRight(['grades.manage']);
+  const canViewUserEvents = hasAnyRight(['users.view']);
   const formTabs = useMemo<Array<[UserFormTab, string]>>(() => {
     const tabs: Array<[UserFormTab, string]> = [
       ['details', 'Date utilizator'],
@@ -645,11 +658,13 @@ export function UserManagementView({
     }
 
     tabs.push(['services', t('users.services')]);
+    if (editing && canViewGrades) tabs.push(['grades', t('users.grades')]);
+    if (editing && canViewUserEvents) tabs.push(['events', t('users.events')]);
     if (editing && canViewDocuments) tabs.push(['documents', 'Documente']);
     if (editing && canUseGdpr) tabs.push(['privacy', 'GDPR']);
     if (editing) tabs.push(['activity', 'Activity']);
     return tabs;
-  }, [canUseGdpr, canViewDocuments, editing, t, useRelationTabs]);
+  }, [canUseGdpr, canViewDocuments, canViewGrades, canViewUserEvents, editing, t, useRelationTabs]);
 
   useEffect(() => {
     if (!scanningCode || activeFormTab !== 'code') return undefined;
@@ -722,6 +737,45 @@ export function UserManagementView({
       setCustomFields([]);
     }
   }, []);
+
+  const loadGrades = useCallback(async () => {
+    if (!canViewGrades) return;
+    try {
+      const payload = await erpApiService.listGrades({ per_page: 100, is_active: '1' });
+      setGrades(payload.data ?? []);
+    } catch {
+      setGrades([]);
+    }
+  }, [canViewGrades]);
+
+  const loadGradeHistory = useCallback(async (userId: number) => {
+    if (!canViewGrades) return;
+    setGradeError('');
+    try {
+      const payload = await erpApiService.listUserGrades(userId, { per_page: 100 });
+      setGradeHistory(payload.data ?? []);
+    } catch (err) {
+      setGradeError(err instanceof Error ? err.message : t('users.gradesLoadError'));
+      setGradeHistory([]);
+    }
+  }, [canViewGrades, t]);
+
+  const loadUserEvents = useCallback(async (userId: number, pageNumber = 1) => {
+    if (!canViewUserEvents) return;
+    setUserEventsLoading(true);
+    setUserEventsError('');
+    try {
+      const payload = await erpApiService.listUserEvents(userId, { page: pageNumber, per_page: 15 });
+      setUserEvents(payload.data ?? []);
+      setUserEventsPage(payload.meta?.current_page ?? payload.current_page ?? pageNumber);
+      setUserEventsLastPage(payload.meta?.last_page ?? payload.last_page ?? 1);
+    } catch (err) {
+      setUserEventsError(err instanceof Error ? err.message : t('users.eventsLoadError'));
+      setUserEvents([]);
+    } finally {
+      setUserEventsLoading(false);
+    }
+  }, [canViewUserEvents, t]);
 
   const fetchUsers = useCallback(async (search: string, limit: number, nextPage: number) => {
     setLoading(true);
@@ -805,8 +859,9 @@ export function UserManagementView({
 
   useEffect(() => {
     void loadLookups();
+    void loadGrades();
     void fetchUsers('', 15, 1);
-  }, [fetchUsers, loadLookups]);
+  }, [fetchUsers, loadGrades, loadLookups]);
 
   useEffect(() => {
     if (!paymentServiceId || paymentForm.id) return;
@@ -823,6 +878,16 @@ export function UserManagementView({
     if (activeFormTab !== 'activity' || !editing) return;
     void loadActivity(editing.id);
   }, [activeFormTab, editing, loadActivity]);
+
+  useEffect(() => {
+    if (activeFormTab !== 'grades' || !editing) return;
+    void loadGradeHistory(editing.id);
+  }, [activeFormTab, editing, loadGradeHistory]);
+
+  useEffect(() => {
+    if (activeFormTab !== 'events' || !editing) return;
+    void loadUserEvents(editing.id, userEventsPage);
+  }, [activeFormTab, editing, loadUserEvents, userEventsPage]);
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -844,6 +909,14 @@ export function UserManagementView({
     setPaymentForm(emptyPaymentForm);
     setServicePayments([]);
     setActivities([]);
+    setGradeHistory([]);
+    setGradeError('');
+    setEditingGrade(null);
+    setGradeForm({ grade_id: '', obtained_at: todayDate(), description: '' });
+    setUserEvents([]);
+    setUserEventsPage(1);
+    setUserEventsLastPage(1);
+    setUserEventsError('');
     setActivityError('');
     setActivityFilters({ type: '', from: '', to: '' });
     setPaymentError('');
@@ -877,6 +950,14 @@ export function UserManagementView({
     setPaymentForm(emptyPaymentForm);
     setServicePayments([]);
     setActivities([]);
+    setGradeHistory([]);
+    setGradeError('');
+    setEditingGrade(null);
+    setGradeForm({ grade_id: '', obtained_at: todayDate(), description: '' });
+    setUserEvents([]);
+    setUserEventsPage(1);
+    setUserEventsLastPage(1);
+    setUserEventsError('');
     setActivityError('');
     setActivityFilters({ type: '', from: '', to: '' });
     setPaymentError('');
@@ -903,6 +984,13 @@ export function UserManagementView({
     setPaymentForm(emptyPaymentForm);
     setServicePayments([]);
     setActivities([]);
+    setGradeHistory([]);
+    setGradeError('');
+    setEditingGrade(null);
+    setUserEvents([]);
+    setUserEventsPage(1);
+    setUserEventsLastPage(1);
+    setUserEventsError('');
     setActivityError('');
     setPaymentError('');
     setPaymentSuccess('');
@@ -1254,6 +1342,44 @@ export function UserManagementView({
     }));
   };
 
+  const saveUserGrade = async () => {
+    if (!editing || !gradeForm.grade_id || !gradeForm.obtained_at) return;
+    setGradeSaving(true);
+    setGradeError('');
+    try {
+      const payload = {
+        grade_id: Number(gradeForm.grade_id),
+        obtained_at: gradeForm.obtained_at,
+        description: gradeForm.description || null,
+      };
+      if (editingGrade) {
+        await erpApiService.update<ApiUserGrade>(`users/${editing.id}/grades`, editingGrade.id, payload);
+      } else {
+        await erpApiService.create<ApiUserGrade>(`users/${editing.id}/grades`, payload);
+      }
+      setEditingGrade(null);
+      setGradeForm({ grade_id: '', obtained_at: todayDate(), description: '' });
+      await loadGradeHistory(editing.id);
+      setSuccess(t('common.saved'));
+    } catch (err) {
+      setGradeError(err instanceof Error ? err.message : t('users.gradesSaveError'));
+    } finally {
+      setGradeSaving(false);
+    }
+  };
+
+  const deleteUserGrade = async (record: ApiUserGrade) => {
+    if (!editing || !window.confirm(t('users.gradesDeleteConfirm'))) return;
+    setGradeError('');
+    try {
+      await erpApiService.remove(`users/${editing.id}/grades`, record.id);
+      await loadGradeHistory(editing.id);
+      setSuccess(t('common.saved'));
+    } catch (err) {
+      setGradeError(err instanceof Error ? err.message : t('users.gradesDeleteError'));
+    }
+  };
+
   const renderCustomField = (field: ApiCustomField) => {
     const key = customFieldValueKey(field);
     const value = form.custom_fields[key] ?? '';
@@ -1430,7 +1556,17 @@ export function UserManagementView({
             </button>
           }
         >
-          <div className="mb-5 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+          <label className="mb-5 block sm:hidden">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">{t('common.section', 'Sectiune')}</span>
+            <select
+              value={activeFormTab}
+              onChange={(event) => setActiveFormTab(event.target.value as UserFormTab)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base font-semibold text-slate-800 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+            >
+              {formTabs.map(([tab, label]) => <option key={tab} value={tab}>{label}</option>)}
+            </select>
+          </label>
+          <div className="mb-5 hidden flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:flex">
             {formTabs.map(([tab, label]) => (
               <button
                 key={tab}
@@ -1542,6 +1678,25 @@ export function UserManagementView({
             renderGroupCheckboxes()
           ) : activeFormTab === 'locations' ? (
             renderLocationCheckboxes()
+          ) : activeFormTab === 'grades' && editing ? (
+            <div className="space-y-5">
+              {gradeError ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{gradeError}</p> : null}
+              {canManageGrades ? (
+                <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
+                  <label className="block"><span className="mb-2 block text-sm font-medium text-slate-700">{t('users.grade')}</span><select value={gradeForm.grade_id} onChange={(event) => setGradeForm((prev) => ({ ...prev, grade_id: event.target.value }))} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"><option value="">{t('users.selectGrade')}</option>{grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.name}</option>)}</select></label>
+                  <Input label={t('users.gradeObtainedAt')} type="date" max={todayDate()} value={gradeForm.obtained_at} onChange={(event) => setGradeForm((prev) => ({ ...prev, obtained_at: event.target.value }))} />
+                  <Textarea label={t('users.gradeDescription')} value={gradeForm.description} onChange={(event) => setGradeForm((prev) => ({ ...prev, description: event.target.value }))} />
+                  <div className="flex items-end gap-2 md:col-span-3"><Button onClick={() => void saveUserGrade()} disabled={gradeSaving || !gradeForm.grade_id || !gradeForm.obtained_at} variant="primary"><Save className="h-4 w-4" />{gradeSaving ? t('common.saving') : editingGrade ? t('common.save') : t('users.addGrade')}</Button>{editingGrade ? <Button onClick={() => { setEditingGrade(null); setGradeForm({ grade_id: '', obtained_at: todayDate(), description: '' }); }}>{t('common.cancel')}</Button> : null}</div>
+                </div>
+              ) : null}
+              <div className="overflow-x-auto rounded-lg border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">{t('users.grade')}</th><th className="px-4 py-3">{t('users.gradeObtainedAt')}</th><th className="px-4 py-3">{t('users.gradeDescription')}</th><th className="px-4 py-3 text-right">{t('common.actions')}</th></tr></thead><tbody>{gradeHistory.map((record) => <tr key={record.id} className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">{record.grade?.name ?? record.grade_id}{record.id === gradeHistory[0]?.id ? <span className="ml-2 rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700">{t('users.activeGrade')}</span> : null}</td><td className="px-4 py-3">{formatDate(record.obtained_at)}</td><td className="px-4 py-3">{record.description || '-'}</td><td className="px-4 py-3 text-right">{canManageGrades ? <div className="flex justify-end gap-2"><button onClick={() => { setEditingGrade(record); setGradeForm({ grade_id: String(record.grade_id), obtained_at: record.obtained_at, description: record.description ?? '' }); }} className="rounded-lg border p-2"><Edit3 className="h-4 w-4" /></button><button onClick={() => void deleteUserGrade(record)} className="rounded-lg border border-red-100 p-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div> : null}</td></tr>)}{gradeHistory.length === 0 ? <tr><td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">{t('users.noGrades')}</td></tr> : null}</tbody></table></div>
+            </div>
+          ) : activeFormTab === 'events' && editing ? (
+            <div className="space-y-4">
+              {userEventsError ? <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{userEventsError}</p> : null}
+              <div className="overflow-x-auto rounded-lg border border-slate-200"><table className="min-w-[900px] w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">{t('users.event')}</th><th className="px-4 py-3">{t('users.eventDate')}</th><th className="px-4 py-3">{t('users.eventStatus')}</th><th className="px-4 py-3">{t('users.participantStatus')}</th><th className="px-4 py-3">{t('users.registeredAt')}</th><th className="px-4 py-3">{t('users.eventNotes')}</th></tr></thead><tbody>{userEvents.map((event) => <tr key={event.id} className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">{event.event?.title ?? `#${event.event_id}`}</td><td className="px-4 py-3">{formatDeviceDateTime(event.start_datetime)} - {formatDeviceDateTime(event.end_datetime)}</td><td className="px-4 py-3"><StatusBadge status={event.status} /></td><td className="px-4 py-3"><StatusBadge status={event.participant_status ?? '-'} /></td><td className="px-4 py-3">{formatDeviceDateTime(event.registered_at)}</td><td className="px-4 py-3">{event.notes || '-'}</td></tr>)}{userEvents.length === 0 ? <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">{userEventsLoading ? t('common.loading') : t('users.noEvents')}</td></tr> : null}</tbody></table></div>
+              <div className="flex items-center justify-end gap-2 text-sm text-slate-600"><button onClick={() => setUserEventsPage((page) => page - 1)} disabled={userEventsLoading || userEventsPage <= 1} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">{t('users.previousPage')}</button><span>{t('users.pageOf', { page: userEventsPage, lastPage: userEventsLastPage })}</span><button onClick={() => setUserEventsPage((page) => page + 1)} disabled={userEventsLoading || userEventsPage >= userEventsLastPage} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">{t('users.nextPage')}</button></div>
+            </div>
           ) : activeFormTab === 'privacy' && editing ? (
             <PrivacyPanel userId={editing.id} administrative canExport={canExportGdpr} canProcess={canProcessGdpr} />
           ) : activeFormTab === 'documents' && editing ? (
@@ -1843,10 +1998,10 @@ export function UserManagementView({
           )}
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <Button onClick={closeForm}>{t('common.cancel')}</Button>
-            {!['services', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
+            {!['services', 'grades', 'events', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser()} disabled={saving} variant="primary">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.save')}
             </Button> : null}
-            {!['services', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
+            {!['services', 'grades', 'events', 'documents', 'privacy', 'activity'].includes(activeFormTab) ? <Button onClick={() => void saveUser(true)} disabled={saving} variant="dark">
               <Save className="h-4 w-4" />{saving ? t('users.saving') : t('common.saveAndClose')}
             </Button> : null}
           </div>

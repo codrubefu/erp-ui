@@ -72,6 +72,77 @@ export type FinancialDocument = {
   xml_filename?: string | null;
 };
 
+export type ServiceExpirationCategory = 'expiring_soon' | 'expired' | 'suspended' | 'not_renewed';
+export type ServiceAssignmentStatus = 'pending' | 'active' | 'expired' | 'suspended' | 'consumed' | 'reserved';
+
+export type ServiceExpirationFilters = {
+  location_id?: number;
+  service_type?: 'membership' | 'access_pass';
+  status?: ServiceAssignmentStatus;
+  expires_in_days_from?: number;
+  expires_in_days_to?: number;
+  category?: ServiceExpirationCategory;
+};
+
+export type ServiceExpirationRow = {
+  assignment_id: number;
+  user_id: number;
+  member_name: string;
+  phone?: string | null;
+  service_id: number;
+  service_name: string;
+  service_type: 'membership' | 'access_pass' | string;
+  status: ServiceAssignmentStatus | string;
+  start_date?: string | null;
+  expires_at?: string | null;
+  days_until_expiration?: number | null;
+  last_notification_at?: string | null;
+  category: ServiceExpirationCategory;
+};
+
+export type ServiceExpirationReport = Record<ServiceExpirationCategory, ServiceExpirationRow[]>;
+
+export type EventParticipationFilters = {
+  from?: string;
+  to?: string;
+  organization_id?: number;
+  category_id?: number;
+  location?: string;
+  time_from?: string;
+  time_to?: string;
+  underutilized_below?: number;
+};
+
+export type EventUtilization = 'capacity_not_set' | 'full' | 'underutilized' | 'normal';
+
+export type EventParticipationGroup = {
+  event: {
+    id: number;
+    title: string;
+  };
+  category: {
+    id: number | null;
+    name?: string | null;
+  };
+  location?: string | null;
+  day: string;
+  time_interval: {
+    from: string;
+    to: string;
+  };
+  sessions: number;
+  capacity: number | null;
+  registrations: number;
+  attendances: number;
+  occupancy_percentage: number | null;
+  utilization: EventUtilization;
+};
+
+export type EventParticipationReport = {
+  underutilized_below: number;
+  groups: EventParticipationGroup[];
+};
+
 function queryFrom(filters: object) {
   const query = new URLSearchParams();
   Object.entries(filters as Record<string, string | number | undefined>).forEach(([key, value]) => {
@@ -114,6 +185,18 @@ async function downloadFinancialDocuments(filters: FinancialReportFilters) {
   return response.blob();
 }
 
+async function downloadServiceExpirations(filters: ServiceExpirationFilters) {
+  const query = queryFrom(filters);
+  const response = await fetch(endpoint(`/reports/service-expirations/export${query ? `?${query}` : ''}`), {
+    headers: apiHeaders(),
+  });
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+  }
+  return response.blob();
+}
+
 export const reportingService = {
   getFinancialReport: (filters: FinancialReportFilters) => {
     const query = queryFrom(filters);
@@ -122,6 +205,14 @@ export const reportingService = {
   getFinancialDocuments: (filters: FinancialReportFilters) => {
     const query = queryFrom(filters);
     return apiClient<FinancialDocument[]>(`/reports/financial-documents${query ? `?${query}` : ''}`);
+  },
+  getServiceExpirations: (filters: ServiceExpirationFilters) => {
+    const query = queryFrom(filters);
+    return apiClient<ServiceExpirationReport>(`/reports/service-expirations${query ? `?${query}` : ''}`);
+  },
+  getEventParticipation: (filters: EventParticipationFilters) => {
+    const query = queryFrom(filters);
+    return apiClient<EventParticipationReport>(`/reports/event-participation${query ? `?${query}` : ''}`);
   },
   createExport: (filters: FinancialReportFilters, format: ReportExportFormat) => {
     return apiClient<ReportExport>('/reports/financial/exports', {
@@ -133,4 +224,5 @@ export const reportingService = {
   downloadExport,
   downloadFinancialDocument,
   downloadFinancialDocuments,
+  downloadServiceExpirations,
 };

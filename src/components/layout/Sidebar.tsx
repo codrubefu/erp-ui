@@ -1,10 +1,14 @@
 import {
   BadgeEuro,
+  Award,
   Bell,
   Building2,
   ChevronRight,
   CreditCard,
   CalendarDays,
+  CalendarClock,
+  Tags,
+  ScanLine,
   Megaphone,
   FileBarChart2,
   FolderTree,
@@ -14,8 +18,9 @@ import {
   SlidersHorizontal,
   UserCheck,
   Users,
+  X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +30,7 @@ type SidebarProps = {
   current: SectionId;
   setCurrent: (id: SectionId) => void;
   open: boolean;
+  onClose: () => void;
 };
 
 type NavItem = {
@@ -32,6 +38,7 @@ type NavItem = {
   labelKey: string;
   icon: LucideIcon;
   rights?: string[];
+  children?: readonly NavItem[];
 };
 
 type NavGroup = {
@@ -56,14 +63,25 @@ const navGroups: readonly NavGroup[] = [
       { id: 'admins', labelKey: 'menu.admins', icon: UserCheck, rights: ['users.view', 'users.manage'] },
       { id: 'access', labelKey: 'menu.access', icon: ShieldCheck, rights: ['groups.view', 'groups.manage'] },
       { id: 'custom-fields', labelKey: 'menu.customFields', icon: SlidersHorizontal ,rights: ['custom-fields.view', 'custom-fields.manage'] },
+      { id: 'grades', labelKey: 'menu.grades', icon: Award, rights: ['grades.view', 'grades.manage'] },
     ],
   },
   {
     id: 'management',
     items: [
+      { id: 'check-in', labelKey: 'menu.checkIn', icon: ScanLine, rights: ['event_participants.manage', 'checkins.manage'] },
       { id: 'members', labelKey: 'menu.users', icon: Users, rights: ['users.view', 'users.manage'] },
       { id: 'services', labelKey: 'menu.services', icon: BadgeEuro, rights: ['services.view', 'services.manage'] },
-      { id: 'events', labelKey: 'menu.events', icon: CalendarDays, rights: ['events.view', 'events.manage'] },
+      {
+        id: 'events',
+        labelKey: 'menu.events',
+        icon: CalendarDays,
+        rights: ['events.view', 'events.manage'],
+        children: [
+          { id: 'events/calendar', labelKey: 'menu.eventsCalendar', icon: CalendarClock, rights: ['events.view', 'events.manage'] },
+          { id: 'events/categories', labelKey: 'menu.eventCategories', icon: Tags, rights: ['events.manage'] },
+        ],
+      },
       { id: 'articles', labelKey: 'menu.articles', icon: Bell, rights: ['articles.view', 'articles.manage'] },
       { id: 'campaigns', labelKey: 'menu.campaigns', icon: Megaphone, rights: ['campaigns.view', 'campaigns.manage', 'reports.manage', 'users.manage'] },
       { id: 'sms', labelKey: 'menu.sms', icon: MessageSquare, rights: ['sms.view', 'sms.manage'] },
@@ -77,13 +95,69 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
-export function Sidebar({ current, setCurrent, open }: SidebarProps) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: false });
+export function Sidebar({ current, setCurrent, open, onClose }: SidebarProps) {
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: false, events: true });
   const { hasAnyRight } = useAuth();
   const { t } = useTranslation();
 
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    document.body.classList.add('mobile-navigation-open');
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.body.classList.remove('mobile-navigation-open');
+    };
+  }, [open, onClose]);
+
+  const renderItems = (items: readonly NavItem[], level = 0) => items.map((item) => {
+    const visibleChildren = item.children?.filter((child) => !child.rights || hasAnyRight(child.rights)) ?? [];
+    const hasChildren = visibleChildren.length > 0;
+    const isOpen = openGroups[item.id] ?? true;
+    const Icon = item.icon;
+    const active = current === item.id;
+
+    return (
+      <div key={item.id} className={cn('space-y-1', level > 0 && 'ml-3 border-l border-slate-200 pl-2')}>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              setCurrent(item.id);
+              onClose();
+            }}
+            className={cn(
+              'flex min-w-0 flex-1 items-center justify-between rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors duration-150',
+              active ? 'border border-indigo-100 bg-indigo-50 text-indigo-700 shadow-sm' : 'border border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+            )}
+          >
+            <span className="flex min-w-0 items-center gap-2.5 font-medium">
+              <span className={cn('rounded-md p-1.5 transition', active ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20' : 'bg-slate-100 text-slate-500')}>
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="truncate">{t(item.labelKey)}</span>
+            </span>
+            {!hasChildren ? <ChevronRight className="h-4 w-4 opacity-60" /> : null}
+          </button>
+          {hasChildren ? (
+            <button
+              aria-label={t(item.labelKey)}
+              onClick={() => setOpenGroups((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
+            </button>
+          ) : null}
+        </div>
+        {hasChildren && isOpen ? <div className="space-y-1">{renderItems(visibleChildren, level + 1)}</div> : null}
+      </div>
+    );
+  });
+
   return (
-    <aside className={cn('fixed inset-y-0 left-0 z-30 w-[17rem] border-r border-slate-200 bg-white px-3 py-4 shadow-[1px_0_0_rgba(15,23,42,0.02)] transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
+    <aside id="primary-navigation" aria-label={t('common.navigation', 'Navigare principala')} className={cn('fixed inset-y-0 left-0 z-30 w-[min(88vw,20rem)] border-r border-slate-200 bg-white px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] shadow-[1px_0_0_rgba(15,23,42,0.02)] transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:h-screen lg:w-[17rem] lg:translate-x-0', open ? 'translate-x-0 shadow-2xl shadow-slate-900/10' : '-translate-x-full')}>
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-3 border-b border-slate-100 px-2 pb-4 pt-1">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-sm shadow-indigo-600/20">
@@ -93,6 +167,9 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
             <p className="truncate text-sm font-bold text-slate-950">Optimizer ERP</p>
             <p className="truncate text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-slate-400">Admin panel</p>
           </div>
+          <button type="button" onClick={onClose} className="ml-auto inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden" aria-label={t('common.close', 'Inchide')}>
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
@@ -123,28 +200,7 @@ export function Sidebar({ current, setCurrent, open }: SidebarProps) {
 
                 {(!isGrouped || isOpen) && (
                   <div className={cn('space-y-1', isGrouped && 'ml-3 border-l border-slate-200 pl-2')}>
-                    {visibleItems.map((item) => {
-                      const Icon = item.icon;
-                      const active = current === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => setCurrent(item.id as SectionId)}
-                          className={cn(
-                            'flex w-full items-center justify-between rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors duration-150',
-                            active ? 'border border-indigo-100 bg-indigo-50 text-indigo-700 shadow-sm' : 'border border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-                          )}
-                        >
-                          <span className="flex min-w-0 items-center gap-2.5 font-medium">
-                            <span className={cn('rounded-md p-1.5 transition', active ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20' : 'bg-slate-100 text-slate-500')}>
-                              <Icon className="h-4 w-4" />
-                            </span>
-                            <span className="truncate">{t(item.labelKey)}</span>
-                          </span>
-                          <ChevronRight className="h-4 w-4 opacity-60" />
-                        </button>
-                      );
-                    })}
+                    {renderItems(visibleItems)}
                   </div>
                 )}
               </div>

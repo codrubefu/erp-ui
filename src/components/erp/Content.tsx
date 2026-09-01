@@ -6,7 +6,9 @@ import { AnnouncementFormPage } from './announcements/AnnouncementFormPage';
 import { AnnouncementsView } from './announcements/AnnouncementsView';
 import { ArticlesModuleRoutes } from './articles/ArticlesModule';
 import { BranchesView } from './branches/BranchesView';
+import { CheckInView } from './check-in/CheckInView';
 import { CustomFieldsView } from './custom-fields/CustomFieldsView';
+import { GradesView } from './grades/GradesView';
 import { DashboardView } from './dashboard/DashboardView';
 import { EventsModuleRoutes } from './events/EventsModule';
 import { LocationGroupsView } from './location-groups/LocationGroupsView';
@@ -61,9 +63,15 @@ export default function Content({ current, page, membersData, servicesData, anno
         return <GroupsRightsView />;
       case 'custom-fields':
         return <CustomFieldsView />;
+      case 'grades':
+        return <GradesView />;
+      case 'check-in':
+        return <CheckInView />;
       case 'services':
         return <ServicesView />;
       case 'events':
+      case 'events/calendar':
+      case 'events/categories':
         return <EventsModuleRoutes />;
       case 'articles':
         return <ArticlesModuleRoutes />;
