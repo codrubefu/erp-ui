@@ -8,8 +8,10 @@ export type ApiUser = {
   phone: string | null;
   notification_consents?: ApiNotificationConsents;
   active: boolean;
-  email: string;
+  email: string | null;
   email_verified_at?: string | null;
+  parent_user_id?: number | null;
+  parent?: ApiUser | null;
   groups?: ApiGroup[];
   locations?: ApiLocation[];
   services?: ApiUserService[];

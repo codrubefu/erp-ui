@@ -20,6 +20,7 @@ type UserForm = {
   last_name: string;
   email: string;
   phone: string;
+  parent_user_id: string;
   active: boolean;
   notification_consents: {
     sms: boolean;
@@ -63,6 +64,7 @@ const emptyForm: UserForm = {
   last_name: '',
   email: '',
   phone: '',
+  parent_user_id: '',
   active: true,
   notification_consents: { sms: false, mail: false },
   group_ids: '',
@@ -143,7 +145,7 @@ function toggleIds(value: string, idsToToggle: number[], checked: boolean) {
 }
 
 function userName(user: ApiUser) {
-  return `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim() || user.email;
+  return `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim() || user.email || `#${user.id}`;
 }
 
 function todayDate() {
@@ -418,8 +420,9 @@ function buildPayload(form: UserForm) {
     user_code: form.user_code.trim() || null,
     first_name: form.first_name,
     last_name: form.last_name,
-    email: form.email,
+    email: form.email || null,
     phone: form.phone || null,
+    parent_user_id: form.parent_user_id ? Number(form.parent_user_id) : null,
     notification_consents: form.notification_consents,
     active: form.active,
     group_ids: toIdList(form.group_ids),
@@ -472,6 +475,7 @@ function formFromUser(user: ApiUser): UserForm {
     last_name: user.last_name ?? '',
     email: user.email ?? '',
     phone: user.phone ?? '',
+    parent_user_id: user.parent_user_id ? String(user.parent_user_id) : '',
     active: Boolean(user.active),
     notification_consents: {
       sms: Boolean(user.notification_consents?.sms),
@@ -595,6 +599,11 @@ export function UserManagementView({
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityError, setActivityError] = useState('');
   const [activityFilters, setActivityFilters] = useState({ type: '', from: '', to: '' });
+  const [selectedParent, setSelectedParent] = useState<ApiUser | null>(null);
+  const [parentSearchTerm, setParentSearchTerm] = useState('');
+  const [parentSearchResults, setParentSearchResults] = useState<ApiUser[]>([]);
+  const [parentSearchLoading, setParentSearchLoading] = useState(false);
+  const [parentSearchError, setParentSearchError] = useState('');
 
   const resolvedTitle = title ?? t('members.title');
   const resolvedAddLabel = addLabel ?? t('members.add');
@@ -798,6 +807,50 @@ export function UserManagementView({
 
   const loadUsers = useCallback((nextPage = page) => fetchUsers(searchTerm, perPage, nextPage), [fetchUsers, searchTerm, perPage, page]);
 
+  useEffect(() => {
+    const term = parentSearchTerm.trim();
+    if (!term) {
+      setParentSearchResults([]);
+      setParentSearchError('');
+      setParentSearchLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setParentSearchLoading(true);
+    setParentSearchError('');
+    const timer = setTimeout(() => {
+      erpApiService.listPaginated<ApiUser>(resource, { search: term, per_page: 50 })
+        .then((payload) => {
+          if (cancelled) return;
+          setParentSearchResults(payload.data.filter((candidate) => candidate.id !== editing?.id));
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setParentSearchError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedCountLabel }));
+          setParentSearchResults([]);
+        })
+        .finally(() => {
+          if (!cancelled) setParentSearchLoading(false);
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [parentSearchTerm, resource, editing?.id, resolvedCountLabel, t]);
+
+  const selectParentUser = (candidate: ApiUser) => {
+    setForm((prev) => ({ ...prev, parent_user_id: String(candidate.id) }));
+    setSelectedParent(candidate);
+    setParentSearchTerm('');
+    setParentSearchResults([]);
+  };
+
+  const clearParentUser = () => {
+    setForm((prev) => ({ ...prev, parent_user_id: '' }));
+    setSelectedParent(null);
+  };
+
   const loadActivity = useCallback(async (userId = editing?.id) => {
     if (!userId) {
       setActivities([]);
@@ -926,6 +979,9 @@ export function UserManagementView({
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
     setInvoiceDownloadKey(null);
+    setSelectedParent(null);
+    setParentSearchTerm('');
+    setParentSearchResults([]);
     setFormOpen(true);
   };
 
@@ -942,6 +998,14 @@ export function UserManagementView({
     const customFieldValues = await loadUserCustomFieldValues(selectedUser);
     setEditing(selectedUser);
     setForm({ ...formFromUser(selectedUser), custom_fields: customFieldValues });
+    setParentSearchTerm('');
+    setParentSearchResults([]);
+    setSelectedParent(null);
+    if (selectedUser.parent_user_id) {
+      erpApiService.get<ApiUser>(resource, selectedUser.parent_user_id)
+        .then((parentUser) => setSelectedParent(parentUser))
+        .catch(() => setSelectedParent(null));
+    }
     setSuccess('');
     setActiveFormTab('details');
     setServiceToAdd('');
@@ -999,6 +1063,9 @@ export function UserManagementView({
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
     setInvoiceDownloadKey(null);
+    setSelectedParent(null);
+    setParentSearchTerm('');
+    setParentSearchResults([]);
   };
 
   useEffect(() => {
@@ -1584,6 +1651,69 @@ export function UserManagementView({
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
               <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
+              <div className="md:col-span-2">
+                <span className="mb-2 block text-sm font-medium text-slate-700">{t('users.parentUser', 'Tutore')}</span>
+                {selectedParent ? (
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5">
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-900">
+                      {[selectedParent.first_name, selectedParent.last_name].filter(Boolean).join(' ')}
+                      {selectedParent.email ? <span className="ml-2 font-normal text-slate-500">{selectedParent.email}</span> : null}
+                      {selectedParent.phone ? <span className="ml-2 font-normal text-slate-500">{selectedParent.phone}</span> : null}
+                    </span>
+                    <button type="button" onClick={clearParentUser} className="shrink-0 text-sm font-medium text-red-600 hover:text-red-700">
+                      {t('users.removeParentUser', 'Elimina')}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      value={parentSearchTerm}
+                      onChange={(event) => setParentSearchTerm(event.target.value)}
+                      placeholder={t('users.parentUserSearchPlaceholder', 'Cauta dupa nume, email sau telefon')}
+                      className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                    />
+                    {parentSearchError ? <p className="mt-2 text-sm font-medium text-red-600">{parentSearchError}</p> : null}
+                    {parentSearchTerm.trim() ? (
+                      <div className="mt-2 overflow-hidden rounded-lg border border-slate-200">
+                        <div className="max-h-64 overflow-y-auto">
+                          <table className="min-w-full text-left text-sm">
+                            <thead className="sticky top-0 bg-slate-50 text-slate-500">
+                              <tr>
+                                <th className="px-3 py-2">{t('users.firstName')}</th>
+                                <th className="px-3 py-2">{t('users.lastName')}</th>
+                                <th className="px-3 py-2">{t('members.email')}</th>
+                                <th className="px-3 py-2">{t('members.phone')}</th>
+                                <th className="px-3 py-2" />
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {parentSearchResults.map((candidate) => (
+                                <tr key={candidate.id} className="border-t border-slate-100 hover:bg-slate-50">
+                                  <td className="px-3 py-2">{candidate.first_name}</td>
+                                  <td className="px-3 py-2">{candidate.last_name}</td>
+                                  <td className="px-3 py-2 text-slate-500">{candidate.email || '-'}</td>
+                                  <td className="px-3 py-2 text-slate-500">{candidate.phone || '-'}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    <button type="button" onClick={() => selectParentUser(candidate)} className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+                                      {t('users.selectParentUser', 'Selecteaza')}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                              {!parentSearchLoading && parentSearchResults.length === 0 ? (
+                                <tr><td colSpan={5} className="px-3 py-4 text-center text-sm text-slate-500">{t('users.noParentUserResults', 'Niciun rezultat')}</td></tr>
+                              ) : null}
+                              {parentSearchLoading ? (
+                                <tr><td colSpan={5} className="px-3 py-4 text-center text-sm text-slate-500">{t('common.loading')}</td></tr>
+                              ) : null}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </div>
               <label className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-indigo-600" />
                 {t('users.activeUser')}
@@ -2089,6 +2219,9 @@ export function UserManagementView({
                 <tr key={user.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
                   <td className="px-5 py-3">
                     <p className="font-semibold text-slate-900">{userName(user)}</p>
+                    {user.parent ? (
+                      <p className="mt-1 text-xs text-slate-500">{t('users.parentUser')}: {userName(user.parent)}</p>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     <p>{user.email}</p>

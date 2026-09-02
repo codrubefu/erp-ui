@@ -18,7 +18,8 @@
     "campaigns": "Campaigns",
     "sms": "SMS and notifications",
     "payments": "Payments and billing",
-    "reports": "Reports"
+    "reports": "Reports",
+    "smtpSettings": "SMTP settings"
   },
   "common": {
     "actions": "Actions",
@@ -58,11 +59,16 @@
     "language": "Language",
     "section": "Section",
     "mobileTableHint": "Swipe horizontally to see all columns.",
+    "swipeHint": "Swipe to see every day of the week.",
     "scrollableTable": "Horizontally scrollable table",
-    "localFormData": "Data entered here is saved locally and remains available."
+    "localFormData": "Data entered here is saved locally and remains available.",
+    "next": "Next",
+    "previous": "Previous",
+    "today": "Today"
   },
   "header": {
-    "searchPlaceholder": "Search members, invoices, announcements..."
+    "searchPlaceholder": "Search members, invoices, announcements...",
+    "search": "Search"
   },
   "quick": {
     "title": "Quick actions",
@@ -106,7 +112,8 @@
     "password": "Password",
     "passwordPlaceholder": "password",
     "loading": "Signing in...",
-    "submit": "Enter application"
+    "submit": "Enter application",
+    "forgotPassword": "Forgot your password?"
   },
   "auth": {
     "loadUserError": "Could not load the authenticated user."
@@ -143,10 +150,15 @@
     "Event retrieved successfully.": "Event retrieved successfully.",
     "Event updated successfully.": "Event updated successfully.",
     "Event deleted successfully.": "Event deleted successfully.",
-    "Event occurrence retrieved successfully.": "Event occurrence retrieved successfully."
+    "Event occurrence retrieved successfully.": "Event occurrence retrieved successfully.",
+    "Dacă adresa de email este asociată unui cont, vei primi un link de resetare a parolei.": "If that email is linked to an account, you will receive a password reset link shortly.",
+    "Linkul de resetare este invalid sau a expirat.": "The reset link is invalid or has expired.",
+    "Parola a fost setată cu succes.": "Your password has been set successfully.",
+    "Setările SMTP există deja pentru această organizație. Folosește PUT/PATCH pentru actualizare.": "SMTP settings already exist for this organization. Use PUT/PATCH to update them."
   },
   "profile": {
     "unknownUser": "User",
+    "codeTitle": "User code",
     "menu": "Profile",
     "info": "Info",
     "security": "Security",
@@ -287,7 +299,22 @@
       "Plătit": "Paid",
       "În așteptare": "Pending",
       "Eșuat": "Failed"
-    }
+    },
+    "admin": "Operator",
+    "empty": "No payments found.",
+    "lifecycle": "Lifecycle",
+    "linkedModel": "Linked to",
+    "loadError": "Could not load the payments.",
+    "loadingList": "Loading payments...",
+    "missingRight": "You do not have the payments.view permission.",
+    "noDirectRoute": "No direct route for this model",
+    "openServiceMembers": "Open members for service #{{id}}",
+    "paidAt": "Paid at",
+    "paymentType": "Payment type",
+    "provider": "Provider",
+    "receiptDownloadError": "Could not download the receipt.",
+    "showingCount": "Showing {{count}} of {{total}} payments.",
+    "viewService": "View service"
   },
   "sms": {
     "title": "SMS and notifications",
@@ -394,7 +421,30 @@
       "friday": "Friday",
       "saturday": "Saturday",
       "sunday": "Sunday"
-    }
+    },
+    "attendancePdfDownloadError": "Could not download the attendance PDF.",
+    "backToEvents": "Back to events",
+    "calendar": "Calendar",
+    "calendarTitle": "Events calendar",
+    "categoryDeleteError": "Could not delete the category.",
+    "categoryDeleted": "Category deleted.",
+    "categorySaveError": "Could not save the category.",
+    "categorySaved": "Category saved.",
+    "downloadAttendancePdf": "Download PDF",
+    "endDatetime": "End",
+    "eventCategories": "Event categories",
+    "eventDetailsTitle": "Event details",
+    "list": "List",
+    "noCategories": "No categories found.",
+    "noOccurrences": "No occurrences found.",
+    "notFound": "This event does not exist.",
+    "occurrenceCancelled": "Occurrence cancelled.",
+    "occurrenceDate": "Occurrence date",
+    "participants": "Participants",
+    "places": "Places",
+    "startDatetime": "Start",
+    "unlimited": "Unlimited",
+    "viewOccurrences": "View occurrences"
   },
   "reports": {
     "members": "Members report",
@@ -454,7 +504,15 @@
       "serviceType": "Service type",
       "location": "Location",
       "admin": "Operator",
-      "segment": "Segment"
+      "segment": "Segment",
+      "assignmentStatus": "Service status",
+      "daysFrom": "Days from",
+      "daysTo": "Days to",
+      "eventLocation": "Event location",
+      "expirationCategory": "Expiration category",
+      "timeFrom": "Time from",
+      "timeTo": "Time to",
+      "underutilizedBelow": "Underutilized below %"
     },
     "groupBy": {
       "day": "Day",
@@ -480,6 +538,40 @@
       "expiresInDays": "Expires in days",
       "location": "Location",
       "serviceType": "Service type"
+    },
+    "daysUntilExpiration": "Days until expiration",
+    "eventParticipationKpis": {
+      "attendances": "Attendances",
+      "averageOccupancy": "Average occupancy",
+      "capacity": "Capacity",
+      "registrations": "Registrations",
+      "sessions": "Sessions"
+    },
+    "eventParticipationLoadError": "Could not load the event participation report.",
+    "eventParticipationTab": "Event participation",
+    "eventParticipationTitle": "Event participation",
+    "lastNotification": "Last notification",
+    "noCategory": "No category",
+    "noEventParticipation": "No event participation for the current filters.",
+    "noServiceExpirations": "No services in the report for the current filters.",
+    "occupancy": "Occupancy",
+    "serviceExpirationCategories": {
+      "expired": "Expired",
+      "expiring_soon": "Expiring soon",
+      "not_renewed": "Not renewed",
+      "suspended": "Suspended"
+    },
+    "serviceExpirationsExportError": "Could not download the service expirations export.",
+    "serviceExpirationsLoadError": "Could not load the service expirations report.",
+    "serviceExpirationsTab": "Service expirations",
+    "serviceExpirationsTitle": "Service expirations",
+    "timeInterval": "Time interval",
+    "utilization": "Utilization",
+    "utilizationStatuses": {
+      "capacity_not_set": "Capacity not set",
+      "full": "Full",
+      "normal": "Normal",
+      "underutilized": "Underutilized"
     }
   },
   "members": {
@@ -587,7 +679,6 @@
     "noMembers": "No members are attached to this service.",
     "searchPlaceholder": "Search by name or description",
     "showingCount": "Showing {{count}} services from API",
-    "duration": "Duration",
     "days": "{{count}} days",
     "noAutoExpiry": "No automatic expiry",
     "missingViewRight": "You do not have permission to view services.",
@@ -772,6 +863,11 @@
     "hideCode": "Hide code",
     "firstName": "First name",
     "lastName": "Last name",
+    "parentUser": "Guardian",
+    "parentUserSearchPlaceholder": "Search by name, email or phone",
+    "selectParentUser": "Select",
+    "removeParentUser": "Remove",
+    "noParentUserResults": "No results",
     "password": "Password",
     "newPassword": "New password",
     "changePasswordHint": "Fill this in only if you want to change it",
@@ -955,5 +1051,48 @@
     "deleteConfirm": "Are you sure you want to delete this announcement?",
     "loadingList": "Loading announcements...",
     "loadingOne": "Loading announcement..."
+  },
+  "passwordReset": {
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter the email address on your account and we will send you a link to set a new password.",
+    "email": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "Send reset link",
+    "sending": "Sending...",
+    "backToLogin": "Back to login",
+    "genericSent": "If that email is linked to an account, you will receive a password reset link shortly.",
+    "setTitle": "Set your password",
+    "setSubtitle": "Choose a password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "mismatch": "Passwords do not match.",
+    "setPassword": "Set password",
+    "settingPassword": "Saving...",
+    "success": "Your password has been set. You can now sign in.",
+    "missingLink": "This link is invalid because it is missing the reset token or email address.",
+    "goToLogin": "Go to login"
+  },
+  "smtpSettings": {
+    "title": "SMTP settings",
+    "subtitle": "Configure the outgoing mail server used to send emails on behalf of this organization.",
+    "host": "SMTP host",
+    "port": "Port",
+    "username": "Username",
+    "password": "Password",
+    "passwordHint": "Leave blank to keep the current password.",
+    "currentlySet": "A password is currently set.",
+    "encryption": "Encryption",
+    "encryptionNone": "None",
+    "fromAddress": "From address",
+    "fromName": "From name",
+    "active": "Active",
+    "save": "Save settings",
+    "deleteConfirm": "Delete the SMTP settings for this organization?",
+    "deleted": "SMTP settings deleted.",
+    "notConfigured": "SMTP settings have not been configured yet for this organization.",
+    "loadError": "Could not load SMTP settings.",
+    "saveError": "Could not save SMTP settings.",
+    "deleteError": "Could not delete SMTP settings.",
+    "viewOnlyNotice": "You only have permission to view these settings."
   }
 }

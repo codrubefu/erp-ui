@@ -35,13 +35,15 @@ function documentFilename(document: ApiUserDocument) {
 }
 
 type UserDocumentsPanelProps = {
-  userId: number;
-  locations: ApiLocation[];
+  userId?: number;
+  locations?: ApiLocation[];
   canUpload: boolean;
   canDelete: boolean;
+  fetchDocuments?: () => Promise<ApiUserDocument[]>;
+  downloadDocumentOverride?: (documentId: number) => Promise<Blob>;
 };
 
-export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: UserDocumentsPanelProps) {
+export function UserDocumentsPanel({ userId, locations = [], canUpload, canDelete, fetchDocuments, downloadDocumentOverride }: UserDocumentsPanelProps) {
   const { t } = useTranslation();
   const [documents, setDocuments] = useState<ApiUserDocument[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,15 +59,19 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
     setLoading(true);
     setError('');
     try {
-      const payload = await erpApiService.listUserDocuments(userId, 1, 100);
-      setDocuments(payload.data);
+      if (fetchDocuments) {
+        setDocuments(await fetchDocuments());
+      } else if (userId) {
+        const payload = await erpApiService.listUserDocuments(userId, 1, 100);
+        setDocuments(payload.data);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('userDocuments.loadError'));
       setDocuments([]);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [fetchDocuments, userId, t]);
 
   useEffect(() => {
     void loadDocuments();
@@ -81,6 +87,7 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
   };
 
   const saveDocument = async () => {
+    if (!userId) return;
     if (!form.file) {
       setError(t('userDocuments.fileRequired'));
       return;
@@ -121,7 +128,8 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
   const downloadDocument = async (document: ApiUserDocument) => {
     setError('');
     try {
-      const blob = await erpApiService.downloadUserDocument(userId, document.id);
+      const blob = downloadDocumentOverride ? await downloadDocumentOverride(document.id) : userId ? await erpApiService.downloadUserDocument(userId, document.id) : null;
+      if (!blob) return;
       const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement('a');
       link.href = url;
@@ -136,6 +144,7 @@ export function UserDocumentsPanel({ userId, locations, canUpload, canDelete }: 
   };
 
   const deleteDocument = async (document: ApiUserDocument) => {
+    if (!userId) return;
     if (!window.confirm(t('userDocuments.deleteConfirm', { title: document.title }))) return;
     setError('');
     try {

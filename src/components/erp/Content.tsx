@@ -14,16 +14,18 @@ import { EventsModuleRoutes } from './events/EventsModule';
 import { LocationGroupsView } from './location-groups/LocationGroupsView';
 import { PaymentFormPage } from './payments/PaymentFormPage';
 import { PaymentsView } from './payments/PaymentsView';
-import { ProfileAnnouncementsPage, ProfileEventsPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileServicesPage } from './profile/ProfilePages';
+import { ProfileDocumentsPage } from './profile/ProfileDocumentsPage';
+import { ProfileAnnouncementsPage, ProfileCodePage, ProfileEventsPage, ProfileGradesPage, ProfileInfoPage, ProfilePrivacyPage, ProfileSecurityPage, ProfileServicesPage } from './profile/ProfilePages';
 import { ReportsView } from './reports/ReportsView';
 import { CampaignsView } from './campaigns/CampaignsView';
 import { QuickCreateMenu } from './shared/QuickCreateMenu';
 import type { ContentProps } from './shared/types';
+import { SmtpSettingsView } from './settings/SmtpSettingsView';
 import { SmsView } from './sms/SmsView';
 import { ServicesView } from './services/ServicesView';
 import { UsersView } from './users/UsersView';
 
-export default function Content({ current, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess }: ContentProps) {
+export default function Content({ current, profileChildId, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, setAnnouncementForm, paymentForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess }: ContentProps) {
   const view = useMemo(() => {
     if (page.section === 'memberForm') {
       return <UsersView />;
@@ -40,17 +42,23 @@ export default function Content({ current, page, membersData, servicesData, anno
 
     switch (current) {
       case 'profile-info':
-        return <ProfileInfoPage />;
+        return <ProfileInfoPage childId={profileChildId ?? undefined} />;
       case 'profile-security':
         return <ProfileSecurityPage />;
       case 'profile-privacy':
-        return <ProfilePrivacyPage />;
+        return <ProfilePrivacyPage childId={profileChildId ?? undefined} />;
       case 'profile-announcements':
-        return <ProfileAnnouncementsPage />;
+        return <ProfileAnnouncementsPage childId={profileChildId ?? undefined} />;
       case 'profile-events':
-        return <ProfileEventsPage />;
+        return <ProfileEventsPage childId={profileChildId ?? undefined} />;
       case 'profile-services':
-        return <ProfileServicesPage />;
+        return <ProfileServicesPage childId={profileChildId ?? undefined} />;
+      case 'profile-code':
+        return <ProfileCodePage childId={profileChildId ?? undefined} />;
+      case 'profile-grades':
+        return <ProfileGradesPage childId={profileChildId ?? undefined} />;
+      case 'profile-documents':
+        return <ProfileDocumentsPage childId={profileChildId ?? undefined} />;
       case 'members':
         return <UsersView />;
       case 'branches':
@@ -65,6 +73,8 @@ export default function Content({ current, page, membersData, servicesData, anno
         return <CustomFieldsView />;
       case 'grades':
         return <GradesView />;
+      case 'smtp-settings':
+        return <SmtpSettingsView />;
       case 'check-in':
         return <CheckInView />;
       case 'services':
@@ -93,7 +103,7 @@ export default function Content({ current, page, membersData, servicesData, anno
           </div>
         );
     }
-  }, [current, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess]);
+  }, [current, profileChildId, page, membersData, servicesData, announcementsData, paymentsData, activityData, navigateToForm, announcementForm, paymentForm, setAnnouncementForm, setPaymentForm, goBackToList, saveAnnouncement, saveAnnouncementAndClose, savePayment, savePaymentAndClose, formSuccess]);
 
   return <main className="mx-auto w-full max-w-[1540px] space-y-5 p-4 sm:p-5 lg:p-6 xl:p-7">{view}</main>;
 }

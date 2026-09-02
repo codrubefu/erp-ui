@@ -40,6 +40,10 @@ function subjectPath(userId?: number) {
   return userId ? `/users/${userId}/privacy` : '/me/privacy';
 }
 
+function selfDataPath(childId?: number) {
+  return childId ? `/me/privacy/data?child_id=${childId}` : '/me/privacy/data';
+}
+
 export async function downloadFromUrl(url: string) {
   const response = await fetch(url, { headers: apiHeaders() });
   if (!response.ok) {
@@ -50,7 +54,7 @@ export async function downloadFromUrl(url: string) {
 }
 
 export const gdprService = {
-  access: (userId?: number) => apiClient<GdprDataAccess>(`${subjectPath(userId)}/data`),
+  access: (userId?: number, childId?: number) => apiClient<GdprDataAccess>(userId ? `${subjectPath(userId)}/data` : selfDataPath(childId)),
   createExport: (userId?: number) => apiClient<GdprExport>(`${subjectPath(userId)}/exports`, { method: 'POST' }),
   exportStatus: (exportId: string) => apiClient<GdprExport>(`/privacy/exports/${exportId}`),
   async downloadExport(exportId: string) {

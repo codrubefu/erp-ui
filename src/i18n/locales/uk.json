@@ -17,7 +17,9 @@
     "articles": "Оголошення",
     "sms": "SMS та сповіщення",
     "payments": "Платежі та рахунки",
-    "reports": "Звіти"
+    "reports": "Звіти",
+    "campaigns": "Кампанії",
+    "smtpSettings": "Налаштування SMTP"
   },
   "common": {
     "actions": "Дії",
@@ -57,11 +59,16 @@
     "language": "Мова",
     "section": "Розділ",
     "mobileTableHint": "Проведіть горизонтально, щоб переглянути всі стовпці.",
+    "swipeHint": "Проведіть, щоб переглянути всі дні тижня.",
     "scrollableTable": "Таблиця з горизонтальним прокручуванням",
-    "localFormData": "Дані, введені тут, зберігаються локально і залишаються доступними."
+    "localFormData": "Дані, введені тут, зберігаються локально і залишаються доступними.",
+    "next": "Далі",
+    "previous": "Назад",
+    "today": "Сьогодні"
   },
   "header": {
-    "searchPlaceholder": "Пошук учасників, рахунків, оголошень..."
+    "searchPlaceholder": "Пошук учасників, рахунків, оголошень...",
+    "search": "Пошук"
   },
   "quick": {
     "title": "Швидкі дії",
@@ -105,7 +112,8 @@
     "password": "Пароль",
     "passwordPlaceholder": "password",
     "loading": "Вхід...",
-    "submit": "Увійти в застосунок"
+    "submit": "Увійти в застосунок",
+    "forgotPassword": "Забули пароль?"
   },
   "auth": {
     "loadUserError": "Не вдалося завантажити автентифікованого користувача."
@@ -142,10 +150,15 @@
     "Event retrieved successfully.": "Подію завантажено.",
     "Event updated successfully.": "Подію оновлено.",
     "Event deleted successfully.": "Подію видалено.",
-    "Event occurrence retrieved successfully.": "Появу події завантажено."
+    "Event occurrence retrieved successfully.": "Появу події завантажено.",
+    "Dacă adresa de email este asociată unui cont, vei primi un link de resetare a parolei.": "Якщо ця адреса електронної пошти пов'язана з обліковим записом, ви незабаром отримаєте посилання для скидання пароля.",
+    "Linkul de resetare este invalid sau a expirat.": "Посилання для скидання пароля недійсне або застаріло.",
+    "Parola a fost setată cu succes.": "Пароль успішно встановлено.",
+    "Setările SMTP există deja pentru această organizație. Folosește PUT/PATCH pentru actualizare.": "Налаштування SMTP для цієї організації вже існують. Використовуйте PUT/PATCH для оновлення."
   },
   "profile": {
     "unknownUser": "Користувач",
+    "codeTitle": "Код користувача",
     "menu": "Профіль",
     "info": "Інфо",
     "security": "Безпека",
@@ -178,7 +191,16 @@
     "passwordMinLength": "Новий пароль має містити щонайменше 8 символів.",
     "passwordMismatch": "Підтвердження пароля не збігається.",
     "passwordUpdated": "Пароль оновлено.",
-    "passwordUpdateError": "Не вдалося оновити пароль."
+    "passwordUpdateError": "Не вдалося оновити пароль.",
+    "announcementRead": "Прочитано",
+    "announcementUnread": "Непрочитано",
+    "announcementViewError": "Не вдалося позначити оголошення як прочитане.",
+    "announcements": "Оголошення",
+    "announcementsLoadError": "Не вдалося завантажити оголошення.",
+    "announcementsTitle": "Мої оголошення",
+    "markAnnouncementRead": "Позначити прочитаним",
+    "noAnnouncements": "Для вас немає оголошень.",
+    "privacy": "Конфіденційність"
   },
   "dashboard": {
     "activeMembers": "Активні учасники",
@@ -277,7 +299,22 @@
       "Plătit": "Оплачено",
       "În așteptare": "Очікує",
       "Eșuat": "Не вдалося"
-    }
+    },
+    "admin": "Оператор",
+    "empty": "Платежів не знайдено.",
+    "lifecycle": "Життєвий цикл",
+    "linkedModel": "Пов'язано з",
+    "loadError": "Не вдалося завантажити платежі.",
+    "loadingList": "Завантаження платежів...",
+    "missingRight": "У вас немає дозволу payments.view.",
+    "noDirectRoute": "Немає прямого посилання для цієї моделі",
+    "openServiceMembers": "Відкрити учасників для послуги #{{id}}",
+    "paidAt": "Дата оплати",
+    "paymentType": "Тип платежу",
+    "provider": "Провайдер",
+    "receiptDownloadError": "Не вдалося завантажити квитанцію.",
+    "showingCount": "Показано {{count}} з {{total}} платежів.",
+    "viewService": "Переглянути послугу"
   },
   "sms": {
     "title": "SMS та сповіщення",
@@ -384,7 +421,30 @@
       "friday": "П'ятниця",
       "saturday": "Субота",
       "sunday": "Неділя"
-    }
+    },
+    "attendancePdfDownloadError": "Не вдалося завантажити PDF відвідуваності.",
+    "backToEvents": "Назад до подій",
+    "calendar": "Календар",
+    "calendarTitle": "Календар подій",
+    "categoryDeleteError": "Не вдалося видалити категорію.",
+    "categoryDeleted": "Категорію видалено.",
+    "categorySaveError": "Не вдалося зберегти категорію.",
+    "categorySaved": "Категорію збережено.",
+    "downloadAttendancePdf": "Завантажити PDF",
+    "endDatetime": "Кінець",
+    "eventCategories": "Категорії подій",
+    "eventDetailsTitle": "Деталі події",
+    "list": "Список",
+    "noCategories": "Категорій не знайдено.",
+    "noOccurrences": "Записів не знайдено.",
+    "notFound": "Ця подія не існує.",
+    "occurrenceCancelled": "Захід скасовано.",
+    "occurrenceDate": "Дата заходу",
+    "participants": "Учасники",
+    "places": "Місця",
+    "startDatetime": "Початок",
+    "unlimited": "Необмежено",
+    "viewOccurrences": "Переглянути заходи"
   },
   "reports": {
     "members": "Звіт учасників",
@@ -444,7 +504,15 @@
       "serviceType": "Тип послуги",
       "location": "Локація",
       "admin": "Оператор",
-      "segment": "Сегмент"
+      "segment": "Сегмент",
+      "assignmentStatus": "Статус послуги",
+      "daysFrom": "Днів від",
+      "daysTo": "Днів до",
+      "eventLocation": "Місце проведення",
+      "expirationCategory": "Категорія закінчення",
+      "timeFrom": "Час від",
+      "timeTo": "Час до",
+      "underutilizedBelow": "Недовикористано нижче %"
     },
     "groupBy": {
       "day": "День",
@@ -470,6 +538,40 @@
       "expiresInDays": "Завершується через днів",
       "location": "Локація",
       "serviceType": "Тип послуги"
+    },
+    "daysUntilExpiration": "Днів до закінчення",
+    "eventParticipationKpis": {
+      "attendances": "Відвідування",
+      "averageOccupancy": "Середнє заповнення",
+      "capacity": "Місткість",
+      "registrations": "Реєстрації",
+      "sessions": "Сесії"
+    },
+    "eventParticipationLoadError": "Не вдалося завантажити звіт про участь у подіях.",
+    "eventParticipationTab": "Участь у подіях",
+    "eventParticipationTitle": "Участь у подіях",
+    "lastNotification": "Останнє сповіщення",
+    "noCategory": "Без категорії",
+    "noEventParticipation": "Немає участі у подіях за поточними фільтрами.",
+    "noServiceExpirations": "Немає послуг у звіті за поточними фільтрами.",
+    "occupancy": "Заповненість",
+    "serviceExpirationCategories": {
+      "expired": "Закінчилися",
+      "expiring_soon": "Скоро закінчаться",
+      "not_renewed": "Не поновлено",
+      "suspended": "Призупинено"
+    },
+    "serviceExpirationsExportError": "Не вдалося завантажити експорт закінчення послуг.",
+    "serviceExpirationsLoadError": "Не вдалося завантажити звіт про закінчення послуг.",
+    "serviceExpirationsTab": "Закінчення послуг",
+    "serviceExpirationsTitle": "Закінчення послуг",
+    "timeInterval": "Часовий інтервал",
+    "utilization": "Використання",
+    "utilizationStatuses": {
+      "capacity_not_set": "Місткість не встановлена",
+      "full": "Повний",
+      "normal": "Нормальний",
+      "underutilized": "Недовикористаний"
     }
   },
   "members": {
@@ -761,6 +863,11 @@
     "hideCode": "Приховати код",
     "firstName": "Ім'я",
     "lastName": "Прізвище",
+    "parentUser": "Опікун",
+    "parentUserSearchPlaceholder": "Пошук за ім'ям, email або телефоном",
+    "selectParentUser": "Обрати",
+    "removeParentUser": "Прибрати",
+    "noParentUserResults": "Немає результатів",
     "password": "Пароль",
     "newPassword": "Новий пароль",
     "changePasswordHint": "Заповніть лише якщо хочете змінити його",
@@ -944,5 +1051,48 @@
     "deleteConfirm": "Ви впевнені, що хочете видалити це оголошення?",
     "loadingList": "Завантаження оголошень...",
     "loadingOne": "Завантаження оголошення..."
+  },
+  "passwordReset": {
+    "forgotTitle": "Скидання пароля",
+    "forgotSubtitle": "Введіть електронну адресу свого облікового запису, і ми надішлемо посилання для встановлення нового пароля.",
+    "email": "Електронна адреса",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "Надіслати посилання",
+    "sending": "Надсилання...",
+    "backToLogin": "Повернутися до входу",
+    "genericSent": "Якщо ця адреса пов'язана з обліковим записом, ви незабаром отримаєте посилання для скидання пароля.",
+    "setTitle": "Встановіть пароль",
+    "setSubtitle": "Виберіть пароль для свого облікового запису.",
+    "newPassword": "Новий пароль",
+    "confirmPassword": "Підтвердіть пароль",
+    "mismatch": "Паролі не збігаються.",
+    "setPassword": "Встановити пароль",
+    "settingPassword": "Збереження...",
+    "success": "Пароль встановлено. Тепер ви можете увійти.",
+    "missingLink": "Це посилання недійсне, оскільки відсутній токен скидання або електронна адреса.",
+    "goToLogin": "Перейти до входу"
+  },
+  "smtpSettings": {
+    "title": "Налаштування SMTP",
+    "subtitle": "Налаштуйте сервер вихідної пошти, який використовується для надсилання листів від імені цієї організації.",
+    "host": "SMTP-сервер",
+    "port": "Порт",
+    "username": "Ім'я користувача",
+    "password": "Пароль",
+    "passwordHint": "Залиште порожнім, щоб зберегти поточний пароль.",
+    "currentlySet": "Пароль наразі встановлено.",
+    "encryption": "Шифрування",
+    "encryptionNone": "Немає",
+    "fromAddress": "Адреса відправника",
+    "fromName": "Ім'я відправника",
+    "active": "Активно",
+    "save": "Зберегти налаштування",
+    "deleteConfirm": "Видалити налаштування SMTP для цієї організації?",
+    "deleted": "Налаштування SMTP видалено.",
+    "notConfigured": "Налаштування SMTP ще не задані для цієї організації.",
+    "loadError": "Не вдалося завантажити налаштування SMTP.",
+    "saveError": "Не вдалося зберегти налаштування SMTP.",
+    "deleteError": "Не вдалося видалити налаштування SMTP.",
+    "viewOnlyNotice": "Ви маєте лише право переглядати ці налаштування."
   }
 }

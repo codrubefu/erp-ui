@@ -1,16 +1,18 @@
-import { Bell, CalendarDays, Check, KeyRound, Mail, Phone, UserCircle } from 'lucide-react';
+import { Award, Bell, CalendarDays, Check, KeyRound, Mail, Phone, ScanLine, UserCircle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiClientError } from '../../../api/apiClient';
 import {
+  getAuthenticatedUser,
   getAuthenticatedUserCustomFields,
   getAuthenticatedUserEvents,
+  getAuthenticatedUserGrades,
   getAuthenticatedUserServices,
   updateAuthenticatedUserPassword,
   type AuthenticatedUserEvent,
 } from '../../../api/authApi';
 import { useAuth } from '../../../context/useAuth';
-import type { ApiCustomFieldValue, ApiPaginated, ApiService } from '../../../services/ErpApiService';
+import type { ApiCustomFieldValue, ApiPaginated, ApiService, ApiUserGrade, AuthenticatedUser } from '../../../services/ErpApiService';
 import { articlesService, type Article } from '../../../services/articlesService';
 import { Alert, Button, Input, SectionCard, StatusBadge } from '../../primitives';
 import { PrivacyPanel } from './PrivacyPanel';
@@ -91,9 +93,12 @@ function eventEnd(event: AuthenticatedUserEvent) {
   return event.ends_at || event.end_at || event.end_time || null;
 }
 
-export function ProfileInfoPage() {
+export function ProfileInfoPage({ childId }: { childId?: number } = {}) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  const [childUser, setChildUser] = useState<AuthenticatedUser | null>(null);
+  const [childUserError, setChildUserError] = useState('');
+  const user = childId ? childUser : authUser;
   const fallbackRows = useMemo(() => userCustomFieldRows(user), [user]);
   const [customFieldValues, setCustomFieldValues] = useState<ApiCustomFieldValue[]>([]);
   const [customFieldsLoading, setCustomFieldsLoading] = useState(false);
@@ -108,18 +113,34 @@ export function ProfileInfoPage() {
   const displayName = userDisplayName(user, t('profile.unknownUser'));
   const phone = user && 'phone' in user ? user.phone : null;
 
+  useEffect(() => {
+    if (!childId) return;
+    let cancelled = false;
+    setChildUserError('');
+    getAuthenticatedUser(childId)
+      .then((nextUser) => {
+        if (!cancelled) setChildUser(nextUser);
+      })
+      .catch((err) => {
+        if (!cancelled) setChildUserError(err instanceof Error ? err.message : t('profile.customFieldsLoadError'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [childId, t]);
+
   const loadCustomFields = useCallback(async () => {
     setCustomFieldsLoading(true);
     setCustomFieldsError('');
     try {
-      setCustomFieldValues(await getAuthenticatedUserCustomFields());
+      setCustomFieldValues(await getAuthenticatedUserCustomFields(childId));
       setCustomFieldsLoaded(true);
     } catch (err) {
       setCustomFieldsError(err instanceof Error ? err.message : t('profile.customFieldsLoadError'));
     } finally {
       setCustomFieldsLoading(false);
     }
-  }, [t]);
+  }, [childId, t]);
 
   useEffect(() => {
     void loadCustomFields();
@@ -127,6 +148,7 @@ export function ProfileInfoPage() {
 
   return (
     <div className="space-y-6">
+      {childUserError ? <Alert tone="error">{childUserError}</Alert> : null}
       <SectionCard title={t('profile.infoTitle')}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-lg bg-slate-50 p-4">
@@ -237,11 +259,11 @@ export function ProfileSecurityPage() {
   );
 }
 
-export function ProfilePrivacyPage() {
-  return <PrivacyPanel />;
+export function ProfilePrivacyPage({ childId }: { childId?: number } = {}) {
+  return <PrivacyPanel childId={childId} />;
 }
 
-export function ProfileAnnouncementsPage() {
+export function ProfileAnnouncementsPage({ childId }: { childId?: number } = {}) {
   const { t } = useTranslation();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
@@ -298,7 +320,7 @@ export function ProfileAnnouncementsPage() {
                   <span>{t('articles.priority', 'Prioritate')}: {article.priority ?? 0}</span>
                 </div>
               </div>
-              {!article.viewed_at ? (
+              {!article.viewed_at && !childId ? (
                 <Button type="button" onClick={() => void markViewed(article)} disabled={markingId === article.id} size="sm" variant="primary">
                   <Check className="h-4 w-4" />
                   {t('profile.markAnnouncementRead', 'Marcheaza citit')}
@@ -316,7 +338,7 @@ export function ProfileAnnouncementsPage() {
   );
 }
 
-export function ProfileEventsPage() {
+export function ProfileEventsPage({ childId }: { childId?: number } = {}) {
   const { t } = useTranslation();
   const [events, setEvents] = useState<AuthenticatedUserEvent[]>([]);
   const [loading, setLoading] = useState(false);
@@ -326,13 +348,13 @@ export function ProfileEventsPage() {
     setLoading(true);
     setError('');
     try {
-      setEvents(unwrapList(await getAuthenticatedUserEvents()));
+      setEvents(unwrapList(await getAuthenticatedUserEvents(childId)));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('profile.eventsLoadError'));
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [childId, t]);
 
   useEffect(() => {
     void loadEvents();
@@ -369,7 +391,7 @@ export function ProfileEventsPage() {
   );
 }
 
-export function ProfileServicesPage() {
+export function ProfileServicesPage({ childId }: { childId?: number } = {}) {
   const { t } = useTranslation();
   const [services, setServices] = useState<ApiService[]>([]);
   const [loading, setLoading] = useState(false);
@@ -379,13 +401,13 @@ export function ProfileServicesPage() {
     setLoading(true);
     setError('');
     try {
-      setServices(unwrapList(await getAuthenticatedUserServices()));
+      setServices(unwrapList(await getAuthenticatedUserServices(childId)));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('profile.servicesLoadError'));
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [childId, t]);
 
   useEffect(() => {
     void loadServices();
@@ -432,6 +454,104 @@ export function ProfileServicesPage() {
                 <td colSpan={8} className="py-10 text-center text-sm text-slate-500">{loading ? t('common.loading') : t('profile.noServices')}</td>
               </tr>
             )}
+          </tbody>
+        </table>
+      </div>
+    </SectionCard>
+  );
+}
+
+export function ProfileCodePage({ childId }: { childId?: number } = {}) {
+  const { t } = useTranslation();
+  const { user: authUser } = useAuth();
+  const [childUser, setChildUser] = useState<AuthenticatedUser | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const user = childId ? childUser : authUser;
+  const userCode = user && 'user_code' in user ? user.user_code : null;
+
+  const loadChildUser = useCallback(async (cancelledRef: { current: boolean }) => {
+    setLoading(true);
+    setError('');
+    try {
+      const nextUser = await getAuthenticatedUser(childId);
+      if (!cancelledRef.current) setChildUser(nextUser);
+    } catch (err) {
+      if (!cancelledRef.current) setError(err instanceof Error ? err.message : t('profile.customFieldsLoadError'));
+    } finally {
+      if (!cancelledRef.current) setLoading(false);
+    }
+  }, [childId, t]);
+
+  useEffect(() => {
+    if (!childId) return;
+    const cancelledRef = { current: false };
+    void loadChildUser(cancelledRef);
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [childId, loadChildUser]);
+
+  return (
+    <SectionCard title={t('profile.codeTitle', 'Cod utilizator')}>
+      {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
+      <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-4">
+        <span className="rounded-lg bg-indigo-100 p-3 text-indigo-700"><ScanLine className="h-6 w-6" /></span>
+        <p className="text-lg font-bold text-slate-900">{loading ? t('common.loading') : userCode || '-'}</p>
+      </div>
+    </SectionCard>
+  );
+}
+
+export function ProfileGradesPage({ childId }: { childId?: number } = {}) {
+  const { t } = useTranslation();
+  const [gradeHistory, setGradeHistory] = useState<ApiUserGrade[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadGrades = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setGradeHistory(unwrapList(await getAuthenticatedUserGrades(childId)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('users.gradesLoadError'));
+    } finally {
+      setLoading(false);
+    }
+  }, [childId, t]);
+
+  useEffect(() => {
+    void loadGrades();
+  }, [loadGrades]);
+
+  return (
+    <SectionCard title={t('users.grades')} action={<Button type="button" onClick={() => void loadGrades()} disabled={loading}>{t('common.refresh')}</Button>}>
+      {error ? <Alert tone="error" className="mb-4">{error}</Alert> : null}
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <table className="min-w-full text-left text-sm">
+          <thead className="bg-slate-50 text-slate-500">
+            <tr>
+              <th className="px-4 py-3">{t('users.grade')}</th>
+              <th className="px-4 py-3">{t('users.gradeObtainedAt')}</th>
+              <th className="px-4 py-3">{t('users.gradeDescription')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {gradeHistory.map((record) => (
+              <tr key={record.id} className="border-t border-slate-100">
+                <td className="px-4 py-3 font-semibold">
+                  <Award className="mr-2 inline h-4 w-4 text-indigo-600" />
+                  {record.grade?.name ?? record.grade_id}
+                  {record.id === gradeHistory[0]?.id ? <span className="ml-2 rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700">{t('users.activeGrade')}</span> : null}
+                </td>
+                <td className="px-4 py-3">{formatDate(record.obtained_at)}</td>
+                <td className="px-4 py-3">{record.description || '-'}</td>
+              </tr>
+            ))}
+            {gradeHistory.length === 0 ? (
+              <tr><td colSpan={3} className="px-4 py-10 text-center text-sm text-slate-500">{loading ? t('common.loading') : t('users.noGrades')}</td></tr>
+            ) : null}
           </tbody>
         </table>
       </div>

@@ -7,21 +7,27 @@ import {
   CreditCard,
   CalendarDays,
   CalendarClock,
+  FileText,
+  Info,
+  KeyRound,
   Tags,
   ScanLine,
   Megaphone,
   FileBarChart2,
   FolderTree,
   LayoutDashboard,
+  Mail,
   MessageSquare,
   ShieldCheck,
   SlidersHorizontal,
   UserCheck,
+  UserCircle,
   Users,
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { getAuthenticatedUserChildren, type AuthenticatedUserChild } from '../../api/authApi';
 import { useAuth } from '../../context/useAuth';
 import { useTranslation } from 'react-i18next';
 import type { SectionId } from '../../types/erp';
@@ -29,9 +35,31 @@ import type { SectionId } from '../../types/erp';
 type SidebarProps = {
   current: SectionId;
   setCurrent: (id: SectionId) => void;
+  profileChildId: number | null;
+  setProfileChildId: (id: number | null) => void;
   open: boolean;
   onClose: () => void;
 };
+
+type ProfileSubItem = {
+  id: SectionId;
+  labelKey: string;
+  icon: LucideIcon;
+};
+
+const profileSelfSubItems: readonly ProfileSubItem[] = [
+  { id: 'profile-info', labelKey: 'profile.info', icon: Info },
+  { id: 'profile-security', labelKey: 'profile.security', icon: KeyRound },
+  { id: 'profile-privacy', labelKey: 'profile.privacy', icon: ShieldCheck },
+  { id: 'profile-announcements', labelKey: 'profile.announcements', icon: Bell },
+  { id: 'profile-events', labelKey: 'profile.events', icon: CalendarDays },
+  { id: 'profile-services', labelKey: 'profile.services', icon: BadgeEuro },
+  { id: 'profile-code', labelKey: 'profile.codeTitle', icon: ScanLine },
+  { id: 'profile-grades', labelKey: 'users.grades', icon: Award },
+  { id: 'profile-documents', labelKey: 'userDocuments.documents', icon: FileText },
+];
+
+const profileChildSubItems: readonly ProfileSubItem[] = profileSelfSubItems.filter((item) => item.id !== 'profile-security');
 
 type NavItem = {
   id: SectionId;
@@ -64,6 +92,7 @@ const navGroups: readonly NavGroup[] = [
       { id: 'access', labelKey: 'menu.access', icon: ShieldCheck, rights: ['groups.view', 'groups.manage'] },
       { id: 'custom-fields', labelKey: 'menu.customFields', icon: SlidersHorizontal ,rights: ['custom-fields.view', 'custom-fields.manage'] },
       { id: 'grades', labelKey: 'menu.grades', icon: Award, rights: ['grades.view', 'grades.manage'] },
+      { id: 'smtp-settings', labelKey: 'menu.smtpSettings', icon: Mail, rights: ['smtp_settings.view', 'smtp_settings.manage'] },
     ],
   },
   {
@@ -95,10 +124,34 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
-export function Sidebar({ current, setCurrent, open, onClose }: SidebarProps) {
+export function Sidebar({ current, setCurrent, profileChildId, setProfileChildId, open, onClose }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ organization: false, events: true });
-  const { hasAnyRight } = useAuth();
+  const [openProfileRow, setOpenProfileRow] = useState<'self' | number | null>(null);
+  const [children, setChildren] = useState<AuthenticatedUserChild[]>([]);
+  const { hasAnyRight, user } = useAuth();
   const { t } = useTranslation();
+  const showProfileSection = hasAnyRight(['profile.view']);
+
+  useEffect(() => {
+    if (!showProfileSection) return;
+    let cancelled = false;
+    getAuthenticatedUserChildren()
+      .then((list) => {
+        if (!cancelled) setChildren(list);
+      })
+      .catch(() => {
+        if (!cancelled) setChildren([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showProfileSection]);
+
+  const selfLabel = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim() || t('profile.unknownUser');
+  const profileRows: Array<{ id: 'self' | number; label: string }> = [
+    { id: 'self', label: selfLabel },
+    ...children.map((child) => ({ id: child.id, label: [child.first_name, child.last_name].filter(Boolean).join(' ').trim() || `#${child.id}` })),
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -113,8 +166,17 @@ export function Sidebar({ current, setCurrent, open, onClose }: SidebarProps) {
     };
   }, [open, onClose]);
 
+  const isItemAllowed = (item: NavItem) => !item.rights || hasAnyRight(item.rights);
+  const visibleChildrenFor = (item: NavItem): NavItem[] => item.children
+    ?.map((child) => ({ ...child, children: visibleChildrenFor(child) }))
+    .filter((child) => isItemAllowed(child) || (child.children?.length ?? 0) > 0) ?? [];
+  const visibleItemsFor = (items: readonly NavItem[]) => items
+    .map((item) => ({ ...item, children: visibleChildrenFor(item) }))
+    .filter((item) => isItemAllowed(item) || (item.children?.length ?? 0) > 0);
+
   const renderItems = (items: readonly NavItem[], level = 0) => items.map((item) => {
-    const visibleChildren = item.children?.filter((child) => !child.rights || hasAnyRight(child.rights)) ?? [];
+    const itemAllowed = isItemAllowed(item);
+    const visibleChildren = item.children ?? [];
     const hasChildren = visibleChildren.length > 0;
     const isOpen = openGroups[item.id] ?? true;
     const Icon = item.icon;
@@ -125,8 +187,14 @@ export function Sidebar({ current, setCurrent, open, onClose }: SidebarProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={() => {
-              setCurrent(item.id);
-              onClose();
+              if (itemAllowed) {
+                setCurrent(item.id);
+                onClose();
+                return;
+              }
+              if (hasChildren) {
+                setOpenGroups((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+              }
             }}
             className={cn(
               'flex min-w-0 flex-1 items-center justify-between rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors duration-150',
@@ -174,7 +242,7 @@ export function Sidebar({ current, setCurrent, open, onClose }: SidebarProps) {
 
         <nav className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
           {navGroups.map((group) => {
-            const visibleItems = group.items.filter((item) => !item.rights || hasAnyRight(item.rights));
+            const visibleItems = visibleItemsFor(group.items);
             if (visibleItems.length === 0) return null;
             const GroupIcon = group.icon ?? Building2;
             const isGrouped = Boolean(group.labelKey);
@@ -206,6 +274,62 @@ export function Sidebar({ current, setCurrent, open, onClose }: SidebarProps) {
               </div>
             );
           })}
+
+          {showProfileSection ? (
+            <div className="space-y-1 border-t border-slate-100 pt-3">
+              {profileRows.map((row) => {
+                const isOpen = openProfileRow === row.id;
+                const subItems = row.id === 'self' ? profileSelfSubItems : profileChildSubItems;
+
+                return (
+                  <div key={row.id} className="space-y-1">
+                    <button
+                      onClick={() => setOpenProfileRow((currentRow) => (currentRow === row.id ? null : row.id))}
+                      className={cn(
+                        'flex w-full items-center justify-between rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors duration-150',
+                        isOpen ? 'border border-indigo-100 bg-indigo-50 text-indigo-700 shadow-sm' : 'border border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-2.5 font-medium">
+                        <span className={cn('rounded-md p-1.5 transition', isOpen ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20' : 'bg-slate-100 text-slate-500')}>
+                          <UserCircle className="h-4 w-4" />
+                        </span>
+                        <span className="truncate">{row.label}</span>
+                      </span>
+                      <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', isOpen && 'rotate-90')} />
+                    </button>
+                    {isOpen ? (
+                      <div className="ml-3 space-y-1 border-l border-slate-200 pl-2">
+                        {subItems.map((item) => {
+                          const Icon = item.icon;
+                          const active = current === item.id && (row.id === 'self' ? profileChildId === null : profileChildId === row.id);
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setProfileChildId(row.id === 'self' ? null : row.id);
+                                setCurrent(item.id);
+                                onClose();
+                              }}
+                              className={cn(
+                                'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-sm font-medium transition-colors duration-150',
+                                active ? 'border border-indigo-100 bg-indigo-50 text-indigo-700 shadow-sm' : 'border border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                              )}
+                            >
+                              <span className={cn('rounded-md p-1.5 transition', active ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20' : 'bg-slate-100 text-slate-500')}>
+                                <Icon className="h-4 w-4" />
+                              </span>
+                              <span className="truncate">{t(item.labelKey)}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </nav>
       </div>
     </aside>
