@@ -73,7 +73,7 @@ Login stores the bearer token and loads the authenticated user via `GET /api/me`
 
 - `src/permissions/permissions.ts`, `src/components/Can.tsx`, `src/components/ProtectedRoute.tsx`, `src/components/layout/Sidebar.tsx`
 
-`permissions.ts` defines implied rights (e.g. `reports.manage` implies `reports.view` and `reports.export`; `dashboard.manage` implies `dashboard.view`). UI visibility must use rights from `useAuth()` and should match backend middleware for the same endpoint. When documenting a page, mention both the UI right checks and the backend endpoint rights the service assumes.
+`permissions.ts` defines implied rights (e.g. `reports.manage` implies `reports.view` and `reports.export`; `dashboard.manage` implies `dashboard.view`). If the authenticated user has no explicit rights in any group, the UI gives them `profile.view` by default so the self-profile sidebar section remains available. UI visibility must use rights from `useAuth()` and should match backend middleware for the same endpoint. When documenting a page, mention both the UI right checks and the backend endpoint rights the service assumes.
 
 ## Localization
 
@@ -90,13 +90,13 @@ Shared types: `src/types/erp.ts`, `src/components/erp/shared/types.ts`.
 ## Feature Map
 
 ### Dashboard
-`src/components/erp/dashboard/DashboardView.tsx`, `src/services/dashboardService.ts`. API-driven via `GET /api/dashboard` (`dashboardService`) for KPI cards, revenue by period, member status, activity, automation indicators — requires `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. Announcements feed loads separately from `articlesService.feed()` and stays visible to any authenticated user.
+`src/components/erp/dashboard/DashboardView.tsx`, `src/services/dashboardService.ts`. API-driven via `GET /api/dashboard` (`dashboardService`) for KPI cards, revenue by period, member status, activity, automation indicators — requires `dashboard.view`, `dashboard.manage`, `reports.view`, or `reports.manage`. Announcements feed loads separately from `articlesService.feed()` and stays visible to any authenticated user. The weekly calendar is also visible to every logged-in user, loads read-only occurrences from `GET /api/event-occurrences`, and opens event details in a dashboard modal instead of routing users without event rights into the administrative Events module.
 
 ### Rapid Check-In
 `src/components/erp/check-in/CheckInView.tsx`, `src/services/checkInService.ts`. At `/erp/check-in`, for `event_participants.manage` or `checkins.manage`. Loads today's occurrences (`GET /api/check-ins/occurrences/current`), searches members (`POST /api/check-ins/search`), confirms attendance (`POST /api/check-ins/confirm`). Optimized for scanner input; displays backend verdict directly (`allowed`, `refused`, `requires_payment`, `document_expired`, `already_present`, `not_found`) without client-side eligibility recalculation. `checkins.override` unlocks an exception action for refused verdicts.
 
 ### Members
-`src/components/erp/members/MembersView.tsx`, `UserDocumentsPanel.tsx`, `MemberFormPage.tsx`, `src/services/ErpApiService.ts`, `paymentService.ts`, `serviceLifecycleService.ts`. Manages users, profile fields, locations, service assignments, lifecycle actions, related payments, private documents. Service assignment status must come from API payload (`service.status` / `service.pivot.status`), never recalculated only from dates.
+`src/components/erp/members/MembersView.tsx`, `UserDocumentsPanel.tsx`, `MemberFormPage.tsx`, `src/services/ErpApiService.ts`, `paymentService.ts`, `serviceLifecycleService.ts`. Manages users, profile fields, locations, service assignments, lifecycle actions, related payments, private documents. In the users table, a member's guardian/tutor is shown under the member name when the API returns the `parent` relation. Service assignment status must come from API payload (`service.status` / `service.pivot.status`), never recalculated only from dates.
 
 Documents tab requires `user-documents.view/upload/delete` or `users.manage`. Upload/replace use `multipart/form-data`; download requests a signed URL then fetches the blob with the bearer token. Categories: `membership_request`, `identity_document`, `gdpr_agreement`, `certificate`, `contract`, `photo`, `other`.
 
@@ -116,7 +116,7 @@ Service history must show the API lifecycle status as-is — no collapsing non-a
 `src/components/erp/reports/ReportsView.tsx`, `src/services/reportingService.ts`, `segmentsService.ts`. Filters, KPI aggregates, revenue by period, receivables, renewals, bank reconciliation, export status, segment management. `GET /api/reports/financial-documents` lists invoices/notes/receipts, filterable by period; export rights allow single or ZIP download. Invoices expose PDF and XML e-Factura downloads. Exports/downloads use blob requests, not JSON unwrapping.
 
 ### Events
-`src/components/erp/events/EventsModule.tsx`, `ParticipantPaymentModal.tsx`, `hooks.ts`, `src/services/eventService.ts`. Category CRUD/filtering, dynamic monthly/weekly calendar, occurrence and participant workflows, participant payments. Quick participant add loads eligible users (`GET /api/event-occurrences/{occurrence}/eligible-participants`), saves via `POST /api/event-occurrences/{occurrence}/participants/bulk`, defaults status to `registered`. Sidebar: `/erp/events/calendar` for `events.view`/`events.manage`, `/erp/events/categories` for `events.manage`. Categories loaded via `eventService.getCategories()`.
+`src/components/erp/events/EventsModule.tsx`, `ParticipantPaymentModal.tsx`, `hooks.ts`, `src/services/eventService.ts`. Category CRUD/filtering, dynamic monthly/weekly calendar, occurrence and participant workflows, participant payments. Quick participant add loads eligible users (`GET /api/event-occurrences/{occurrence}/eligible-participants`), saves via `POST /api/event-occurrences/{occurrence}/participants/bulk`, defaults status to `registered`. The dashboard exposes a read-only weekly calendar for all authenticated users. Sidebar: `/erp/events/calendar` for `events.view`/`events.manage`, `/erp/events/categories` for `events.manage`. Categories loaded via `eventService.getCategories()`.
 
 ### Articles And Announcements
 `src/components/erp/articles/*`, `src/components/erp/announcements/AnnouncementsView.tsx`, `src/services/articlesService.ts`. Articles are API-driven with audience/receipt behavior where exposed by the backend. Announcements still use the ERP shared data shape — explain separately from articles when behavior differs.
@@ -128,7 +128,10 @@ Service history must show the API lifecycle status as-is — no collapsing non-a
 `src/components/erp/branches/BranchesView.tsx`, `location-groups/LocationGroupsView.tsx`, `admins/AdminsView.tsx`, `access/GroupsRightsView.tsx`, `custom-fields/CustomFieldsView.tsx`, `src/services/ErpApiService.ts`. Tenant structure, admins, rights/groups, custom fields.
 
 ### Profile
-`src/components/erp/profile/ProfilePages.tsx`, `src/context/AuthContext.tsx`, `src/services/ErpApiService.ts`. Authenticated user's data, security area, event participation, service status. Service badges use lifecycle status from the API, with `is_currently_active` only as a fallback.
+`src/components/erp/profile/ProfilePages.tsx`, `src/context/AuthContext.tsx`, `src/services/ErpApiService.ts`. Authenticated user's data, security area, event participation, service status. In the sidebar, the self-profile row and any child rows render after the operational navigation groups and are collapsed by default; expanding one row closes the previously open profile row. Service badges use lifecycle status from the API, with `is_currently_active` only as a fallback.
+
+### Settings And Account Access
+`src/components/erp/settings/SmtpSettingsView.tsx`, `src/services/smtpSettingsService.ts` — organization SMTP configuration. `src/components/auth/ForgotPasswordView.tsx`, `SetPasswordView.tsx`, `src/api/passwordResetApi.ts`, `src/pages/ForgotPasswordPage.tsx`, `SetPasswordPage.tsx` — self-service password reset flow outside the authenticated shell. `src/components/erp/profile/ProfileDocumentsPage.tsx` — the self-profile equivalent of member document management. Verify current endpoints/rights in source before explaining, as these were added after this file's last full review.
 
 ## Local Cache And Demo Data
 
