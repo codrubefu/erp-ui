@@ -240,21 +240,6 @@ Tabul de servicii permite:
 - consumarea unui acces pentru servicii cu limita de acces;
 - stergerea assignment-ului din profil.
 
-### Grade
-
-Modulul Grade permite organizatiei sa defineasca niveluri precum Centura Alba, Albastra sau Neagra.
-
-Utilizatorii cu dreptul `grades.manage` pot:
-
-- crea, edita, activa/dezactiva si sterge logic grade;
-- acorda un grad unui user cu data obtinerii si descriere;
-- modifica sau sterge o obtinere din istoricul userului;
-- selecta un grad si lista userii al caror grad activ este acel grad.
-
-Istoricul este pastrat. Gradul activ este ultima obtinere in ordine cronologica; daca doua obtineri au aceeasi data, este activa cea adaugata ultima. Datele viitoare nu sunt acceptate.
-
-Lista userilor este paginata si filtrata pe server. Stergerea logica a unui grad nu elimina obtinerile deja inregistrate.
-
 Statusuri posibile:
 
 - `pending`

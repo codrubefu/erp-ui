@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input, SectionCard, StatusBadge } from '../../primitives';
 import { erpApiService, type ApiPaginated } from '../../../services/ErpApiService';
-import { formatDeviceDateTime } from '../../../utils/erp/formatters';
 
 type SmsMessage = {
   id: number;
@@ -37,6 +36,16 @@ function paginationFrom<T>(payload: ApiPaginated<T>, fallbackPage: number, fallb
     per_page: payload.meta?.per_page ?? payload.per_page ?? fallbackPerPage,
     total: payload.meta?.total ?? payload.total ?? payload.data.length,
   };
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 16).replace('T', ' ');
+  return new Intl.DateTimeFormat('ro-RO', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(date);
 }
 
 function userName(message: SmsMessage) {
@@ -180,7 +189,7 @@ export function SmsView() {
                   <td className="px-4 py-3 text-slate-600">{message.service?.name || (message.service_id ? `#${message.service_id}` : '-')}</td>
                   <td className="px-4 py-3 text-slate-600">{message.type || '-'}</td>
                   <td className="px-4 py-3"><StatusBadge status={message.status || '-'} /></td>
-                  <td className="px-5 py-3 text-slate-600">{formatDeviceDateTime(message.sent_at ?? message.created_at)}</td>
+                  <td className="px-5 py-3 text-slate-600">{formatDateTime(message.sent_at ?? message.created_at)}</td>
                 </tr>
               )) : (
                 <tr>
