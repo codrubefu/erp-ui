@@ -6,7 +6,7 @@ import { currentDateTimeLocal, dateTimeLocalToApi } from '../../../utils/erp/for
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 
 function participantPaymentModelId(participant: EventParticipant) {
-  return participant.pivot_id ?? null;
+  return participant.id ?? null;
 }
 
 export function ParticipantPaymentModal({ participant, occurrence, onClose, onSaved }: { participant: EventParticipant; occurrence: { event?: EventItem } | null; onClose: () => void; onSaved: () => void }) {

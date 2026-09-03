@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { erpApiService, type ApiLocationGroup } from '../../../services/ErpApiService';
 import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
-import { formatDeviceDate } from '../../../utils/erp/formatters';
 
 type LocationGroupForm = {
   name: string;
@@ -28,6 +27,11 @@ function formFromLocationGroup(group: ApiLocationGroup): LocationGroupForm {
     name: group.name ?? '',
     description: group.description ?? '',
   };
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return '-';
+  return value.slice(0, 10);
 }
 
 export function LocationGroupsView() {
@@ -178,7 +182,7 @@ export function LocationGroupsView() {
                 <TableCell className="font-semibold text-slate-900">{group.name}</TableCell>
                 <TableCell className="max-w-[420px] text-slate-600">{group.description || t('locationGroups.defaultDescription')}</TableCell>
                 <TableCell className="text-slate-600">{group.locations?.length ?? 0}</TableCell>
-                <TableCell className="text-slate-600">{formatDeviceDate(group.updated_at)}</TableCell>
+                <TableCell className="text-slate-600">{formatDate(group.updated_at)}</TableCell>
                 <TableCell align="right">
                   <div className="flex justify-end gap-2">
                     <button onClick={() => startEdit(group)} className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white"><Edit3 className="mr-2 h-4 w-4" />{t('common.edit')}</button>

@@ -14,7 +14,6 @@ import type { ApiCustomFieldValue, ApiPaginated, ApiService } from '../../../ser
 import { articlesService, type Article } from '../../../services/articlesService';
 import { Alert, Button, Input, SectionCard, StatusBadge } from '../../primitives';
 import { PrivacyPanel } from './PrivacyPanel';
-import { formatDeviceDate } from '../../../utils/erp/formatters';
 
 type PasswordForm = {
   current_password: string;
@@ -40,7 +39,8 @@ function unwrapList<T>(payload: ApiPaginated<T> | T[]) {
 }
 
 function formatDate(value?: string | null) {
-  return formatDeviceDate(value);
+  if (!value) return '-';
+  return value.slice(0, 10);
 }
 
 function serviceStatus(service: ApiService) {

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Input, SectionCard, Select } from '../../primitives';
 import { gdprService, type ConsentRecord, type GdprDataAccess, type GdprExport, type GdprRequest } from '../../../services/gdprService';
 import type { NotificationChannel } from '../../../services/notificationService';
-import { formatDeviceDateTime } from '../../../utils/erp/formatters';
 
 type PrivacyPanelProps = {
   userId?: number;
@@ -26,7 +25,7 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function formatDate(value?: string | null) {
-  return formatDeviceDateTime(value);
+  return value ? value.slice(0, 16).replace('T', ' ') : '-';
 }
 
 export function PrivacyPanel({ userId, administrative = false, canExport = true, canProcess = true }: PrivacyPanelProps) {

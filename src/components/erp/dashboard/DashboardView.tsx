@@ -1,15 +1,12 @@
-import { BadgeEuro, Bell, Building2, CalendarClock, Check, ChevronLeft, ChevronRight, RefreshCw, UserCheck } from 'lucide-react';
+import { BadgeEuro, Bell, Building2, CalendarClock, Check, RefreshCw, UserCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { dashboardService, type DashboardAutomation, type DashboardPayload } from '../../../services/dashboardService';
 import { articlesService, type Article } from '../../../services/articlesService';
-import { eventService, type EventOccurrence } from '../../../services/eventService';
 import { Alert, Button, SectionCard, StatCard } from '../../primitives';
 import { useAuth } from '../../../context/useAuth';
 import type { DashboardViewProps } from '../shared/types';
-import { deviceLocale } from '../../../utils/erp/formatters';
 
 const statusColors: Record<string, string> = {
   active: '#4f46e5',
@@ -46,53 +43,18 @@ function shortText(value: string, max = 180) {
   return value.length > max ? `${value.slice(0, max).trim()}...` : value;
 }
 
-function formatDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function startOfWeek(date: Date) {
-  const next = new Date(date);
-  const day = next.getDay() || 7;
-  next.setDate(next.getDate() - day + 1);
-  return next;
-}
-
-function timeToHourMinute(value?: string | null) {
-  if (!value) return '';
-  const timePart = value.includes('T') ? value.split('T')[1] : value;
-  return timePart.slice(0, 5);
-}
-
-function dateToDateInput(value?: string | null) {
-  return value ? value.slice(0, 10) : null;
-}
-
 export function DashboardView(props: DashboardViewProps) {
   void props;
   const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const canViewDashboard = hasAnyRight(['dashboard.view', 'dashboard.manage', 'reports.view', 'reports.manage']);
-  const canViewEvents = hasAnyRight(['events.view', 'events.manage']);
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [announcements, setAnnouncements] = useState<Article[]>([]);
-  const [weekAnchor, setWeekAnchor] = useState(() => new Date());
-  const [weekOccurrences, setWeekOccurrences] = useState<EventOccurrence[]>([]);
   const [loading, setLoading] = useState(false);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
-  const [weekLoading, setWeekLoading] = useState(false);
   const [markingAnnouncementId, setMarkingAnnouncementId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [announcementsError, setAnnouncementsError] = useState('');
-  const [weekError, setWeekError] = useState('');
 
   const loadDashboard = useCallback(async () => {
     if (!canViewDashboard) return;
@@ -128,46 +90,6 @@ export function DashboardView(props: DashboardViewProps) {
   useEffect(() => {
     void loadAnnouncements();
   }, [loadAnnouncements]);
-
-  const weekRange = useMemo(() => {
-    const start = startOfWeek(weekAnchor);
-    return { start, end: addDays(start, 6) };
-  }, [weekAnchor]);
-
-  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(weekRange.start, index)), [weekRange.start]);
-
-  const weekOccurrencesByDate = useMemo(() => {
-    const grouped = new Map<string, EventOccurrence[]>();
-    weekOccurrences.forEach((occurrence) => {
-      const key = dateToDateInput(occurrence.occurrence_date) ?? dateToDateInput(occurrence.start_datetime);
-      if (!key) return;
-      grouped.set(key, [...(grouped.get(key) ?? []), occurrence]);
-    });
-    return grouped;
-  }, [weekOccurrences]);
-
-  const loadWeekOccurrences = useCallback(async () => {
-    if (!canViewEvents) return;
-    setWeekLoading(true);
-    setWeekError('');
-    try {
-      const payload = await eventService.getAllOccurrences({
-        date_from: formatDateKey(weekRange.start),
-        date_to: formatDateKey(weekRange.end),
-        per_page: 200,
-      });
-      setWeekOccurrences(payload.data ?? []);
-    } catch (err) {
-      setWeekOccurrences([]);
-      setWeekError(err instanceof Error ? err.message : 'Nu am putut incarca evenimentele saptamanii.');
-    } finally {
-      setWeekLoading(false);
-    }
-  }, [canViewEvents, weekRange.end, weekRange.start]);
-
-  useEffect(() => {
-    void loadWeekOccurrences();
-  }, [loadWeekOccurrences]);
 
   const markAnnouncementViewed = async (article: Article) => {
     setMarkingAnnouncementId(article.id);
@@ -231,57 +153,9 @@ export function DashboardView(props: DashboardViewProps) {
     </SectionCard>
   );
 
-  const weekCalendarPanel = canViewEvents ? (
-    <SectionCard
-      title="Calendarul saptamanii"
-      action={(
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => setWeekAnchor((current) => addDays(current, -7))} className="rounded-lg border border-slate-200 p-2 text-slate-700"><ChevronLeft className="h-4 w-4" /></button>
-          <button type="button" onClick={() => setWeekAnchor(new Date())} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">Azi</button>
-          <button type="button" onClick={() => setWeekAnchor((current) => addDays(current, 7))} className="rounded-lg border border-slate-200 p-2 text-slate-700"><ChevronRight className="h-4 w-4" /></button>
-          <Button type="button" size="sm" onClick={() => void loadWeekOccurrences()} disabled={weekLoading}><RefreshCw size={16} />{t('common.refresh')}</Button>
-          <Link to="/erp/events/calendar" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">Calendar complet</Link>
-        </div>
-      )}
-    >
-      <div className="mb-3 text-sm font-semibold text-slate-700">{formatDateKey(weekRange.start)} - {formatDateKey(weekRange.end)}</div>
-      {weekError ? <Alert tone="error" className="mb-3">{weekError}</Alert> : null}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-7">
-        {weekDays.map((day) => {
-          const key = formatDateKey(day);
-          const items = weekOccurrencesByDate.get(key) ?? [];
-          const isToday = key === formatDateKey(new Date());
-
-          return (
-            <div key={key} className={`min-h-40 rounded-lg border p-3 ${isToday ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/70'}`}>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase text-slate-500">{day.toLocaleDateString(deviceLocale(), { weekday: 'short' })}</span>
-                <span className="text-sm font-bold text-slate-900">{day.getDate()}</span>
-              </div>
-              <div className="space-y-2">
-                {items.length ? items.slice(0, 5).map((occurrence) => (
-                  <Link key={occurrence.id} to={`/erp/events/${occurrence.event_id}/occurrences/${occurrence.id}/participants`} className="block rounded-md border border-slate-200 bg-white px-2 py-2 text-xs shadow-sm hover:border-indigo-200 hover:bg-indigo-50">
-                    <div className="flex items-center gap-1.5 font-semibold text-slate-900">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: occurrence.event?.category?.color ?? '#64748b' }} />
-                      {timeToHourMinute(occurrence.start_datetime)}
-                    </div>
-                    <div className="mt-1 truncate text-slate-700">{occurrence.event?.title ?? `Event #${occurrence.event_id}`}</div>
-                    <div className="mt-0.5 truncate text-slate-500">{occurrence.event?.location ?? '-'}</div>
-                  </Link>
-                )) : <p className="text-xs text-slate-400">{weekLoading ? 'Se incarca...' : 'Fara evenimente'}</p>}
-                {items.length > 5 ? <Link to="/erp/events/calendar" className="block text-xs font-semibold text-indigo-700">+{items.length - 5} mai multe</Link> : null}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </SectionCard>
-  ) : null;
-
   if (!canViewDashboard) {
     return (
       <div className="space-y-5">
-        {weekCalendarPanel}
         {announcementsPanel}
       </div>
     );
@@ -318,8 +192,6 @@ export function DashboardView(props: DashboardViewProps) {
         <StatCard title={t('dashboard.totalRevenue')} value={`${money(stats.total_revenue)} RON`} change={t('dashboard.paymentsCalculated')} helper={t('dashboard.persistentData')} icon={BadgeEuro} />
         <StatCard title={t('dashboard.activeBranches')} value={String(stats.active_locations)} change={t('dashboard.membersByLocation')} helper={t('dashboard.branchesDefined')} icon={Building2} />
       </div>
-
-      {weekCalendarPanel}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2">

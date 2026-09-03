@@ -4,7 +4,6 @@ export { Button, ButtonLink } from './actions/Button';
 export { Alert } from './feedback/Alert';
 export { SuccessMessage } from './feedback/SuccessMessage';
 export { StatusBadge } from './feedback/StatusBadge';
-export { Toast } from './feedback/Toast';
 export { DataTable, EmptyTableRow, TableCell, TableHeadCell, TableShell } from './tables/DataTable';
 export { Input } from './forms/Input';
 export { Select } from './forms/Select';

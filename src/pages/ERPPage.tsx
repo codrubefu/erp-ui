@@ -19,7 +19,7 @@ import type {
   Service,
 } from '../types/erp';
 
-const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-services', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'grades', 'check-in', 'members', 'services', 'events', 'events/calendar', 'events/categories', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
+const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-services', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'members', 'services', 'events', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
 const USE_LOCAL_ERP_CACHE = import.meta.env.VITE_USE_LOCAL_ERP_CACHE === 'true';
 const USE_LOCAL_ERP_SEED = import.meta.env.VITE_USE_LOCAL_ERP_SEED === 'true';
 
@@ -117,8 +117,7 @@ export default function ERPAdminPanel() {
   const location = useLocation();
   const auth = useAuth();
   const { pathname } = location;
-  const pathParts = pathname.split('/');
-  const routeSection = pathParts[2] === 'events' && ['calendar', 'categories'].includes(pathParts[3]) ? `events/${pathParts[3]}` : pathParts[2];
+  const routeSection = pathname.split('/')[2];
 
   const resolvedRouteSection: SectionId = routeSection && SECTION_IDS.includes(routeSection as SectionId)
     ? (routeSection as SectionId)
@@ -353,7 +352,7 @@ export default function ERPAdminPanel() {
   return (
     <div className="min-h-screen bg-[#f3f6fb] text-slate-900">
       <div className="flex min-h-screen">
-        <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar current={current} setCurrent={handleSidebarChange} open={sidebarOpen} />
         {sidebarOpen ? (
           <button
             aria-label="Close navigation"
@@ -395,3 +394,4 @@ export default function ERPAdminPanel() {
     </div>
   );
 }
+
