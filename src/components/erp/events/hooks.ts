@@ -64,6 +64,7 @@ export function useEvent(id?: number) {
 
 export function useEventOccurrences(eventId?: number, params: OccurrenceFilters = {}) {
   const [occurrences, setOccurrences] = useState<EventOccurrence[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta>({ current_page: 1, last_page: 1, per_page: params.per_page ?? 15, total: 0 });
   const [loading, setLoading] = useState(Boolean(eventId));
   const [error, setError] = useState('');
 
@@ -74,6 +75,7 @@ export function useEventOccurrences(eventId?: number, params: OccurrenceFilters 
     try {
       const payload = await eventService.getEventOccurrences(eventId, params);
       setOccurrences(payload.data ?? []);
+      setMeta(metaFrom(payload));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut incarca aparitiile.');
     } finally {
@@ -85,11 +87,12 @@ export function useEventOccurrences(eventId?: number, params: OccurrenceFilters 
     void reload();
   }, [reload]);
 
-  return { occurrences, loading, error, reload };
+  return { occurrences, meta, loading, error, reload };
 }
 
-export function useEventParticipants(occurrenceId?: number) {
+export function useEventParticipants(occurrenceId?: number, params: { page?: number; per_page?: number } = {}) {
   const [participants, setParticipants] = useState<EventParticipant[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta>({ current_page: 1, last_page: 1, per_page: params.per_page ?? 15, total: 0 });
   const [loading, setLoading] = useState(Boolean(occurrenceId));
   const [error, setError] = useState('');
 
@@ -98,18 +101,24 @@ export function useEventParticipants(occurrenceId?: number) {
     setLoading(true);
     setError('');
     try {
-      const payload = await eventService.getOccurrenceParticipants(occurrenceId);
-      setParticipants(Array.isArray(payload) ? payload : payload.data ?? []);
+      const payload = await eventService.getOccurrenceParticipants(occurrenceId, params);
+      if (Array.isArray(payload)) {
+        setParticipants(payload);
+        setMeta({ current_page: 1, last_page: 1, per_page: payload.length, total: payload.length });
+      } else {
+        setParticipants(payload.data ?? []);
+        setMeta(metaFrom(payload));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut incarca participantii.');
     } finally {
       setLoading(false);
     }
-  }, [occurrenceId]);
+  }, [occurrenceId, params]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
 
-  return { participants, loading, error, reload };
+  return { participants, meta, loading, error, reload };
 }

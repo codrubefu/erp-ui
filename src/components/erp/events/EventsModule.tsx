@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarClock, ChevronLeft, ChevronRight, CreditCard, Download, Edit3, Eye, Plus, RefreshCw, Save, Search, Tags, Trash2, Users, X } from 'lucide-react';
+import { AlertTriangle, CalendarClock, ChevronLeft, ChevronRight, CreditCard, Download, Edit3, Eye, Plus, RefreshCw, Save, Tags, Trash2, Users } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { eventService, type ApiValidationError, type EventCategory, type EventCategoryPayload, type EventItem, type EventOccurrence, type EventParticipant, type EventPayload, type EventStatus, type EventService, type EventUser, type OccurrenceStatus, type ParticipantStatus, type RecurrenceType, type Weekday } from '../../../services/eventService';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import { paymentService } from '../../../services/paymentService';
-import { ButtonLink, Modal, SectionCard, Toast } from '../../primitives';
+import { ButtonLink, DataTable, EmptyTableRow, Modal, SectionCard, TableCell, TableHeadCell, TableRow, TableShell, Toast } from '../../primitives';
 import { useEvent, useEventOccurrences, useEventParticipants, useEvents } from './hooks';
 import { useAuth } from '../../../context/useAuth';
 import { deviceLocale, formatApiDate, formatCurrency, formatDeviceDate, paymentMethodLabel } from '../../../utils/erp/formatters';
@@ -166,6 +166,7 @@ function EventsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const [filters, setFilters] = useState({ page: 1, per_page: 15, search: '', category_id: '', status: '', recurrence_type: '', requires_active_service: '', requires_payment: '', sort: 'created_at' as const, direction: 'desc' as const });
+  const [searchInput, setSearchInput] = useState(filters.search);
   const query = useMemo(() => filters, [filters]);
   const { events, meta, loading, error, reload } = useEvents(query);
   const [categories, setCategories] = useState<EventCategory[]>([]);
@@ -175,6 +176,13 @@ function EventsPage() {
   useEffect(() => {
     eventService.getCategories({ per_page: 100, is_active: '1' }).then((payload) => setCategories(payload.data ?? [])).catch(() => setCategories([]));
   }, []);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setFilters((prev) => (prev.search === searchInput ? prev : { ...prev, search: searchInput, page: 1 }));
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput]);
 
   if (!permissions.canViewEvents) return <SectionCard title={t('events.title')}><p className="text-sm text-slate-600">{t('events.missingViewRight')}</p></SectionCard>;
 
@@ -195,38 +203,55 @@ function EventsPage() {
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
       <SectionCard title={t('events.managementTitle')} action={<div className="flex flex-wrap gap-2"><ButtonLink to="calendar" variant="secondary"><CalendarClock className="h-4 w-4" />{t('events.calendar')}</ButtonLink>{permissions.canManageEvents ? <ButtonLink to="categories" variant="secondary"><Tags className="h-4 w-4" />{t('events.eventCategories')}</ButtonLink> : null}{permissions.canManageEvents ? <ButtonLink to="new" variant="primary"><Plus className="h-4 w-4" />{t('events.create')}</ButtonLink> : null}</div>}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-9">
-          <TextField label={t('events.searchTitle')} value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value, page: 1 }))} />
-          <SelectField label="Categorie" value={filters.category_id} onChange={(e) => setFilters((p) => ({ ...p, category_id: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
+          <TextField label={t('events.searchTitle')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+          <SelectField label={t('events.category')} value={filters.category_id} onChange={(e) => setFilters((p) => ({ ...p, category_id: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
           <SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{eventStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
           <SelectField label={t('events.recurrence')} value={filters.recurrence_type} onChange={(e) => setFilters((p) => ({ ...p, recurrence_type: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="once">once</option><option value="weekly">weekly</option><option value="monthly">monthly</option></SelectField>
           <SelectField label={t('services.service')} value={filters.requires_active_service} onChange={(e) => setFilters((p) => ({ ...p, requires_active_service: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
-          <SelectField label="Paid event" value={filters.requires_payment} onChange={(e) => setFilters((p) => ({ ...p, requires_payment: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
+          <SelectField label={t('events.paidEvent')} value={filters.requires_payment} onChange={(e) => setFilters((p) => ({ ...p, requires_payment: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('common.yes')}</option><option value="0">{t('common.no')}</option></SelectField>
           <SelectField label={t('events.sort')} value={filters.sort} onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value as typeof p.sort }))}><option value="created_at">created_at</option><option value="start_date">start_date</option><option value="title">title</option></SelectField>
-          <SelectField label="direction" value={filters.direction} onChange={(e) => setFilters((p) => ({ ...p, direction: e.target.value as typeof p.direction }))}><option value="desc">desc</option><option value="asc">asc</option></SelectField>
-          <button onClick={() => void reload()} className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Search className="h-4 w-4" />{t('common.search')}</button>
+          <SelectField label={t('events.direction')} value={filters.direction} onChange={(e) => setFilters((p) => ({ ...p, direction: e.target.value as typeof p.direction }))}><option value="desc">{t('events.directionDesc')}</option><option value="asc">{t('events.directionAsc')}</option></SelectField>
         </div>
         {error ? <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead><tr className="border-b text-slate-500"><th className="pb-3">{t('common.title')}</th><th className="pb-3">Categorie</th><th className="pb-3">{t('events.date')}</th><th className="pb-3">{t('events.recurrence')}</th><th className="pb-3">{t('services.service')}</th><th className="pb-3">Paid</th><th className="pb-3">{t('common.status')}</th><th className="pb-3 text-right">{t('common.actions')}</th></tr></thead>
-            <tbody>{events.length ? events.map((event) => (
-              <tr key={event.id} className="border-b border-slate-100 align-top">
-                <td className="py-4 font-semibold text-slate-900">{event.title}<p className="text-xs font-normal text-slate-500">{event.location || '-'}</p></td>
-                <td className="py-4"><CategoryBadge category={event.category} /></td>
-                <td className="py-4 text-slate-600">{formatDeviceDate(event.start_date)} {event.start_time}-{event.end_time}</td>
-                <td className="py-4"><RecurrenceBadge type={event.recurrence_type} /></td>
-                <td className="py-4"><ServiceRequirementBadge event={event} /></td>
-                <td className="py-4">{event.requires_payment ? <span className="font-semibold text-slate-900">{event.payment_amount ?? '-'} {event.payment_type ?? ''}</span> : '-'}</td>
-                <td className="py-4"><StatusBadge status={event.status} /></td>
-                <td className="py-4"><div className="flex flex-wrap justify-end gap-2">
-                  <Link to={`${event.id}`} className="rounded-lg border px-3 py-2"><Eye className="h-4 w-4" /></Link>
-                  {permissions.canManageEvents ? <Link to={`${event.id}/edit`} className="rounded-lg border px-3 py-2"><Edit3 className="h-4 w-4" /></Link> : null}
-                  <Link to={`${event.id}/occurrences`} className="rounded-lg border px-3 py-2"><CalendarClock className="h-4 w-4" /></Link>
-                  {permissions.canManageEvents ? <button onClick={() => setDeleting(event)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button> : null}
-                </div></td>
-              </tr>
-            )) : <tr><td colSpan={8} className="py-10 text-center text-slate-500">{loading ? t('events.loadingList') : t('events.empty')}</td></tr>}</tbody>
-          </table>
+        <div className="mt-6">
+          <TableShell>
+            <DataTable>
+              <thead>
+                <tr>
+                  <TableHeadCell>{t('common.title')}</TableHeadCell>
+                  <TableHeadCell>{t('events.category')}</TableHeadCell>
+                  <TableHeadCell>{t('events.date')}</TableHeadCell>
+                  <TableHeadCell>{t('events.recurrence')}</TableHeadCell>
+                  <TableHeadCell>{t('services.service')}</TableHeadCell>
+                  <TableHeadCell>{t('events.paidEvent')}</TableHeadCell>
+                  <TableHeadCell>{t('common.status')}</TableHeadCell>
+                  <TableHeadCell align="right">{t('common.actions')}</TableHeadCell>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell label={t('common.title')} className="font-semibold text-slate-900">{event.title}<p className="text-xs font-normal text-slate-500">{event.location || '-'}</p></TableCell>
+                    <TableCell label={t('events.category')}><CategoryBadge category={event.category} /></TableCell>
+                    <TableCell label={t('events.date')} className="text-slate-600">{formatDeviceDate(event.start_date)} {event.start_time}-{event.end_time}</TableCell>
+                    <TableCell label={t('events.recurrence')}><RecurrenceBadge type={event.recurrence_type} /></TableCell>
+                    <TableCell label={t('services.service')}><ServiceRequirementBadge event={event} /></TableCell>
+                    <TableCell label={t('events.paidEvent')}>{event.requires_payment ? <span className="font-semibold text-slate-900">{event.payment_amount ?? '-'} {event.payment_type ?? ''}</span> : '-'}</TableCell>
+                    <TableCell label={t('common.status')}><StatusBadge status={event.status} /></TableCell>
+                    <TableCell label={t('common.actions')} align="right">
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                        <Link to={`${event.id}`} className="rounded-lg border px-3 py-2"><Eye className="h-4 w-4" /></Link>
+                        {permissions.canManageEvents ? <Link to={`${event.id}/edit`} className="rounded-lg border px-3 py-2"><Edit3 className="h-4 w-4" /></Link> : null}
+                        <Link to={`${event.id}/occurrences`} className="rounded-lg border px-3 py-2"><CalendarClock className="h-4 w-4" /></Link>
+                        {permissions.canManageEvents ? <button onClick={() => setDeleting(event)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button> : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!events.length ? <EmptyTableRow colSpan={8}>{loading ? t('events.loadingList') : t('events.empty')}</EmptyTableRow> : null}
+              </tbody>
+            </DataTable>
+          </TableShell>
         </div>
         <div className="mt-4"><Pagination page={meta.current_page} lastPage={meta.last_page} onPage={(page) => setFilters((p) => ({ ...p, page }))} /></div>
       </SectionCard>
@@ -331,8 +356,9 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
     if (!form.end_time) nextErrors.end_time = t('events.endTimeRequired');
     if (!form.start_date) nextErrors.start_date = t('events.startDateRequired');
     if (form.requires_active_service && !form.required_service_id) nextErrors.required_service_id = t('events.requiredServiceRequired');
-    if (form.requires_payment && !form.payment_amount) nextErrors.payment_amount = 'Payment amount is required.';
-    if (form.requires_payment && !form.payment_type) nextErrors.payment_type = 'Currency is required.';
+    if (form.requires_payment && !form.payment_amount) nextErrors.payment_amount = t('events.paymentAmountRequired');
+    if (form.requires_payment && !form.payment_type) nextErrors.payment_type = t('events.currencyRequired');
+    if (form.recurrence_type === 'weekly' && !(form.recurrence_days ?? []).length) nextErrors.recurrence_days = t('events.weeklyDaysRequired');
     setClientErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -402,26 +428,47 @@ function EventForm({ mode }: { mode: 'create' | 'edit' }) {
     <form onSubmit={onSubmit} className="space-y-6">
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
       <SectionCard title={mode === 'create' ? t('events.createEvent') : t('events.editEvent')} action={<ButtonLink to="/erp/events" variant="secondary">{t('common.back')}</ButtonLink>}>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextField label={t('common.title')} value={form.title} onChange={(e) => updateField('title', e.target.value)} error={clientErrors.title || fieldError(serverErrors, 'title')} />
-          <SelectField label="Categorie" value={form.category_id ?? ''} onChange={(e) => updateField('category_id', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'category_id')}><option value="">Fara categorie</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
-          <TextField label={t('articles.locations')} value={form.location ?? ''} onChange={(e) => updateField('location', e.target.value)} error={fieldError(serverErrors, 'location')} />
-          <TextField label="start_time" type="time" value={form.start_time} onChange={(e) => updateField('start_time', e.target.value)} error={clientErrors.start_time || fieldError(serverErrors, 'start_time')} />
-          <TextField label="end_time" type="time" value={form.end_time} onChange={(e) => updateField('end_time', e.target.value)} error={clientErrors.end_time || fieldError(serverErrors, 'end_time')} />
-          <TextField label="start_date" type="date" value={form.start_date} onChange={(e) => updateField('start_date', e.target.value)} error={clientErrors.start_date || fieldError(serverErrors, 'start_date')} />
-          <TextField label="end_date" type="date" value={form.end_date ?? ''} onChange={(e) => updateField('end_date', e.target.value || null)} error={fieldError(serverErrors, 'end_date')} />
-          <SelectField label="recurrence_type" value={form.recurrence_type} onChange={(e) => updateField('recurrence_type', e.target.value as RecurrenceType)} error={fieldError(serverErrors, 'recurrence_type')}><option value="once">once</option><option value="weekly">weekly</option><option value="monthly">monthly</option></SelectField>
-          {recurrenceType === 'monthly' ? <TextField label="monthly_day" type="number" min={1} max={31} value={form.monthly_day ?? ''} onChange={(e) => updateField('monthly_day', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'monthly_day')} /> : null}
-          {recurrenceType === 'weekly' ? <div><span className="mb-2 block text-sm font-medium text-slate-700">{t('events.recurrenceDays')}</span><div className="grid grid-cols-2 gap-2">{weekdays.map((day) => <label key={day} className="rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={(form.recurrence_days ?? []).includes(day)} onChange={(e) => updateField('recurrence_days', e.target.checked ? [...(form.recurrence_days ?? []), day] : (form.recurrence_days ?? []).filter((item) => item !== day))} className="mr-2 accent-indigo-600" />{t(weekdayLabelKeys[day])}</label>)}</div>{fieldError(serverErrors, 'recurrence_days') ? <span className="mt-1 block text-xs text-red-600">{fieldError(serverErrors, 'recurrence_days')}</span> : null}</div> : null}
-          <TextField label="max_participants" type="number" min={1} value={form.max_participants ?? ''} onChange={(e) => updateField('max_participants', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'max_participants')} />
-          <SelectField label="status" value={form.status} onChange={(e) => updateField('status', e.target.value as EventStatus)} error={fieldError(serverErrors, 'status')}>{eventStatuses.map((status) => <option key={status}>{status}</option>)}</SelectField>
-          <label className="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.requires_active_service} onChange={(e) => updateField('requires_active_service', e.target.checked)} className="accent-indigo-600" />requires_active_service</label>
-          {needsService ? <SelectField label={t('events.requiredService')} value={form.required_service_id ?? ''} onChange={(e) => updateField('required_service_id', e.target.value ? Number(e.target.value) : null)} error={clientErrors.required_service_id || fieldError(serverErrors, 'required_service_id')}><option value="">{t('common.select')}</option>{services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</SelectField> : null}
-          <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input type="checkbox" checked={form.requires_payment} onChange={(e) => updateField('requires_payment', e.target.checked)} className="accent-indigo-600" />Paid Event</label>
-            {needsPayment ? <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"><TextField label="payment_amount" type="number" min={0} step="0.01" value={form.payment_amount ?? ''} onChange={(e) => updateField('payment_amount', e.target.value ? Number(e.target.value) : null)} error={clientErrors.payment_amount || fieldError(serverErrors, 'payment_amount')} /><TextField label="currency" value={form.payment_type ?? 'RON'} onChange={(e) => updateField('payment_type', e.target.value)} error={clientErrors.payment_type || fieldError(serverErrors, 'payment_type')} /></div> : <p className="mt-2 text-sm text-slate-500">Payment fields are cleared while this event is free.</p>}
-          </div>
-          <label className="md:col-span-2"><span className="mb-2 block text-sm font-medium text-slate-700">description</span><textarea value={form.description ?? ''} onChange={(e) => updateField('description', e.target.value)} rows={4} className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none" />{fieldError(serverErrors, 'description') ? <span className="text-xs text-red-600">{fieldError(serverErrors, 'description')}</span> : null}</label>
+        <div className="space-y-8">
+          <fieldset className="space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wide text-slate-500">{t('events.sectionGeneralDetails')}</legend>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <TextField label={t('common.title')} value={form.title} onChange={(e) => updateField('title', e.target.value)} error={clientErrors.title || fieldError(serverErrors, 'title')} />
+              <SelectField label={t('events.category')} value={form.category_id ?? ''} onChange={(e) => updateField('category_id', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'category_id')}><option value="">{t('events.noCategory')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</SelectField>
+              <TextField label={t('events.location')} value={form.location ?? ''} onChange={(e) => updateField('location', e.target.value)} error={fieldError(serverErrors, 'location')} />
+              <label className="md:col-span-2"><span className="mb-2 block text-sm font-medium text-slate-700">{t('events.description')}</span><textarea value={form.description ?? ''} onChange={(e) => updateField('description', e.target.value)} rows={4} className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none" />{fieldError(serverErrors, 'description') ? <span className="text-xs text-red-600">{fieldError(serverErrors, 'description')}</span> : null}</label>
+            </div>
+          </fieldset>
+
+          <hr className="border-slate-100" />
+
+          <fieldset className="space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wide text-slate-500">{t('events.sectionScheduleRecurrence')}</legend>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <TextField label={t('events.startTime')} type="time" value={form.start_time} onChange={(e) => updateField('start_time', e.target.value)} error={clientErrors.start_time || fieldError(serverErrors, 'start_time')} />
+              <TextField label={t('events.endTime')} type="time" value={form.end_time} onChange={(e) => updateField('end_time', e.target.value)} error={clientErrors.end_time || fieldError(serverErrors, 'end_time')} />
+              <TextField label={t('events.startDate')} type="date" value={form.start_date} onChange={(e) => updateField('start_date', e.target.value)} error={clientErrors.start_date || fieldError(serverErrors, 'start_date')} />
+              <TextField label={t('events.endDate')} type="date" value={form.end_date ?? ''} onChange={(e) => updateField('end_date', e.target.value || null)} error={fieldError(serverErrors, 'end_date')} />
+              <SelectField label={t('events.recurrenceType')} value={form.recurrence_type} onChange={(e) => updateField('recurrence_type', e.target.value as RecurrenceType)} error={fieldError(serverErrors, 'recurrence_type')}><option value="once">once</option><option value="weekly">weekly</option><option value="monthly">monthly</option></SelectField>
+              {recurrenceType === 'monthly' ? <TextField label={t('events.recurrenceDaysOrMonthlyDay')} type="number" min={1} max={31} value={form.monthly_day ?? ''} onChange={(e) => updateField('monthly_day', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'monthly_day')} /> : null}
+              {recurrenceType === 'weekly' ? <div><span className="mb-2 block text-sm font-medium text-slate-700">{t('events.recurrenceDays')}</span><div className="grid grid-cols-2 gap-2">{weekdays.map((day) => <label key={day} className="rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={(form.recurrence_days ?? []).includes(day)} onChange={(e) => updateField('recurrence_days', e.target.checked ? [...(form.recurrence_days ?? []), day] : (form.recurrence_days ?? []).filter((item) => item !== day))} className="mr-2 accent-indigo-600" />{t(weekdayLabelKeys[day])}</label>)}</div>{clientErrors.recurrence_days || fieldError(serverErrors, 'recurrence_days') ? <span className="mt-1 block text-xs text-red-600">{clientErrors.recurrence_days || fieldError(serverErrors, 'recurrence_days')}</span> : null}</div> : null}
+            </div>
+          </fieldset>
+
+          <hr className="border-slate-100" />
+
+          <fieldset className="space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wide text-slate-500">{t('events.sectionParticipationPayment')}</legend>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <TextField label={t('events.maxParticipants')} type="number" min={1} value={form.max_participants ?? ''} onChange={(e) => updateField('max_participants', e.target.value ? Number(e.target.value) : null)} error={fieldError(serverErrors, 'max_participants')} />
+              <SelectField label={t('common.status')} value={form.status} onChange={(e) => updateField('status', e.target.value as EventStatus)} error={fieldError(serverErrors, 'status')}>{eventStatuses.map((status) => <option key={status}>{status}</option>)}</SelectField>
+              <label className="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.requires_active_service} onChange={(e) => updateField('requires_active_service', e.target.checked)} className="accent-indigo-600" />{t('events.requiresActiveService')}</label>
+              {needsService ? <SelectField label={t('events.requiredService')} value={form.required_service_id ?? ''} onChange={(e) => updateField('required_service_id', e.target.value ? Number(e.target.value) : null)} error={clientErrors.required_service_id || fieldError(serverErrors, 'required_service_id')}><option value="">{t('common.select')}</option>{services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</SelectField> : null}
+              <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input type="checkbox" checked={form.requires_payment} onChange={(e) => updateField('requires_payment', e.target.checked)} className="accent-indigo-600" />{t('events.paidEvent')}</label>
+                {needsPayment ? <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"><TextField label={t('events.paymentAmount')} type="number" min={0} step="0.01" value={form.payment_amount ?? ''} onChange={(e) => updateField('payment_amount', e.target.value ? Number(e.target.value) : null)} error={clientErrors.payment_amount || fieldError(serverErrors, 'payment_amount')} /><TextField label={t('events.currency')} value={form.payment_type ?? 'RON'} onChange={(e) => updateField('payment_type', e.target.value)} error={clientErrors.payment_type || fieldError(serverErrors, 'payment_type')} /></div> : <p className="mt-2 text-sm text-slate-500">{t('events.paymentFieldsHint')}</p>}
+              </div>
+            </div>
+          </fieldset>
         </div>
         <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => navigate('/erp/events')} className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.cancel')}</button><button type="submit" onClick={() => setCloseAfterSave(false)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.save')}</button><button type="submit" onClick={() => setCloseAfterSave(true)} disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{t('common.saveAndClose')}</button></div>
       </SectionCard>
@@ -439,13 +486,40 @@ function EventDetailsPage() {
   return (
     <SectionCard title={event.title} action={<div className="flex gap-2">{permissions.canManageEvents ? <ButtonLink to="edit" variant="secondary">{t('common.edit')}</ButtonLink> : null}<ButtonLink to="occurrences" variant="dark">{t('events.viewOccurrences')}</ButtonLink></div>}>
       <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
-        <p><b>descriere:</b> {event.description || '-'}</p><p><b>locatie:</b> {event.location || '-'}</p><p><b>categorie:</b> <CategoryBadge category={event.category} /></p>
-        <p><b>interval orar:</b> {event.start_date} {event.start_time}-{event.end_time}</p><p><b>tip recurență:</b> <RecurrenceBadge type={event.recurrence_type} /></p>
-        <p><b>zile/zi lunara:</b> {event.recurrence_type === 'weekly' ? event.recurrence_days?.map((d) => t(weekdayLabelKeys[d])).join(', ') : event.recurrence_type === 'monthly' ? event.monthly_day : '-'}</p>
-        <p><b>conditie participare:</b> <ServiceRequirementBadge event={event} /></p><p><b>status:</b> <StatusBadge status={event.status} /></p><p><b>max participanti:</b> {event.max_participants ?? 'nelimitat'}</p>
-        <p><b>paid event:</b> {event.requires_payment ? `${event.payment_amount ?? '-'} ${event.payment_type ?? ''}` : 'nu'}</p><p><b>occurrences_count:</b> {event.occurrences_count ?? event.occurrences?.length ?? '-'}</p>
+        <p><b>{t('events.description')}:</b> {event.description || '-'}</p><p><b>{t('events.location')}:</b> {event.location || '-'}</p><p><b>{t('events.category')}:</b> <CategoryBadge category={event.category} /></p>
+        <p><b>{t('events.timeRange')}:</b> {event.start_date} {event.start_time}-{event.end_time}</p><p><b>{t('events.recurrenceType')}:</b> <RecurrenceBadge type={event.recurrence_type} /></p>
+        <p><b>{t('events.recurrenceDaysOrMonthlyDay')}:</b> {event.recurrence_type === 'weekly' ? event.recurrence_days?.map((d) => t(weekdayLabelKeys[d])).join(', ') : event.recurrence_type === 'monthly' ? event.monthly_day : '-'}</p>
+        <p><b>{t('events.participationCondition')}:</b> <ServiceRequirementBadge event={event} /></p><p><b>{t('common.status')}:</b> <StatusBadge status={event.status} /></p><p><b>{t('events.maxParticipants')}:</b> {event.max_participants ?? t('events.unlimited')}</p>
+        <p><b>{t('events.paidEvent')}:</b> {event.requires_payment ? `${event.payment_amount ?? '-'} ${event.payment_type ?? ''}` : t('common.no')}</p><p><b>{t('events.occurrencesCount')}:</b> {event.occurrences_count ?? event.occurrences?.length ?? '-'}</p>
       </div>
-      {event.occurrences?.length ? <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">occurrence_date</th><th className="pb-3">start_datetime</th><th className="pb-3">end_datetime</th><th className="pb-3">status</th><th className="pb-3">participants</th></tr></thead><tbody>{event.occurrences.map((occurrence) => <tr key={occurrence.id} className="border-b border-slate-100"><td className="py-3">{occurrence.occurrence_date}</td><td>{occurrence.start_datetime}</td><td>{occurrence.end_datetime}</td><td><StatusBadge status={occurrence.status} /></td><td>{occurrence.participants_count}</td></tr>)}</tbody></table></div> : null}
+      {event.occurrences?.length ? (
+        <div className="mt-6">
+          <TableShell>
+            <DataTable>
+              <thead>
+                <tr>
+                  <TableHeadCell>{t('events.occurrenceDate')}</TableHeadCell>
+                  <TableHeadCell>{t('events.startDatetime')}</TableHeadCell>
+                  <TableHeadCell>{t('events.endDatetime')}</TableHeadCell>
+                  <TableHeadCell>{t('common.status')}</TableHeadCell>
+                  <TableHeadCell>{t('events.participants')}</TableHeadCell>
+                </tr>
+              </thead>
+              <tbody>
+                {event.occurrences.map((occurrence) => (
+                  <TableRow key={occurrence.id}>
+                    <TableCell label={t('events.occurrenceDate')}>{occurrence.occurrence_date}</TableCell>
+                    <TableCell label={t('events.startDatetime')}>{occurrence.start_datetime}</TableCell>
+                    <TableCell label={t('events.endDatetime')}>{occurrence.end_datetime}</TableCell>
+                    <TableCell label={t('common.status')}><StatusBadge status={occurrence.status} /></TableCell>
+                    <TableCell label={t('events.participants')}>{occurrence.participants_count}</TableCell>
+                  </TableRow>
+                ))}
+              </tbody>
+            </DataTable>
+          </TableShell>
+        </div>
+      ) : null}
     </SectionCard>
   );
 }
@@ -480,11 +554,11 @@ function EventCategoriesPage() {
       setCategories(payload.data ?? []);
       setMeta(payload.meta ?? { current_page: payload.current_page ?? 1, last_page: payload.last_page ?? 1, per_page: payload.per_page ?? 15, total: payload.total ?? payload.data?.length ?? 0 });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nu am putut incarca categoriile.');
+      setError(err instanceof Error ? err.message : t('events.categoriesLoadError'));
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, t]);
 
   useEffect(() => {
     void reload();
@@ -507,7 +581,7 @@ function EventCategoriesPage() {
   const save = async () => {
     if (saving) return;
     const nextErrors: Record<string, string> = {};
-    if (!form.name.trim()) nextErrors.name = 'Numele categoriei este obligatoriu.';
+    if (!form.name.trim()) nextErrors.name = t('events.categoryNameRequired');
     setClientErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -548,37 +622,53 @@ function EventCategoriesPage() {
       {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
       <SectionCard title={t('events.eventCategories')} action={<ButtonLink to="/erp/events" variant="secondary">{t('events.backToEvents')}</ButtonLink>}>
         <form onSubmit={(eventSubmit) => { eventSubmit.preventDefault(); void save(); }} className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_140px_1fr_auto]">
-          <TextField label="Nume" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} error={clientErrors.name || fieldError(serverErrors, 'name')} />
-          <TextField label="Culoare" type="color" value={form.color ?? '#2563eb'} onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))} error={fieldError(serverErrors, 'color')} />
-          <TextField label="Descriere" value={form.description ?? ''} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} error={fieldError(serverErrors, 'description')} />
-          <label className="mt-7 flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.is_active ?? true} onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))} className="accent-indigo-600" />Activa</label>
+          <TextField label={t('events.categoryName')} value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} error={clientErrors.name || fieldError(serverErrors, 'name')} />
+          <TextField label={t('events.color')} type="color" value={form.color ?? '#2563eb'} onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))} error={fieldError(serverErrors, 'color')} />
+          <TextField label={t('events.description')} value={form.description ?? ''} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} error={fieldError(serverErrors, 'description')} />
+          <label className="mt-7 flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={form.is_active ?? true} onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))} className="accent-indigo-600" />{t('events.active')}</label>
           <div className="flex gap-2 md:col-span-4">
-            <button type="button" onClick={() => void save()} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{saving ? 'Se salveaza...' : editing ? 'Actualizeaza' : 'Adauga'}</button>
-            {editing ? <button type="button" onClick={resetForm} className="rounded-lg border px-4 py-2 text-sm font-semibold">Anuleaza editarea</button> : null}
+            <button type="button" onClick={() => void save()} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"><Save className="h-4 w-4" />{saving ? t('events.categorySaving') : editing ? t('events.categoryUpdate') : t('common.add')}</button>
+            {editing ? <button type="button" onClick={resetForm} className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('events.categoryCancelEdit')}</button> : null}
           </div>
         </form>
       </SectionCard>
-      <SectionCard title="Lista categorii">
+      <SectionCard title={t('events.categoriesListTitle')}>
         <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
-          <TextField label="Cauta" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
-          <SelectField label="Status" value={filters.is_active} onChange={(e) => setFilters((prev) => ({ ...prev, is_active: e.target.value, page: 1 }))}><option value="">Toate</option><option value="1">Active</option><option value="0">Inactive</option></SelectField>
-          <button onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">Cauta</button>
+          <TextField label={t('common.search')} value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
+          <SelectField label={t('common.status')} value={filters.is_active} onChange={(e) => setFilters((prev) => ({ ...prev, is_active: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option><option value="1">{t('events.active')}</option><option value="0">{t('events.inactive')}</option></SelectField>
+          <button onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
         </div>
         {error ? <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead><tr className="border-b text-slate-500"><th className="pb-3">Categorie</th><th className="pb-3">Descriere</th><th className="pb-3">Evenimente</th><th className="pb-3">Status</th><th className="pb-3 text-right">Actiuni</th></tr></thead>
-            <tbody>{categories.length ? categories.map((category) => (
-              <tr key={category.id} className="border-b border-slate-100">
-                <td className="py-4"><CategoryBadge category={category} /></td>
-                <td className="py-4 text-slate-600">{category.description || '-'}</td>
-                <td className="py-4">{category.events_count ?? 0}</td>
-                <td className="py-4"><StatusBadge status={category.is_active ? 'active' : 'inactive'} /></td>
-                <td className="py-4"><div className="flex justify-end gap-2"><button onClick={() => startEdit(category)} className="rounded-lg border px-3 py-2"><Edit3 className="h-4 w-4" /></button><button onClick={() => setDeleting(category)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div></td>
+        <TableShell>
+          <DataTable>
+            <thead>
+              <tr>
+                <TableHeadCell>{t('events.category')}</TableHeadCell>
+                <TableHeadCell>{t('events.description')}</TableHeadCell>
+                <TableHeadCell>{t('menu.events')}</TableHeadCell>
+                <TableHeadCell>{t('common.status')}</TableHeadCell>
+                <TableHeadCell align="right">{t('common.actions')}</TableHeadCell>
               </tr>
-            )) : <tr><td colSpan={5} className="py-10 text-center text-slate-500">{loading ? t('common.loading') : t('events.noCategories')}</td></tr>}</tbody>
-          </table>
-        </div>
+            </thead>
+            <tbody>
+              {categories.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell label={t('events.category')}><CategoryBadge category={category} /></TableCell>
+                  <TableCell label={t('events.description')} className="text-slate-600">{category.description || '-'}</TableCell>
+                  <TableCell label={t('menu.events')}>{category.events_count ?? 0}</TableCell>
+                  <TableCell label={t('common.status')}><StatusBadge status={category.is_active ? 'active' : 'inactive'} /></TableCell>
+                  <TableCell label={t('common.actions')} align="right">
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                      <button onClick={() => startEdit(category)} className="rounded-lg border px-3 py-2"><Edit3 className="h-4 w-4" /></button>
+                      <button onClick={() => setDeleting(category)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!categories.length ? <EmptyTableRow colSpan={5}>{loading ? t('common.loading') : t('events.noCategories')}</EmptyTableRow> : null}
+            </tbody>
+          </DataTable>
+        </TableShell>
         <div className="mt-4"><Pagination page={meta.current_page} lastPage={meta.last_page} onPage={(page) => setFilters((prev) => ({ ...prev, page }))} /></div>
       </SectionCard>
       {deleting ? <DeleteConfirmModal label={deleting.name} onCancel={() => setDeleting(null)} onConfirm={() => void remove()} /> : null}
@@ -594,6 +684,7 @@ function EventCalendarPage() {
   const [status, setStatus] = useState('');
   const [categories, setCategories] = useState<EventCategory[]>([]);
   const [occurrences, setOccurrences] = useState<EventOccurrence[]>([]);
+  const [occurrencesTotal, setOccurrencesTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const range = useMemo(() => calendarRange(anchor, mode), [anchor, mode]);
@@ -621,6 +712,7 @@ function EventCalendarPage() {
         per_page: 500,
       });
       setOccurrences(payload.data ?? []);
+      setOccurrencesTotal(payload.meta?.total ?? payload.total ?? payload.data?.length ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nu am putut incarca evenimentele din calendar.');
     } finally {
@@ -668,6 +760,7 @@ function EventCalendarPage() {
       </div>
 
       {error ? <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
+      {occurrencesTotal > occurrences.length ? <p className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.calendarTruncatedWarning')}</p> : null}
       <div className="grid grid-cols-7 overflow-hidden rounded-lg border border-slate-200 bg-white">
         {weekdays.map((day) => <div key={day} className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-slate-500">{day.slice(0, 3)}</div>)}
         {days.map((day) => {
@@ -703,26 +796,51 @@ function EventOccurrencesPage() {
   const { t } = useTranslation();
   const { eventId } = useParams();
   const id = Number(eventId);
-  const [filters, setFilters] = useState({ date_from: '', date_to: '', status: '' });
+  const [filters, setFilters] = useState({ date_from: '', date_to: '', status: '', page: 1, per_page: 15 });
   const { event } = useEvent(id);
-  const { occurrences, loading, error, reload } = useEventOccurrences(id, filters);
+  const { occurrences, meta, loading, error, reload } = useEventOccurrences(id, filters);
   const permissions = usePermissions();
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const cancelOccurrence = async (occurrenceId: number) => {
-    try {
-      await eventService.cancelOccurrence(occurrenceId);
-      setToast({ type: 'success', message: t('events.occurrenceCancelled') });
-      await reload();
-    } catch (err) {
-      setToast({ type: 'error', message: err instanceof Error ? err.message : t('events.cancelOccurrenceError') });
-    }
-  };
   return (
     <SectionCard title={t('events.occurrencesFor', { title: event?.title ?? '' })} action={<ButtonLink to="/erp/events" variant="secondary">{t('common.back')}</ButtonLink>}>
-      {toast ? <Toast {...toast} onClose={() => setToast(null)} /> : null}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><TextField label={t('events.dateFrom')} type="date" value={filters.date_from} onChange={(e) => setFilters((p) => ({ ...p, date_from: e.target.value }))} /><TextField label={t('events.dateTo')} type="date" value={filters.date_to} onChange={(e) => setFilters((p) => ({ ...p, date_to: e.target.value }))} /><SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}><option value="">{t('common.all')}</option>{occurrenceStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><button onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><RefreshCw className="mr-2 inline h-4 w-4" />{t('events.filter')}</button></div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><TextField label={t('events.dateFrom')} type="date" value={filters.date_from} onChange={(e) => setFilters((p) => ({ ...p, date_from: e.target.value, page: 1 }))} /><TextField label={t('events.dateTo')} type="date" value={filters.date_to} onChange={(e) => setFilters((p) => ({ ...p, date_to: e.target.value, page: 1 }))} /><SelectField label={t('common.status')} value={filters.status} onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value, page: 1 }))}><option value="">{t('common.all')}</option>{occurrenceStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField><button onClick={() => void reload()} className="mt-7 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><RefreshCw className="mr-2 inline h-4 w-4" />{t('events.filter')}</button></div>
       {error ? <p className="mt-4 text-red-600">{error}</p> : null}
-      <div className="mt-6 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="pb-3">{t('events.occurrenceDate')}</th><th className="pb-3">{t('events.startDatetime')}</th><th className="pb-3">{t('events.endDatetime')}</th><th className="pb-3">{t('common.status')}</th><th className="pb-3">{t('events.participants')}</th><th className="pb-3">{t('events.places')}</th><th className="pb-3 text-right">{t('common.actions')}</th></tr></thead><tbody>{occurrences.length ? occurrences.map((o) => <tr key={o.id} className="border-b border-slate-100"><td className="py-4">{o.occurrence_date}</td><td>{o.start_datetime}</td><td>{o.end_datetime}</td><td><StatusBadge status={o.status} /></td><td>{o.participants_count}</td><td>{o.available_places ?? t('events.unlimited')}</td><td><div className="flex justify-end gap-2">{permissions.canViewParticipants ? <Link to={`${o.id}/participants`} className="rounded-lg border px-3 py-2"><Users className="h-4 w-4" /></Link> : null}{permissions.canManageParticipants ? <Link to={`${o.id}/participants?add=1`} className="rounded-lg border px-3 py-2"><Plus className="h-4 w-4" /></Link> : null}{permissions.canManageEvents ? <button onClick={() => void cancelOccurrence(o.id)} className="rounded-lg border px-3 py-2 text-red-600"><X className="h-4 w-4" /></button> : null}</div></td></tr>) : <tr><td colSpan={7} className="py-10 text-center text-slate-500">{loading ? t('common.loading') : t('events.noOccurrences')}</td></tr>}</tbody></table></div>
+      <div className="mt-6">
+        <TableShell>
+          <DataTable>
+            <thead>
+              <tr>
+                <TableHeadCell>{t('events.occurrenceDate')}</TableHeadCell>
+                <TableHeadCell>{t('events.startDatetime')}</TableHeadCell>
+                <TableHeadCell>{t('events.endDatetime')}</TableHeadCell>
+                <TableHeadCell>{t('common.status')}</TableHeadCell>
+                <TableHeadCell>{t('events.participants')}</TableHeadCell>
+                <TableHeadCell>{t('events.places')}</TableHeadCell>
+                <TableHeadCell align="right">{t('common.actions')}</TableHeadCell>
+              </tr>
+            </thead>
+            <tbody>
+              {occurrences.map((o) => (
+                <TableRow key={o.id}>
+                  <TableCell label={t('events.occurrenceDate')}>{o.occurrence_date}</TableCell>
+                  <TableCell label={t('events.startDatetime')}>{o.start_datetime}</TableCell>
+                  <TableCell label={t('events.endDatetime')}>{o.end_datetime}</TableCell>
+                  <TableCell label={t('common.status')}><StatusBadge status={o.status} /></TableCell>
+                  <TableCell label={t('events.participants')}>{o.participants_count}</TableCell>
+                  <TableCell label={t('events.places')}>{o.available_places ?? t('events.unlimited')}</TableCell>
+                  <TableCell label={t('common.actions')} align="right">
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                      {permissions.canViewParticipants ? <Link to={`${o.id}/participants`} className="rounded-lg border px-3 py-2"><Users className="h-4 w-4" /></Link> : null}
+                      {permissions.canManageParticipants ? <Link to={`${o.id}/participants?add=1`} className="rounded-lg border px-3 py-2"><Plus className="h-4 w-4" /></Link> : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!occurrences.length ? <EmptyTableRow colSpan={7}>{loading ? t('common.loading') : t('events.noOccurrences')}</EmptyTableRow> : null}
+            </tbody>
+          </DataTable>
+        </TableShell>
+      </div>
+      <div className="mt-4"><Pagination page={meta.current_page} lastPage={meta.last_page} onPage={(page) => setFilters((p) => ({ ...p, page }))} /></div>
     </SectionCard>
   );
 }
@@ -832,7 +950,60 @@ function AddParticipantsPanel({ occurrenceId, event, availableSlots, onClose, on
 
   const allPageSelected = selectableUsers.length > 0 && selectableUsers.every((user) => selectedUserIds.includes(user.id));
 
-  return <div className="mb-6 rounded-lg border border-slate-200 bg-white p-5"><div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between"><div><h3 className="text-lg font-semibold">{t('events.addParticipant')}</h3><p className="mt-1 text-sm text-slate-500">Selecteaza unul sau mai multi useri eligibili pentru aparitia curenta.</p></div><button onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.close')}</button></div>{event?.requires_active_service ? <p className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.eventNeedsActiveService')}</p> : null}{blocked ? <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{t('events.noAvailablePlaces')}</p> : null}{error ? <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}<div className="mt-4 space-y-4"><div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_180px]"><TextField label={t('events.searchUser')} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('events.searchUserPlaceholder')} autoFocus /><SelectField label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField></div><div className="overflow-hidden rounded-lg border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="w-12 px-4 py-3"><input type="checkbox" checked={allPageSelected} onChange={(e) => togglePage(e.target.checked)} disabled={!selectableUsers.length || blocked} className="h-4 w-4 accent-indigo-600" /></th><th className="px-4 py-3">{t('users.user')}</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">{t('members.phone')}</th><th className="px-4 py-3">{t('services.service')}</th></tr></thead><tbody>{selectableUsers.length ? selectableUsers.map((u) => <tr key={u.id} className={`border-t border-slate-100 ${selectedUserIds.includes(u.id) ? 'bg-indigo-50/60' : ''}`}><td className="px-4 py-3"><input type="checkbox" checked={selectedUserIds.includes(u.id)} onChange={(e) => toggleUser(u.id, e.target.checked)} disabled={blocked} className="h-4 w-4 accent-indigo-600" /></td><td className="px-4 py-3 font-medium text-slate-900">{userLabel(u)}</td><td className="px-4 py-3 text-slate-600">{u.email}</td><td className="px-4 py-3 text-slate-600">{u.phone || '-'}</td><td className="px-4 py-3">{hasActiveService(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{t('users.statusActive')}</span> : <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Eligibil</span>}</td></tr>) : <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{loadingUsers ? t('events.loadingUsers') : t('events.noUsers')}</td></tr>}</tbody></table></div><div className="flex flex-col gap-3 text-sm text-slate-600 md:flex-row md:items-center md:justify-between"><span>{usersMeta.total ? t('events.usersCount', { count: usersMeta.total }) : t('events.noResults')} - {selectedUserIds.length} selectati</span><Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} /></div><label><span className="mb-2 block text-sm font-medium">{t('events.notes')}</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-lg border px-4 py-3 text-sm" /></label></div><div className="mt-6 flex justify-end gap-2"><button onClick={() => setSelectedUserIds([])} disabled={!selectedUserIds.length || saving} className="rounded-lg border px-4 py-2 text-sm font-semibold disabled:opacity-50">Goleste selectia</button><button onClick={() => void save()} disabled={!selectedUserIds.length || blocked || saving} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? t('events.adding') : `Adauga ${selectedUserIds.length} participanti`}</button></div></div>;
+  return (
+    <div className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">{t('events.addParticipant')}</h3>
+          <p className="mt-1 text-sm text-slate-500">{t('events.selectEligibleUsersHint')}</p>
+        </div>
+        <button onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-semibold">{t('common.close')}</button>
+      </div>
+      {event?.requires_active_service ? <p className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800"><AlertTriangle className="mr-2 inline h-4 w-4" />{t('events.eventNeedsActiveService')}</p> : null}
+      {blocked ? <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{t('events.noAvailablePlaces')}</p> : null}
+      {error ? <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+      <div className="mt-4 space-y-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_180px]">
+          <TextField label={t('events.searchUser')} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('events.searchUserPlaceholder')} autoFocus />
+          <SelectField label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value as ParticipantStatus)} disabled={blocked}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
+        </div>
+        <TableShell>
+          <DataTable>
+            <thead>
+              <tr>
+                <TableHeadCell><input type="checkbox" checked={allPageSelected} onChange={(e) => togglePage(e.target.checked)} disabled={!selectableUsers.length || blocked} className="h-4 w-4 accent-indigo-600" /></TableHeadCell>
+                <TableHeadCell>{t('users.user')}</TableHeadCell>
+                <TableHeadCell>{t('members.email')}</TableHeadCell>
+                <TableHeadCell>{t('members.phone')}</TableHeadCell>
+                <TableHeadCell>{t('services.service')}</TableHeadCell>
+              </tr>
+            </thead>
+            <tbody>
+              {selectableUsers.map((u) => (
+                <TableRow key={u.id} className={selectedUserIds.includes(u.id) ? 'sm:bg-indigo-50/60' : ''}>
+                  <TableCell><input type="checkbox" checked={selectedUserIds.includes(u.id)} onChange={(e) => toggleUser(u.id, e.target.checked)} disabled={blocked} className="h-4 w-4 accent-indigo-600" /></TableCell>
+                  <TableCell label={t('users.user')} className="font-medium text-slate-900">{userLabel(u)}</TableCell>
+                  <TableCell label={t('members.email')} className="text-slate-600">{u.email}</TableCell>
+                  <TableCell label={t('members.phone')} className="text-slate-600">{u.phone || '-'}</TableCell>
+                  <TableCell label={t('services.service')}>{hasActiveService(u) ? <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{t('users.statusActive')}</span> : <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{t('events.eligible')}</span>}</TableCell>
+                </TableRow>
+              ))}
+              {!selectableUsers.length ? <EmptyTableRow colSpan={5}>{loadingUsers ? t('events.loadingUsers') : t('events.noUsers')}</EmptyTableRow> : null}
+            </tbody>
+          </DataTable>
+        </TableShell>
+        <div className="flex flex-col gap-3 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
+          <span>{usersMeta.total ? t('events.usersCount', { count: usersMeta.total }) : t('events.noResults')} - {t('events.selectedCount', { count: selectedUserIds.length })}</span>
+          <Pagination page={usersMeta.current_page} lastPage={usersMeta.last_page} onPage={setUsersPage} />
+        </div>
+        <label><span className="mb-2 block text-sm font-medium">{t('events.notes')}</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-lg border px-4 py-3 text-sm" /></label>
+      </div>
+      <div className="mt-6 flex justify-end gap-2">
+        <button onClick={() => setSelectedUserIds([])} disabled={!selectedUserIds.length || saving} className="rounded-lg border px-4 py-2 text-sm font-semibold disabled:opacity-50">{t('events.clearSelection')}</button>
+        <button onClick={() => void save()} disabled={!selectedUserIds.length || blocked || saving} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? t('events.adding') : t('events.addSelectedParticipants', { count: selectedUserIds.length })}</button>
+      </div>
+    </div>
+  );
 }
 
 function ScanParticipantPanel({ occurrenceId, availableSlots, existingParticipants, onSaved }: { occurrenceId: number; availableSlots?: number | null; existingParticipants: EventParticipant[]; onSaved: () => void }) {
@@ -889,7 +1060,8 @@ function EventParticipantsPage() {
   const { t } = useTranslation();
   const { occurrenceId } = useParams();
   const id = Number(occurrenceId);
-  const { participants, loading, error, reload } = useEventParticipants(id);
+  const [participantsFilters, setParticipantsFilters] = useState({ page: 1, per_page: 15 });
+  const { participants, meta, loading, error, reload } = useEventParticipants(id, participantsFilters);
   const [occurrence, setOccurrence] = useState<{ event?: EventItem; available_places?: number | null } | null>(null);
   const [showAdd, setShowAdd] = useState(new URLSearchParams(window.location.search).get('add') === '1');
   const [paymentParticipant, setPaymentParticipant] = useState<EventParticipant | null>(null);
@@ -900,6 +1072,10 @@ function EventParticipantsPage() {
   const [attendancePdfError, setAttendancePdfError] = useState('');
   const [savingParticipantId, setSavingParticipantId] = useState<number | null>(null);
   const [participantDrafts, setParticipantDrafts] = useState<Record<number, { status: ParticipantStatus; notes: string }>>({});
+  const [selectedParticipantIds, setSelectedParticipantIds] = useState<number[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<ParticipantStatus>('registered');
+  const [bulkApplying, setBulkApplying] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const permissions = usePermissions();
 
   useEffect(() => {
@@ -917,9 +1093,43 @@ function EventParticipantsPage() {
     });
   }, [participants]);
 
+  useEffect(() => {
+    const participantIds = new Set(participants.map(participantUserId));
+    setSelectedParticipantIds((prev) => prev.filter((userId) => participantIds.has(userId)));
+  }, [participants]);
+
   const remove = async (userId: number) => {
     await eventService.removeOccurrenceParticipant(id, userId);
     await reload();
+  };
+
+  const toggleParticipantSelection = (userId: number, checked: boolean) => {
+    setSelectedParticipantIds((prev) => checked ? Array.from(new Set([...prev, userId])) : prev.filter((item) => item !== userId));
+  };
+
+  const toggleAllParticipantsSelection = (checked: boolean) => {
+    const pageIds = participants.map(participantUserId);
+    setSelectedParticipantIds((prev) => checked ? Array.from(new Set([...prev, ...pageIds])) : prev.filter((userId) => !pageIds.includes(userId)));
+  };
+
+  const applyBulkStatus = async () => {
+    if (!selectedParticipantIds.length || bulkApplying) return;
+    setBulkApplying(true);
+    setBulkMessage(null);
+    try {
+      const results = await Promise.allSettled(selectedParticipantIds.map((userId) => eventService.updateOccurrenceParticipantStatus(id, userId, { status: bulkStatus })));
+      const failed = results.filter((result) => result.status === 'rejected').length;
+      await reload();
+      if (failed) setBulkMessage({ type: 'error', text: t('events.bulkStatusError') });
+      else {
+        setBulkMessage({ type: 'success', text: t('events.bulkStatusUpdated') });
+        setSelectedParticipantIds([]);
+      }
+    } catch {
+      setBulkMessage({ type: 'error', text: t('events.bulkStatusError') });
+    } finally {
+      setBulkApplying(false);
+    }
   };
 
   const updateDraft = (userId: number, patch: Partial<{ status: ParticipantStatus; notes: string }>) => {
@@ -980,9 +1190,11 @@ function EventParticipantsPage() {
     }
   };
 
+  const allParticipantsSelected = participants.length > 0 && participants.every((participant) => selectedParticipantIds.includes(participantUserId(participant)));
+
   return (
     <SectionCard
-      title="Occurrence Participants"
+      title={t('events.occurrenceParticipantsTitle')}
       action={(
         <div className="flex flex-wrap justify-end gap-2">
           {permissions.canViewParticipants ? (
@@ -992,7 +1204,7 @@ function EventParticipantsPage() {
           ) : null}
           {permissions.canManageParticipants ? (
             <button onClick={() => setShowAdd(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
-              <Plus className="mr-2 inline h-4 w-4" />Add participant
+              <Plus className="mr-2 inline h-4 w-4" />{t('events.addParticipant')}
             </button>
           ) : null}
         </div>
@@ -1010,20 +1222,32 @@ function EventParticipantsPage() {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+      {permissions.canManageParticipants ? (
+        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-end md:justify-between">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[220px_auto] sm:items-end">
+            <SelectField label={t('events.changeStatusForSelected')} value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as ParticipantStatus)}>{participantStatuses.map((s) => <option key={s}>{s}</option>)}</SelectField>
+            <button onClick={() => void applyBulkStatus()} disabled={!selectedParticipantIds.length || bulkApplying} className="rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{bulkApplying ? t('common.saving') : t('events.applySelection')}</button>
+          </div>
+          <span className="text-sm text-slate-600">{t('events.selectedCount', { count: selectedParticipantIds.length })}</span>
+        </div>
+      ) : null}
+      {bulkMessage ? <p className={`mb-3 rounded-lg px-4 py-3 text-sm font-medium ${bulkMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>{bulkMessage.text}</p> : null}
+
+      <TableShell>
+        <DataTable>
           <thead>
-            <tr className="border-b text-slate-500">
-              <th className="pb-3">user name</th>
-              <th className="pb-3">email</th>
-              <th className="pb-3">status</th>
-              <th className="pb-3">registered_at</th>
-              <th className="pb-3">notes</th>
-              <th className="pb-3 text-right">Actiuni</th>
+            <tr>
+              {permissions.canManageParticipants ? <TableHeadCell><input type="checkbox" checked={allParticipantsSelected} onChange={(e) => toggleAllParticipantsSelection(e.target.checked)} disabled={!participants.length} className="h-4 w-4 accent-indigo-600" /></TableHeadCell> : null}
+              <TableHeadCell>{t('users.user')}</TableHeadCell>
+              <TableHeadCell>{t('members.email')}</TableHeadCell>
+              <TableHeadCell>{t('common.status')}</TableHeadCell>
+              <TableHeadCell>{t('events.registeredAt')}</TableHeadCell>
+              <TableHeadCell>{t('events.notes')}</TableHeadCell>
+              <TableHeadCell align="right">{t('common.actions')}</TableHeadCell>
             </tr>
           </thead>
           <tbody>
-            {participants.length ? participants.map((participant) => {
+            {participants.map((participant) => {
               const userId = participantUserId(participant);
               const modelId = participantPaymentModelId(participant);
               const participantPayments = modelId ? paymentsByParticipant.get(modelId) ?? [] : [];
@@ -1031,8 +1255,9 @@ function EventParticipantsPage() {
               const dirty = draft.status !== participant.status || draft.notes !== (participant.notes ?? '');
 
               return (
-                <tr key={userId} className="border-b border-slate-100 align-top">
-                  <td className="py-4">
+                <TableRow key={userId}>
+                  {permissions.canManageParticipants ? <TableCell><input type="checkbox" checked={selectedParticipantIds.includes(userId)} onChange={(e) => toggleParticipantSelection(userId, e.target.checked)} className="h-4 w-4 accent-indigo-600" /></TableCell> : null}
+                  <TableCell label={t('users.user')}>
                     <p className="font-medium text-slate-900">{participantName(participant)}</p>
                     <div className="mt-3 space-y-2">
                       {participantPayments.length ? participantPayments.map((payment) => (
@@ -1042,18 +1267,28 @@ function EventParticipantsPage() {
                         </div>
                       )) : <p className="text-xs text-slate-400">{paymentsLoading ? t('events.loadingPayments') : t('events.noPayments')}</p>}
                     </div>
-                  </td>
-                  <td className="py-4">{participant.user?.email ?? participant.email ?? '-'}</td>
-                  <td className="py-4">{permissions.canManageParticipants ? <select value={draft.status} onChange={(e) => updateDraft(userId, { status: e.target.value as ParticipantStatus })} className="rounded-lg border px-3 py-2">{participantStatuses.map((status) => <option key={status}>{status}</option>)}</select> : <StatusBadge status={participant.status} />}</td>
-                  <td className="py-4">{participant.registered_at}</td>
-                  <td className="py-4">{permissions.canManageParticipants ? <textarea value={draft.notes} onChange={(e) => updateDraft(userId, { notes: e.target.value })} rows={2} className="min-w-64 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" /> : participant.notes || '-'}</td>
-                  <td className="py-4 text-right">{permissions.canManageParticipants ? <div className="flex justify-end gap-2"><button onClick={() => setPaymentParticipant(participant)} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700"><CreditCard className="h-4 w-4" /></button><button onClick={() => void saveParticipant(userId)} disabled={!dirty || savingParticipantId === userId} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 disabled:opacity-40"><Save className="h-4 w-4" /></button><button onClick={() => void remove(userId)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div> : null}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell label={t('members.email')}>{participant.user?.email ?? participant.email ?? '-'}</TableCell>
+                  <TableCell label={t('common.status')}>{permissions.canManageParticipants ? <select value={draft.status} onChange={(e) => updateDraft(userId, { status: e.target.value as ParticipantStatus })} className="rounded-lg border px-3 py-2">{participantStatuses.map((status) => <option key={status}>{status}</option>)}</select> : <StatusBadge status={participant.status} />}</TableCell>
+                  <TableCell label={t('events.registeredAt')}>{participant.registered_at}</TableCell>
+                  <TableCell label={t('events.notes')}>{permissions.canManageParticipants ? <textarea value={draft.notes} onChange={(e) => updateDraft(userId, { notes: e.target.value })} rows={2} className="min-w-64 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" /> : participant.notes || '-'}</TableCell>
+                  <TableCell label={t('common.actions')} align="right">
+                    {permissions.canManageParticipants ? (
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                        <button onClick={() => setPaymentParticipant(participant)} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700"><CreditCard className="h-4 w-4" /></button>
+                        <button onClick={() => void saveParticipant(userId)} disabled={!dirty || savingParticipantId === userId} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 disabled:opacity-40"><Save className="h-4 w-4" /></button>
+                        <button onClick={() => void remove(userId)} className="rounded-lg border border-red-100 px-3 py-2 text-red-600"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
               );
-            }) : <tr><td colSpan={6} className="py-10 text-center text-slate-500">{loading ? 'Se incarca...' : 'Nu exista participanti.'}</td></tr>}
+            })}
+            {!participants.length ? <EmptyTableRow colSpan={permissions.canManageParticipants ? 7 : 6}>{loading ? t('common.loading') : t('events.noParticipants')}</EmptyTableRow> : null}
           </tbody>
-        </table>
-      </div>
+        </DataTable>
+      </TableShell>
+      <div className="mt-4"><Pagination page={meta.current_page} lastPage={meta.last_page} onPage={(page) => setParticipantsFilters((p) => ({ ...p, page }))} /></div>
 
       {paymentParticipant ? <ParticipantPaymentModal participant={paymentParticipant} occurrence={occurrence} onClose={() => setPaymentParticipant(null)} onSaved={() => { setPaymentParticipant(null); void loadOccurrencePayments(); }} /> : null}
     </SectionCard>

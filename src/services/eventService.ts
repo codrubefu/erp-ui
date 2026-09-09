@@ -241,12 +241,8 @@ export const eventService = {
   getEventOccurrences: (eventId: number, params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>(`/events/${eventId}/occurrences`, {}, params),
   getAllOccurrences: (params: OccurrenceFilters = {}) => request<Paginated<EventOccurrence>>('/event-occurrences', {}, params),
   getOccurrence: (id: number) => request<EventOccurrence>(`/event-occurrences/${id}`),
-  cancelOccurrence: (id: number) => {
-    void id;
-    return Promise.reject(new Error('Swagger nu expune un endpoint pentru anularea aparitiei.'));
-  },
   getEligibleOccurrenceParticipants: (occurrenceId: number, params: EligibleParticipantFilters = {}) => request<Paginated<EventUser> | EventUser[]>(`/event-occurrences/${occurrenceId}/eligible-participants`, {}, params),
-  getOccurrenceParticipants: (occurrenceId: number) => request<Paginated<EventParticipant> | EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`, {}, { per_page: 100 }),
+  getOccurrenceParticipants: (occurrenceId: number, params: { page?: number; per_page?: number } = {}) => request<Paginated<EventParticipant> | EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants`, {}, { per_page: 15, ...params }),
   addOccurrenceParticipant: (occurrenceId: number, payload: AddParticipantPayload) => request<EventParticipant>(`/event-occurrences/${occurrenceId}/participants`, { method: 'POST', body: JSON.stringify(payload) }),
   bulkAddOccurrenceParticipants: (occurrenceId: number, payload: BulkAddParticipantsPayload) => request<EventParticipant[]>(`/event-occurrences/${occurrenceId}/participants/bulk`, { method: 'POST', body: JSON.stringify(payload) }),
   removeOccurrenceParticipant: (occurrenceId: number, userId: number) => request<void>(`/event-occurrences/${occurrenceId}/participants/${userId}`, { method: 'DELETE' }),
