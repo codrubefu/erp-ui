@@ -732,6 +732,8 @@
     "hideCode": "Hide code",
     "firstName": "First name",
     "lastName": "Last name",
+    "cnp": "CNP",
+    "ci": "ID card (series and number)",
     "password": "Password",
     "newPassword": "New password",
     "changePasswordHint": "Fill this in only if you want to change it",

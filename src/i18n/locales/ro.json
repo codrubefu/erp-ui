@@ -733,6 +733,8 @@
     "hideCode": "Ascunde codul",
     "firstName": "Prenume",
     "lastName": "Nume",
+    "cnp": "CNP",
+    "ci": "CI (serie si numar)",
     "password": "Parola",
     "newPassword": "Parola noua",
     "changePasswordHint": "Completeaza doar daca o schimbi",

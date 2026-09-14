@@ -6,6 +6,8 @@ export type ApiUser = {
   first_name: string;
   last_name: string;
   phone: string | null;
+  cnp?: string | null;
+  ci?: string | null;
   notification_consents?: ApiNotificationConsents;
   active: boolean;
   email: string;

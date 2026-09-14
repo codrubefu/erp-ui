@@ -19,6 +19,8 @@ type UserForm = {
   last_name: string;
   email: string;
   phone: string;
+  cnp: string;
+  ci: string;
   active: boolean;
   notification_consents: {
     sms: boolean;
@@ -62,6 +64,8 @@ const emptyForm: UserForm = {
   last_name: '',
   email: '',
   phone: '',
+  cnp: '',
+  ci: '',
   active: true,
   notification_consents: { sms: false, mail: false },
   group_ids: '',
@@ -421,6 +425,8 @@ function buildPayload(form: UserForm) {
     last_name: form.last_name,
     email: form.email,
     phone: form.phone || null,
+    cnp: form.cnp.trim() || null,
+    ci: form.ci.trim() || null,
     notification_consents: form.notification_consents,
     active: form.active,
     group_ids: toIdList(form.group_ids),
@@ -473,6 +479,8 @@ function formFromUser(user: ApiUser): UserForm {
     last_name: user.last_name ?? '',
     email: user.email ?? '',
     phone: user.phone ?? '',
+    cnp: user.cnp ?? '',
+    ci: user.ci ?? '',
     active: Boolean(user.active),
     notification_consents: {
       sms: Boolean(user.notification_consents?.sms),
@@ -1448,6 +1456,8 @@ export function UserManagementView({
               <Input label={t('users.lastName')} value={form.last_name} onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))} placeholder="Doe" />
               <Input label={t('members.email')} type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="john@example.com" />
               <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
+              <Input label={t('users.cnp')} value={form.cnp} onChange={(event) => setForm((prev) => ({ ...prev, cnp: event.target.value }))} placeholder="1900101123456" maxLength={20} />
+              <Input label={t('users.ci')} value={form.ci} onChange={(event) => setForm((prev) => ({ ...prev, ci: event.target.value }))} placeholder="RT123456" maxLength={20} />
               <label className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-indigo-600" />
                 {t('users.activeUser')}
