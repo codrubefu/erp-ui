@@ -33,7 +33,7 @@ const emptyForm: ServiceForm = {
   description: '',
   type: 'membership',
   price: '',
-  currency: 'EUR',
+  currency: 'RON',
   duration_days: '',
   expiration_rule: 'duration',
   fixed_expires_at: '',
@@ -54,8 +54,8 @@ function buildPayload(form: ServiceForm) {
     description: form.description || null,
     type: form.type,
     price: Number(form.price) || 0,
-    currency: form.currency.trim().toUpperCase() || 'EUR',
-    duration_days: optionalNumber(form.duration_days),
+    currency: form.currency.trim().toUpperCase() || 'RON',
+    duration_days: form.expiration_rule === 'fixed_date' ? null : optionalNumber(form.duration_days),
     expiration_rule: form.expiration_rule,
     fixed_expires_at: form.expiration_rule === 'fixed_date' ? form.fixed_expires_at || null : null,
     grace_period_days: Number(form.grace_period_days) || 0,
@@ -71,7 +71,7 @@ function formFromService(service: ApiService): ServiceForm {
     description: service.description ?? '',
     type: service.type ?? 'membership',
     price: String(service.price ?? ''),
-    currency: service.currency ?? 'EUR',
+    currency: service.currency ?? 'RON',
     duration_days: service.duration_days ? String(service.duration_days) : '',
     expiration_rule: service.expiration_rule ?? 'duration',
     fixed_expires_at: service.fixed_expires_at ? service.fixed_expires_at.slice(0, 16) : '',
@@ -319,16 +319,16 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
               </select>
             </label>
             <Input label={t('services.price')} type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="99.99" />
-            <Input label={t('services.currency')} maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="EUR" />
+            <Input label={t('services.currency')} maxLength={3} value={form.currency} onChange={(event) => setForm((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="RON" />
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">{t('services.expirationRule')}</span>
-              <select value={form.expiration_rule} onChange={(event) => setForm((prev) => ({ ...prev, expiration_rule: event.target.value as ServiceExpirationRule }))} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+              <select value={form.expiration_rule} onChange={(event) => { const expirationRule = event.target.value as ServiceExpirationRule; setForm((prev) => ({ ...prev, expiration_rule: expirationRule, duration_days: expirationRule === 'fixed_date' ? '' : prev.duration_days })); }} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                 <option value="duration">{t('services.expirationRules.duration')}</option>
                 <option value="fixed_date">{t('services.expirationRules.fixed_date')}</option>
                 <option value="none">{t('services.expirationRules.none')}</option>
               </select>
             </label>
-            <Input label={t('services.durationDays')} type="number" min="1" value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
+            <Input label={t('services.durationDays')} type="number" min="1" disabled={form.expiration_rule === 'fixed_date'} value={form.duration_days} onChange={(event) => setForm((prev) => ({ ...prev, duration_days: event.target.value }))} placeholder="365" />
             {form.expiration_rule === 'fixed_date' ? <Input label={t('services.fixedExpiresAt')} type="datetime-local" value={form.fixed_expires_at} onChange={(event) => setForm((prev) => ({ ...prev, fixed_expires_at: event.target.value }))} /> : null}
             <Input label={t('services.gracePeriodDays')} type="number" min="0" value={form.grace_period_days} onChange={(event) => setForm((prev) => ({ ...prev, grace_period_days: event.target.value }))} placeholder="0" />
             <Input label={t('services.maxAccesses')} type="number" min="1" value={form.max_accesses} onChange={(event) => setForm((prev) => ({ ...prev, max_accesses: event.target.value }))} placeholder="30" />
@@ -495,8 +495,9 @@ export function ServicesView({ openOnMount = false }: ServicesViewProps = {}) {
                   </td>
                   <td className="px-4 py-3 font-semibold text-slate-900">{service.price} {service.currency}</td>
                   <td className="px-4 py-3 text-slate-600">
-                    <p>{t('services.duration')}: {service.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
-                    {service.expiration_rule === 'fixed_date' ? <p>{t('services.fixedExpiresAt')}: {formatDate(service.fixed_expires_at)}</p> : null}
+                    {service.expiration_rule === 'fixed_date'
+                      ? <p>{t('services.fixedExpiresAt')}: {formatDate(service.fixed_expires_at)}</p>
+                      : <p>{t('services.duration')}: {service.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>}
                     <p>{t('services.gracePeriodDays')}: {service.grace_period_days ?? 0}</p>
                     <p>{t('services.maxAccesses')}: {service.max_accesses ?? '-'}</p>
                     <p>{t('branches.users')}: {service.max_users ?? '-'}</p>

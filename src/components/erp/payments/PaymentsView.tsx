@@ -1,11 +1,13 @@
-import { ChevronLeft, ChevronRight, Download, LinkIcon, Plus, RefreshCw } from 'lucide-react';
+import { Ban, ChevronLeft, ChevronRight, Download, LinkIcon, Plus, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Button, ButtonLink, DataTable, EmptyTableRow, SectionCard, Select, StatusBadge, TableCell, TableHeadCell, TableShell } from '../../primitives';
 import type { ApiPayment } from '../../../services/ErpApiService';
 import type { PaymentsViewProps } from '../shared/types';
 import { formatApiDate, formatCurrency, paymentMethodLabel } from '../../../utils/erp/formatters';
 import { paymentService } from '../../../services/paymentService';
 import { useAuth } from '../../../context/useAuth';
+import { CancelPaymentPopup } from './CancelPaymentPopup';
 
 const defaultMeta = { current_page: 1, last_page: 1, per_page: 15, total: 0 };
 
@@ -39,16 +41,19 @@ function resolvePaymentModelLink(payment: ApiPayment) {
 
 export function PaymentsView(props: PaymentsViewProps) {
   void props;
+  const { t } = useTranslation();
   const { hasAnyRight } = useAuth();
   const canViewPayments = hasAnyRight(['payments.view', 'payments.manage']);
   const canManagePayments = hasAnyRight(['payments.create', 'payments.update', 'payments.manage']);
+  const canCancelPayments = hasAnyRight(['payments.manage']);
   const [payments, setPayments] = useState<ApiPayment[]>([]);
   const [meta, setMeta] = useState(defaultMeta);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success] = useState('');
+  const [success, setSuccess] = useState('');
+  const [cancellingPayment, setCancellingPayment] = useState<ApiPayment | null>(null);
   const [receiptLoadingId, setReceiptLoadingId] = useState<number | null>(null);
 
   const loadPayments = useCallback(async (nextPage = page, nextPerPage = perPage) => {
@@ -109,15 +114,27 @@ export function PaymentsView(props: PaymentsViewProps) {
           </Select>
           <span className="pb-2 text-sm font-medium text-slate-600">{loading ? 'Se incarca...' : `Afisare ${payments.length} din ${meta.total} plati.`}</span>
         </div>
+        {cancellingPayment ? (
+          <CancelPaymentPopup
+            payment={cancellingPayment}
+            onClose={() => setCancellingPayment(null)}
+            onCancelled={async () => {
+              await loadPayments();
+              setCancellingPayment(null);
+              setSuccess(t('payments.cancelSuccess'));
+            }}
+          />
+        ) : null}
         <TableShell>
           <DataTable className="min-w-[1100px]">
             <thead><tr><TableHeadCell>first_name</TableHeadCell><TableHeadCell>last_name</TableHeadCell><TableHeadCell>status</TableHeadCell><TableHeadCell>payment_type</TableHeadCell><TableHeadCell>provider</TableHeadCell><TableHeadCell>receipt</TableHeadCell><TableHeadCell>model</TableHeadCell><TableHeadCell>amount</TableHeadCell><TableHeadCell>paid_at</TableHeadCell><TableHeadCell>lifecycle</TableHeadCell><TableHeadCell>admin</TableHeadCell><TableHeadCell align="right">Actiuni</TableHeadCell></tr></thead>
             <tbody>{payments.length ? payments.map((payment) => {
               const modelLink = resolvePaymentModelLink(payment);
 
-              const canDownloadReceipt = payment.status === 'confirmed' && Boolean(payment.receipt_number);
+              const canDownloadReceipt = (payment.status === 'confirmed' || payment.status === 'cancelled') && Boolean(payment.receipt_number);
+              const canCancelPayment = canCancelPayments && payment.status === 'confirmed' && Boolean(payment.receipt_number);
 
-              return <tr key={payment.id} className="group align-top transition-colors hover:bg-indigo-50/30"><TableCell className="font-medium text-slate-900">{payment.first_name}</TableCell><TableCell className="font-medium text-slate-900">{payment.last_name}</TableCell><TableCell>{payment.status ? <StatusBadge status={payment.status} /> : '-'}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell><p>{payment.provider ?? '-'}</p><p className="text-xs text-slate-500">{payment.provider_transaction_id ?? payment.external_reference ?? ''}</p></TableCell><TableCell>{payment.receipt_number ?? '-'}</TableCell><TableCell><p>{payment.model_type}</p><p className="text-xs text-slate-500">model_id {payment.model_id ?? '-'}</p><p className="text-xs text-slate-500">org {payment.organization_id ?? '-'} / loc {payment.location_id ?? '-'}</p></TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell><p>confirmed {formatApiDate(payment.confirmed_at)}</p><p>failed {formatApiDate(payment.failed_at)}</p>{payment.failure_reason ? <p className="text-xs text-red-600">{payment.failure_reason}</p> : null}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right"><div className="flex flex-wrap justify-end gap-2">{canDownloadReceipt ? <Button onClick={() => void downloadReceipt(payment)} disabled={receiptLoadingId === payment.id} size="sm"><Download className="h-4 w-4" />Receipt</Button> : null}{modelLink ? <ButtonLink to={modelLink.to} size="sm" title={modelLink.title}><LinkIcon className="h-4 w-4" />{modelLink.label}</ButtonLink> : <span className="text-sm text-slate-500">Model fara ruta directa</span>}</div></TableCell></tr>;
+              return <tr key={payment.id} className="group align-top transition-colors hover:bg-indigo-50/30"><TableCell className="font-medium text-slate-900">{payment.first_name}</TableCell><TableCell className="font-medium text-slate-900">{payment.last_name}</TableCell><TableCell>{payment.status ? <StatusBadge status={payment.status} /> : '-'}</TableCell><TableCell>{paymentMethodLabel(payment)}</TableCell><TableCell><p>{payment.provider ?? '-'}</p><p className="text-xs text-slate-500">{payment.provider_transaction_id ?? payment.external_reference ?? ''}</p></TableCell><TableCell>{payment.receipt_number ?? '-'}</TableCell><TableCell><p>{payment.model_type}</p><p className="text-xs text-slate-500">model_id {payment.model_id ?? '-'}</p><p className="text-xs text-slate-500">org {payment.organization_id ?? '-'} / loc {payment.location_id ?? '-'}</p></TableCell><TableCell className="font-semibold text-slate-900">{formatCurrency(payment.amount)}</TableCell><TableCell>{formatApiDate(payment.paid_at)}</TableCell><TableCell><p>confirmed {formatApiDate(payment.confirmed_at)}</p><p>failed {formatApiDate(payment.failed_at)}</p>{payment.failure_reason ? <p className="text-xs text-red-600">{payment.failure_reason}</p> : null}{payment.status === 'cancelled' ? <p className="text-xs text-red-600">{t('payments.cancelled')} {formatApiDate(payment.cancelled_at)}: {payment.cancellation_reason ?? '-'}</p> : null}</TableCell><TableCell>{adminLabel(payment)}</TableCell><TableCell align="right"><div className="flex flex-wrap justify-end gap-2">{canDownloadReceipt ? <Button onClick={() => void downloadReceipt(payment)} disabled={receiptLoadingId === payment.id} size="sm"><Download className="h-4 w-4" />Receipt</Button> : null}{canCancelPayment ? <Button onClick={() => setCancellingPayment(payment)} size="sm"><Ban className="h-4 w-4" />{t('payments.cancelAction')}</Button> : null}{modelLink ? <ButtonLink to={modelLink.to} size="sm" title={modelLink.title}><LinkIcon className="h-4 w-4" />{modelLink.label}</ButtonLink> : <span className="text-sm text-slate-500">Model fara ruta directa</span>}</div></TableCell></tr>;
             }) : <EmptyTableRow colSpan={12}>{loading ? 'Se incarca platile...' : 'Nu exista plati.'}</EmptyTableRow>}</tbody>
           </DataTable>
         </TableShell>

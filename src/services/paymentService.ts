@@ -24,6 +24,7 @@ export const paymentService = {
   listPaginated: (page: number, perPage: number) => erpApiService.listPaginated<ApiPayment>('payments', { page, per_page: perPage }),
   create: (payload: PaymentPayload) => erpApiService.create<ApiPayment>('payments', payload),
   attachModel: (paymentId: number, payload: { model_type: PaymentModelType; model_id: number }) => erpApiService.attachPaymentModel<ApiPayment>(paymentId, payload),
+  cancel: (paymentId: number, reason: string) => erpApiService.cancelPayment<ApiPayment>(paymentId, reason),
   downloadReceipt: (paymentId: number) => erpApiService.downloadPaymentReceipt(paymentId),
   listForModels: async (modelType: PaymentModelType, modelIds: number[]) => {
     const ids = Array.from(new Set(modelIds.filter(Boolean)));

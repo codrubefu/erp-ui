@@ -1,6 +1,8 @@
 import React from 'react';
-import { Lock, User } from 'lucide-react';
+import { Download, Lock, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePwaInstall } from '../../utils/pwaInstall';
+import { PwaInstallPopup } from './PwaInstallPopup';
 
 type Credentials = {
   username: string;
@@ -17,9 +19,11 @@ type LoginViewProps = {
 
 export function LoginView({ credentials, onChange, onSubmit, loading = false, error }: LoginViewProps) {
   const { t } = useTranslation();
+  const { canInstall, showIosHint, install } = usePwaInstall();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+      <PwaInstallPopup />
       <div className="grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="hidden bg-slate-950 p-10 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
@@ -83,6 +87,17 @@ export function LoginView({ credentials, onChange, onSubmit, loading = false, er
                 {loading ? t('login.loading') : t('login.submit')}
               </button>
             </form>
+            {canInstall ? (
+              <button
+                type="button"
+                onClick={install}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                <Download className="h-4 w-4 text-indigo-600" /> {t('login.installApp')}
+              </button>
+            ) : showIosHint ? (
+              <p className="mt-4 text-center text-xs text-slate-500">{t('login.installIosHint')}</p>
+            ) : null}
           </div>
         </div>
       </div>

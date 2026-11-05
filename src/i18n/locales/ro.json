@@ -99,7 +99,12 @@
     "password": "Parola",
     "passwordPlaceholder": "password",
     "loading": "Se conecteaza...",
-    "submit": "Intra in aplicatie"
+    "submit": "Intra in aplicatie",
+    "installApp": "Instaleaza aplicatia",
+    "installIosHint": "Pentru instalare: apasa Share, apoi \"Adauga pe ecranul principal\".",
+    "installTitle": "Instaleaza OPTIMIZER",
+    "installDescription": "Instaleaza aplicatia pe acest dispozitiv pentru acces rapid, direct de pe ecranul principal.",
+    "installLater": "Mai tarziu"
   },
   "auth": {
     "loadUserError": "Nu am putut incarca utilizatorul autentificat."
@@ -254,6 +259,15 @@
     "save": "Salveaza anunt"
   },
   "payments": {
+    "cancelAction": "Anuleaza",
+    "cancelTitle": "Anulare chitanta",
+    "cancelWarning": "Numarul chitantei ramane consumat, iar serviciul activat de aceasta plata revine in asteptare. Anularea nu returneaza banii si nu face refund la procesator.",
+    "cancelReason": "Motivul anularii",
+    "cancelConfirm": "Anuleaza chitanta",
+    "cancelKeep": "Renunta",
+    "cancelled": "Anulata",
+    "cancelSuccess": "Chitanta a fost anulata.",
+    "cancelFailed": "Nu am putut anula chitanta.",
     "title": "Plati si facturare",
     "add": "Adauga plata",
     "addInvoice": "Adaugare plata / factura",
@@ -270,8 +284,7 @@
     "method": "Metoda",
     "paymentMethod": "Metoda plata",
     "transactionDate": "Data tranzactiei",
-    "save": "Salveaza tranzactie"
-    ,
+    "save": "Salveaza tranzactie",
     "methods": {
       "Card": "Card",
       "Numerar": "Numerar",
@@ -581,7 +594,6 @@
     "noMembers": "Nu exista membri atasati acestui serviciu.",
     "searchPlaceholder": "Cauta dupa nume sau descriere",
     "showingCount": "Afisare {{count}} servicii din API",
-    "duration": "Durata",
     "days": "{{count}} zile",
     "noAutoExpiry": "Fara expirare automata",
     "missingViewRight": "Nu ai dreptul de vizualizare servicii.",
@@ -765,7 +777,6 @@
     "noAttachedServices": "Nu exista servicii atasate.",
     "serviceHistory": "Istoric servicii",
     "noServiceHistory": "Nu exista istoric pentru acest utilizator.",
-    "noCustomFields": "Nu exista campuri custom pentru utilizatori.",
     "customFilePlaceholder": "Valoare fisier",
     "resetFilters": "Reseteaza filtre",
     "saving": "Se salveaza...",

@@ -1,3 +1,5 @@
+import { organizationConfigService } from '../services/OrganizationConfigService';
+
 export type RuntimeConfig = {
   apiBaseUrl: string;
   devProxyTarget?: string;
@@ -24,14 +26,26 @@ function normalizeConfig(payload: unknown): RuntimeConfig {
   };
 }
 
+async function loadOrganizationApiBaseUrl() {
+  if (import.meta.env.DEV) return undefined;
+  try {
+    return await organizationConfigService.getApiBaseUrlForCurrentUrl();
+  } catch {
+    return undefined;
+  }
+}
+
 export async function loadRuntimeConfig() {
   try {
     const response = await fetch('/app-config.json', { cache: 'no-store' });
-    if (!response.ok) return runtimeConfig;
-    runtimeConfig = normalizeConfig(await response.json());
+    if (response.ok) runtimeConfig = normalizeConfig(await response.json());
   } catch {
     runtimeConfig = defaultConfig;
   }
+
+  const organizationApiBaseUrl = await loadOrganizationApiBaseUrl();
+  if (organizationApiBaseUrl) runtimeConfig = { ...runtimeConfig, apiBaseUrl: organizationApiBaseUrl };
+
   return runtimeConfig;
 }
 

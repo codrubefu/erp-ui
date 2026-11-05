@@ -99,7 +99,12 @@
     "password": "Password",
     "passwordPlaceholder": "password",
     "loading": "Signing in...",
-    "submit": "Enter application"
+    "submit": "Enter application",
+    "installApp": "Install app",
+    "installIosHint": "To install: tap Share, then \"Add to Home Screen\".",
+    "installTitle": "Install OPTIMIZER",
+    "installDescription": "Install the app on this device for quick access straight from your home screen.",
+    "installLater": "Later"
   },
   "auth": {
     "loadUserError": "Could not load the authenticated user."
@@ -254,6 +259,15 @@
     "save": "Save announcement"
   },
   "payments": {
+    "cancelAction": "Cancel",
+    "cancelTitle": "Cancel receipt",
+    "cancelWarning": "The receipt number stays used and the service activated by this payment returns to pending. Cancelling does not return the money or issue a refund at the payment provider.",
+    "cancelReason": "Cancellation reason",
+    "cancelConfirm": "Cancel receipt",
+    "cancelKeep": "Keep receipt",
+    "cancelled": "Cancelled",
+    "cancelSuccess": "The receipt was cancelled.",
+    "cancelFailed": "Could not cancel the receipt.",
     "title": "Payments and billing",
     "add": "Add payment",
     "addInvoice": "Add payment / invoice",
@@ -580,7 +594,6 @@
     "noMembers": "No members are attached to this service.",
     "searchPlaceholder": "Search by name or description",
     "showingCount": "Showing {{count}} services from API",
-    "duration": "Duration",
     "days": "{{count}} days",
     "noAutoExpiry": "No automatic expiry",
     "missingViewRight": "You do not have permission to view services.",
@@ -764,7 +777,6 @@
     "noAttachedServices": "No services attached.",
     "serviceHistory": "Service history",
     "noServiceHistory": "No history exists for this user.",
-    "noCustomFields": "No custom fields exist for users.",
     "customFilePlaceholder": "File value",
     "resetFilters": "Reset filters",
     "saving": "Saving...",

@@ -417,7 +417,7 @@ export function ProfileServicesPage() {
                   <p className="mt-1 text-sm text-slate-600">{service.description || '-'}</p>
                 </td>
                 <td className="py-4 font-semibold text-slate-900">{service.price} {service.currency}</td>
-                <td className="py-4 text-slate-600">{service.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</td>
+                <td className="py-4 text-slate-600">{service.expiration_rule === 'fixed_date' ? formatDate(service.fixed_expires_at) : service.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</td>
                 <td className="py-4 text-slate-600">{formatDate(service.start_date ?? service.pivot?.start_date)}</td>
                 <td className="py-4 text-slate-600">{formatDate(service.expires_at ?? service.pivot?.expires_at)}</td>
                 <td className="py-4 text-slate-600">{serviceAccesses(service)}</td>

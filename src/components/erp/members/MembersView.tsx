@@ -1,10 +1,11 @@
-import { ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filter, MoreVertical, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
+import { Ban, ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText, Filter, MoreVertical, Plus, RefreshCw, Save, ScanLine, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
+import { CancelPaymentPopup } from '../payments/CancelPaymentPopup';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 import { serviceLifecycleService } from '../../../services/serviceLifecycleService';
 import { useAuth } from '../../../context/useAuth';
@@ -20,6 +21,7 @@ type UserForm = {
   email: string;
   phone: string;
   cnp: string;
+  address: string;
   ci: string;
   active: boolean;
   notification_consents: {
@@ -33,7 +35,6 @@ type UserForm = {
 };
 
 type ServicePaymentForm = {
-  id: number | null;
   first_name: string;
   last_name: string;
   service_id: string;
@@ -65,6 +66,7 @@ const emptyForm: UserForm = {
   email: '',
   phone: '',
   cnp: '',
+  address: '',
   ci: '',
   active: true,
   notification_consents: { sms: false, mail: false },
@@ -75,7 +77,6 @@ const emptyForm: UserForm = {
 };
 
 const emptyPaymentForm: ServicePaymentForm = {
-  id: null,
   first_name: '',
   last_name: '',
   service_id: '',
@@ -220,11 +221,6 @@ function dateTimeLocalToApi(value: string) {
   return value.length === 16 ? `${value.replace('T', ' ')}:00` : value.replace('T', ' ');
 }
 
-function apiDateTimeToLocal(value?: string | null) {
-  if (!value) return '';
-  return value.replace(' ', 'T').slice(0, 16);
-}
-
 function amountFromService(service?: ApiService | ApiUserService | null) {
   if (service?.price === undefined || service.price === null) return '';
   return String(service.price);
@@ -255,7 +251,6 @@ function paymentFormFromSelection(form: UserForm, service?: ApiService | ApiUser
   }
 
   return {
-    id: null,
     first_name: form.first_name,
     last_name: form.last_name,
     service_id: String(service.id),
@@ -266,22 +261,6 @@ function paymentFormFromSelection(form: UserForm, service?: ApiService | ApiUser
     currency: service.currency ?? '',
     payment_type_id: '',
     paid_at: currentDateTimeLocal(),
-  };
-}
-
-function paymentFormFromPayment(payment: ApiPayment, form: UserForm, service?: ApiService | ApiUserService | null): ServicePaymentForm {
-  return {
-    id: payment.id,
-    first_name: payment.first_name ?? form.first_name,
-    last_name: payment.last_name ?? form.last_name,
-    service_id: String(payment.service_id ?? service?.id ?? ''),
-    service_reference: String(payment.service_id ?? service?.id ?? ''),
-    service_name: service?.name ?? payment.service?.name ?? '',
-    service_description: service?.description ?? payment.service?.description ?? '',
-    amount: String(payment.amount ?? ''),
-    currency: service?.currency ?? payment.service?.currency ?? '',
-    payment_type_id: String(payment.payment_type_id ?? ''),
-    paid_at: apiDateTimeToLocal(payment.paid_at),
   };
 }
 
@@ -426,6 +405,7 @@ function buildPayload(form: UserForm) {
     email: form.email,
     phone: form.phone || null,
     cnp: form.cnp.trim() || null,
+    address: form.address.trim() || null,
     ci: form.ci.trim() || null,
     notification_consents: form.notification_consents,
     active: form.active,
@@ -480,6 +460,7 @@ function formFromUser(user: ApiUser): UserForm {
     email: user.email ?? '',
     phone: user.phone ?? '',
     cnp: user.cnp ?? '',
+    address: user.address ?? '',
     ci: user.ci ?? '',
     active: Boolean(user.active),
     notification_consents: {
@@ -578,6 +559,7 @@ export function UserManagementView({
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
   const [receiptLoadingId, setReceiptLoadingId] = useState<number | null>(null);
+  const [cancellingPayment, setCancellingPayment] = useState<ApiPayment | null>(null);
   const [lifecycleSavingId, setLifecycleSavingId] = useState<number | null>(null);
   const [paymentNoteLoadingId, setPaymentNoteLoadingId] = useState<number | null>(null);
   const [invoiceLoadingId, setInvoiceLoadingId] = useState<number | null>(null);
@@ -623,7 +605,6 @@ export function UserManagementView({
     const modelId = serviceUserIdForAssignment(assignment, editing, selectedPaymentService);
     const alreadyPaidCents = servicePayments
       .filter((payment) => payablePayment(payment))
-      .filter((payment) => payment.id !== paymentForm.id)
       .filter((payment) => (
         modelId
           ? payment.model_id === modelId
@@ -632,9 +613,10 @@ export function UserManagementView({
       .reduce((total, payment) => total + (moneyToCents(payment.amount) ?? 0), 0);
 
     return centsToMoney(Math.max(servicePriceCents - alreadyPaidCents, 0));
-  }, [editing, form.services, paymentForm.id, paymentForm.service_id, paymentServiceId, selectedPaymentService, servicePayments]);
+  }, [editing, form.services, paymentForm.service_id, paymentServiceId, selectedPaymentService, servicePayments]);
 
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
+  const canCancelPayments = hasAnyRight(['payments.manage']);
   const canUseGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
   const canExportGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
   const canProcessGdpr = hasAnyRight(['gdpr.process']);
@@ -645,8 +627,9 @@ export function UserManagementView({
     const tabs: Array<[UserFormTab, string]> = [
       ['details', 'Date utilizator'],
       ['code', t('users.userCode')],
-      ['information', t('users.information')],
     ];
+
+    if (userCustomFields.length) tabs.push(['information', t('users.information')]);
 
     if (useRelationTabs) {
       tabs.push(['groups', t('users.groups')], ['locations', t('articles.locations')]);
@@ -657,7 +640,7 @@ export function UserManagementView({
     if (editing && canUseGdpr) tabs.push(['privacy', 'GDPR']);
     if (editing) tabs.push(['activity', 'Activity']);
     return tabs;
-  }, [canUseGdpr, canViewDocuments, editing, t, useRelationTabs]);
+  }, [canUseGdpr, canViewDocuments, editing, t, useRelationTabs, userCustomFields.length]);
 
   useEffect(() => {
     if (!scanningCode || activeFormTab !== 'code') return undefined;
@@ -817,7 +800,7 @@ export function UserManagementView({
   }, [fetchUsers, loadLookups]);
 
   useEffect(() => {
-    if (!paymentServiceId || paymentForm.id) return;
+    if (!paymentServiceId) return;
     setPaymentError('');
     setPaymentSuccess('');
     setPaymentForm(paymentFormFromSelection({
@@ -825,7 +808,7 @@ export function UserManagementView({
       first_name: form.first_name,
       last_name: form.last_name,
     }, selectedPaymentService));
-  }, [form.first_name, form.last_name, paymentForm.id, paymentServiceId, selectedPaymentService]);
+  }, [form.first_name, form.last_name, paymentServiceId, selectedPaymentService]);
 
   useEffect(() => {
     if (activeFormTab !== 'activity' || !editing) return;
@@ -1002,15 +985,6 @@ export function UserManagementView({
     setPaymentSuccess('');
   };
 
-  const editPayment = (payment: ApiPayment, service?: ApiService | ApiUserService | null) => {
-    const serviceId = Number(payment.service_id ?? service?.id);
-    if (!serviceId) return;
-    setPaymentServiceId(serviceId);
-    setPaymentForm(paymentFormFromPayment(payment, form, service));
-    setPaymentError('');
-    setPaymentSuccess('');
-  };
-
   const updatePaymentForm = (field: keyof ServicePaymentForm, value: string) => {
     setPaymentForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -1084,14 +1058,9 @@ export function UserManagementView({
         payment_type_id: paymentTypeId,
         paid_at: dateTimeLocalToApi(paymentForm.paid_at),
       };
-      let savedPayment: ApiPayment;
-      if (paymentForm.id) {
-        savedPayment = await erpApiService.update<ApiPayment>('payments', paymentForm.id, payload);
-      } else {
-        savedPayment = await erpApiService.create<ApiPayment>('payments', payload);
-      }
+      const savedPayment = await erpApiService.create<ApiPayment>('payments', payload);
       const currentStatus = serviceAssignmentStatus(selectedPaymentService, assignment);
-      if (!paymentForm.id && savedPayment.id && modelId && ['pending', 'reserved', 'expired'].includes(currentStatus ?? '')) {
+      if (savedPayment.id && modelId && ['pending', 'reserved', 'expired'].includes(currentStatus ?? '')) {
         try {
           await serviceLifecycleService.activate(modelId, savedPayment.id);
         } catch (activationError) {
@@ -1109,7 +1078,7 @@ export function UserManagementView({
       setPaymentServiceId(null);
       setPaymentForm(emptyPaymentForm);
       setPaymentSuccess('');
-      setSuccess(paymentForm.id ? 'Payment updated.' : 'Payment saved.');
+      setSuccess('Payment saved.');
     } catch (err) {
       setPaymentError(err instanceof Error ? err.message : 'Could not save payment.');
     } finally {
@@ -1206,6 +1175,13 @@ export function UserManagementView({
     } finally {
       setInvoiceDownloadKey(null);
     }
+  };
+
+  const handlePaymentCancelled = async (payment: ApiPayment) => {
+    setServicePayments((prev) => prev.map((item) => (item.id === payment.id ? { ...item, ...payment } : item)));
+    if (editing) await reloadEditingUserServices();
+    setCancellingPayment(null);
+    setSuccess(t('payments.cancelSuccess'));
   };
 
   const downloadReceipt = async (payment: ApiPayment) => {
@@ -1458,6 +1434,7 @@ export function UserManagementView({
               <Input label={t('members.phone')} value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+15550001111" />
               <Input label={t('users.cnp')} value={form.cnp} onChange={(event) => setForm((prev) => ({ ...prev, cnp: event.target.value }))} placeholder="1900101123456" maxLength={20} />
               <Input label={t('users.ci')} value={form.ci} onChange={(event) => setForm((prev) => ({ ...prev, ci: event.target.value }))} placeholder="RT123456" maxLength={20} />
+              <div className="md:col-span-2"><Input label={t('members.address')} value={form.address} onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))} placeholder={t('members.addressPlaceholder')} maxLength={500} /></div>
               <label className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
                 <input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} className="h-4 w-4 accent-indigo-600" />
                 {t('users.activeUser')}
@@ -1542,11 +1519,7 @@ export function UserManagementView({
             </div>
           ) : activeFormTab === 'information' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {userCustomFields.length ? userCustomFields.map(renderCustomField) : (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 md:col-span-2">
-                  {t('users.noCustomFields')}
-                </div>
-              )}
+              {userCustomFields.map(renderCustomField)}
             </div>
           ) : activeFormTab === 'groups' ? (
             renderGroupCheckboxes()
@@ -1627,7 +1600,7 @@ export function UserManagementView({
 
               {selectedPaymentService ? (
                 <PaymentPopup
-                  title={paymentForm.id ? `Edit payment #${paymentForm.id}` : 'Adauga plata'}
+                  title="Adauga plata"
                   subtitle={selectedPaymentService.name
                     ? `Plata pentru ${selectedPaymentService.name}`
                     : `Plata pentru service #${paymentForm.service_id || selectedPaymentService.id}`}
@@ -1643,6 +1616,14 @@ export function UserManagementView({
                     setPaymentError('');
                   }}
                   onSave={() => void savePayment()}
+                />
+              ) : null}
+
+              {cancellingPayment ? (
+                <CancelPaymentPopup
+                  payment={cancellingPayment}
+                  onClose={() => setCancellingPayment(null)}
+                  onCancelled={handlePaymentCancelled}
                 />
               ) : null}
 
@@ -1665,7 +1646,7 @@ export function UserManagementView({
                         const userService = mergeById(editing?.services, editing?.active_services).find((item) => item.id === assignment.id);
                         const service = services.find((item) => item.id === assignment.id) ?? userService;
                         const persistedExpiresAt = serviceExpiresAt(userService);
-                        const expiresAt = persistedExpiresAt ?? addDays(assignment.start_date, service?.duration_days);
+                        const expiresAt = persistedExpiresAt ?? (service?.expiration_rule === 'fixed_date' ? service.fixed_expires_at : addDays(assignment.start_date, service?.duration_days));
                         const serviceUserId = serviceUserIdForAssignment(assignment, editing, service);
                         const lifecycleStatus = serviceAssignmentStatus(userService ?? service, assignment);
                         const accessesUsed = assignmentValue<number>(assignment, userService ?? service, 'accesses_used') ?? 0;
@@ -1681,7 +1662,7 @@ export function UserManagementView({
                           <tr key={assignment.id} className="border-b border-slate-100 align-top transition-colors hover:bg-indigo-50/30">
                             <td className="px-5 py-3">
                               <p className="font-medium text-slate-900">{service?.name ?? `#${assignment.id}`}</p>
-                              <p className="text-xs text-slate-500">{service?.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
+                              <p className="text-xs text-slate-500">{service?.expiration_rule === 'fixed_date' ? `${t('services.fixedExpiresAt')}: ${formatDate(service.fixed_expires_at)}` : service?.duration_days ? t('services.days', { count: service.duration_days }) : t('services.noAutoExpiry')}</p>
                               <p className="text-xs text-slate-500">{t('services.invoiceNumber')}: {assignment.invoice_number ?? '-'}</p>
                               <p className="text-xs text-slate-500">{t('services.billNumber')}: {assignment.bill_number ?? '-'}</p>
                               <div className="mt-3 space-y-2">
@@ -1691,16 +1672,19 @@ export function UserManagementView({
                                       <div>
                                         <p className="text-xs font-semibold text-slate-900">Payment #{payment.id} - {payment.amount}</p>
                                         <p className="text-xs text-slate-500">{paymentMethodLabel(payment)} - {payment.paid_at ?? '-'}</p>
+                                        {payment.status === 'cancelled' ? <p className="text-xs text-red-600">{t('payments.cancelled')}: {payment.cancellation_reason ?? '-'}</p> : null}
                                       </div>
                                       <div className="flex flex-wrap justify-end gap-2">
-                                        {payment.status === 'confirmed' && payment.receipt_number ? (
+                                        {(payment.status === 'confirmed' || payment.status === 'cancelled') && payment.receipt_number ? (
                                           <Button onClick={() => void downloadReceipt(payment)} disabled={receiptLoadingId === payment.id} size="sm" className="px-2.5 py-1.5 text-xs">
                                             <Download className="h-3.5 w-3.5" />{t('payments.receipt')}
                                           </Button>
                                         ) : null}
-                                        <Button onClick={() => editPayment(payment, service)} size="sm" className="px-2.5 py-1.5 text-xs">
-                                          <Edit3 className="h-3.5 w-3.5" />{t('common.edit')}
-                                        </Button>
+                                        {canCancelPayments && payment.status === 'confirmed' && payment.receipt_number ? (
+                                          <Button onClick={() => setCancellingPayment(payment)} size="sm" className="px-2.5 py-1.5 text-xs">
+                                            <Ban className="h-3.5 w-3.5" />{t('payments.cancelAction')}
+                                          </Button>
+                                        ) : null}
                                       </div>
                                     </div>
                                   </div>

@@ -4,6 +4,7 @@ export type OrganizationConfigEntry = {
   organisation_id?: string | number;
   organization_name?: string;
   organisation_name?: string;
+  apiBaseUrl?: string;
 };
 
 const CONFIG_URL = '/json/organizations.json';
@@ -59,6 +60,11 @@ export class OrganizationConfigService {
     }
 
     return organizationName;
+  }
+
+  async getApiBaseUrlForCurrentUrl() {
+    const match = await this.getConfigForCurrentUrl();
+    return match?.apiBaseUrl?.trim() || undefined;
   }
 }
 

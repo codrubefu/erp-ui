@@ -164,7 +164,11 @@ Free services can be activated without a payment. Paid services still activate t
 
 Each persisted service assignment in the member services tab can download a payment note PDF through `ErpApiService.downloadServicePaymentNote()`, which calls `GET /api/service-assignments/{assignment}/payment-note` and saves the returned blob locally. Assignments without an invoice number show a generate invoice button that calls `serviceLifecycleService.generateInvoice()`, backed by `POST /api/service-assignments/{assignment}/invoice`, and refreshes the member after the database row is updated.
 
-Confirmed payments listed under a member service expose a receipt download action that calls `ErpApiService.downloadPaymentReceipt()` and saves the returned PDF blob.
+Confirmed and cancelled payments listed under a member service expose a receipt download action that calls `ErpApiService.downloadPaymentReceipt()` and saves the returned PDF blob.
+
+Payments cannot be edited from the UI. Users with `payments.manage` can cancel a confirmed payment with a receipt from the member services tab or the payments list. `CancelPaymentPopup` requires a reason and calls `POST /api/payments/{payment}/cancel` through `paymentService.cancel()`. The member form also saves `address`, which is printed on receipts.
+
+In the service form, new services default to RON. The duration field is disabled and sent as `null` when the expiration rule is `fixed_date`, and service lists show the fixed expiry date instead of a duration.
 
 Service history must display the lifecycle status returned by the API. Do not collapse non-active states into a generic expired label and do not decide history membership only from dates.
 

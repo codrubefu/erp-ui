@@ -8,6 +8,7 @@ export type ApiUser = {
   phone: string | null;
   cnp?: string | null;
   ci?: string | null;
+  address?: string | null;
   notification_consents?: ApiNotificationConsents;
   active: boolean;
   email: string;
@@ -270,6 +271,7 @@ export type ApiPayment = {
   refunded_at?: string | null;
   cancelled_at?: string | null;
   failure_reason?: string | null;
+  cancellation_reason?: string | null;
   admin_id?: number | null;
   admin?: AuthenticatedUser | null;
   created_at?: string | null;
@@ -499,6 +501,13 @@ export class ErpApiService {
           start_date: service.start_date,
         })),
       }),
+    });
+  }
+
+  async cancelPayment<T>(paymentId: number, reason: string) {
+    return this.request<T>(`/payments/${paymentId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
     });
   }
 

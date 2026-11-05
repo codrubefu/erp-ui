@@ -54,7 +54,7 @@ const emptyForms: {
     id: 0,
     name: '',
     price: '',
-    currency: 'EUR',
+    currency: 'RON',
     duration_days: null,
     max_users: null,
     is_active: true,

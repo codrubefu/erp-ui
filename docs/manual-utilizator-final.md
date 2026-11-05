@@ -326,8 +326,8 @@ Campuri disponibile:
 - descriere;
 - tip serviciu: membership sau access pass;
 - pret;
-- moneda;
-- durata in zile;
+- moneda, implicit RON;
+- durata in zile, indisponibila cand regula de expirare este data fixa;
 - regula de expirare;
 - data fixa de expirare, daca regula este fixed date;
 - perioada de gratie;
@@ -475,7 +475,8 @@ Utilizatorul poate:
 - vedea modelul atasat;
 - vedea suma;
 - vedea datele de plata, confirmare sau eroare;
-- descarca chitanta, daca plata este confirmata;
+- descarca chitanta, daca plata este confirmata sau anulata;
+- anula o chitanta emisa, daca aveti dreptul de administrare a platilor;
 - naviga catre modelul asociat, daca exista ruta UI.
 
 ### Creare plata
@@ -499,7 +500,20 @@ Reguli importante:
 - platile cash sunt confirmate imediat;
 - cardul si transferul pot incepe ca initiate/pending si sunt confirmate prin callback;
 - o plata confirmata pentru serviciu poate activa serviciul asociat;
-- chitanta este disponibila doar pentru plati confirmate cu numar de chitanta.
+- chitanta este disponibila pentru plati confirmate sau anulate cu numar de chitanta;
+- chitanta afiseaza adresa membrului si modalitatea de plata;
+- dupa emitere, chitanta nu mai poate fi editata si ramane la fel chiar daca se schimba datele membrului, ale serviciului sau ale organizatiei.
+
+### Corectarea unei chitante gresite
+
+O chitanta emisa nu se editeaza. Pentru corectie:
+
+1. apasati Anuleaza la plata respectiva si completati motivul;
+2. adaugati o plata noua, care primeste o chitanta noua.
+
+Numarul chitantei anulate nu se refoloseste. Chitanta ramane descarcabila, cu marcajul ANULATA si motivul. Serviciul activat de plata anulata revine in asteptare, daca nu exista alta plata confirmata pentru el.
+
+Anularea nu returneaza banii si nu face refund la procesator. Returul se face separat.
 
 ## 15. Rapoarte si segmente
 
