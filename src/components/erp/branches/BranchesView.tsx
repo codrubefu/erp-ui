@@ -66,7 +66,7 @@ export function BranchesView() {
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiLocation>('locations', { search, per_page: 100 });
+      const data = await erpApiService.list<ApiLocation>('locations', { search, per_page: 200 });
       setLocations(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('branches.loadError'));
@@ -82,7 +82,7 @@ export function BranchesView() {
   }, [fetchLocations]);
 
   useEffect(() => {
-    erpApiService.list<ApiLocationGroup>('location-groups', { per_page: 100 })
+    erpApiService.list<ApiLocationGroup>('location-groups', { per_page: 200 })
       .then(setLocationGroups)
       .catch(() => setLocationGroups([]));
   }, []);

@@ -694,9 +694,9 @@ export function UserManagementView({
   const loadLookups = useCallback(async () => {
     try {
       const [groupData, locationData, serviceData] = await Promise.all([
-        erpApiService.list<ApiGroup>('groups', { per_page: 100 }),
-        erpApiService.list<ApiLocation>('locations', { per_page: 100 }),
-        erpApiService.list<ApiService>('services', { per_page: 100, is_active: '1' }),
+        erpApiService.list<ApiGroup>('groups', { per_page: 200 }),
+        erpApiService.list<ApiLocation>('locations', { per_page: 200 }),
+        erpApiService.list<ApiService>('services', { per_page: 200, is_active: '1' }),
       ]);
       setGroups(groupData);
       setLocations(locationData);

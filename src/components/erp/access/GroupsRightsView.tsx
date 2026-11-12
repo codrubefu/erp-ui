@@ -182,7 +182,7 @@ export function GroupsRightsView() {
 
   const loadUsers = useCallback(async () => {
     try {
-      const data = await erpApiService.list<ApiUser>('users', { per_page: 100 });
+      const data = await erpApiService.list<ApiUser>('users', { per_page: 200 });
       setUsers(data);
     } catch {
       setUsers([]);
@@ -191,7 +191,7 @@ export function GroupsRightsView() {
 
   const loadRights = useCallback(async () => {
     try {
-      const data = await erpApiService.list<ApiRight>('rights', { per_page: 100 });
+      const data = await erpApiService.list<ApiRight>('rights', { per_page: 200 });
       setRights(data);
     } catch {
       setRights([]);
@@ -202,7 +202,7 @@ export function GroupsRightsView() {
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiRecord>('groups', { search: currentSearch, per_page: 50 });
+      const data = await erpApiService.list<ApiRecord>('groups', { search: currentSearch, per_page: 200 });
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('access.loadError'));

@@ -214,8 +214,8 @@ export function ReportsView(props: ReportsViewProps) {
 
   useEffect(() => {
     Promise.all([
-      erpApiService.list<ApiLocation>('locations', { per_page: 100 }).catch(() => []),
-      erpApiService.list<ApiUser>('admins', { per_page: 100 }).catch(() => []),
+      erpApiService.list<ApiLocation>('locations', { per_page: 200 }).catch(() => []),
+      erpApiService.list<ApiUser>('admins', { per_page: 200 }).catch(() => []),
     ]).then(([nextLocations, nextAdmins]) => {
       setLocations(nextLocations);
       setAdmins(nextAdmins);

@@ -50,7 +50,7 @@ export function LocationGroupsView() {
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiLocationGroup>('location-groups', { search, per_page: 100 });
+      const data = await erpApiService.list<ApiLocationGroup>('location-groups', { search, per_page: 200 });
       setGroups(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('locationGroups.loadError'));
