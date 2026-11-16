@@ -759,6 +759,8 @@
     "pageOf": "Pagina {{page}} din {{lastPage}}",
     "previousPage": "Anterior",
     "nextPage": "Urmator",
+    "locationsSearchPlaceholder": "Cauta organizatie sau filiala",
+    "locationsSelectedCount": "{{selected}} din {{total}} organizatii selectate",
     "searchPlaceholder": "Cauta dupa cod, nume, email sau telefon",
     "showingCount": "Afisare {{count}} {{label}} din API",
     "user": "Utilizator",
