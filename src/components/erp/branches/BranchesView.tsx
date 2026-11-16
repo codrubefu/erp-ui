@@ -1,7 +1,7 @@
 import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell } from '../../primitives';
+import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell, Pagination, type PaginationState } from '../../primitives';
 import { erpApiService, type ApiLocation, type ApiLocationGroup } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
@@ -54,6 +54,7 @@ export function BranchesView() {
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [locationGroups, setLocationGroups] = useState<ApiLocationGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState<PaginationState>({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -62,12 +63,23 @@ export function BranchesView() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<LocationForm>(emptyForm);
 
-  const fetchLocations = useCallback(async (search: string) => {
+  const fetchLocations = useCallback(async (search: string, page = 1, perPage = 15) => {
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiLocation>('locations', { search, per_page: 100 });
-      setLocations(data);
+      const payload = await erpApiService.listPaginated<ApiLocation>('locations', { search, page, per_page: perPage });
+      const lastPage = payload.meta?.last_page ?? payload.last_page ?? 1;
+      const currentPage = payload.meta?.current_page ?? payload.current_page ?? page;
+      if (payload.data.length === 0 && currentPage > 1 && currentPage > lastPage) {
+        return await fetchLocations(search, lastPage, perPage);
+      }
+      setLocations(payload.data);
+      setPagination({
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: payload.meta?.per_page ?? payload.per_page ?? perPage,
+        total: payload.meta?.total ?? payload.total ?? payload.data.length,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('branches.loadError'));
     } finally {
@@ -75,14 +87,15 @@ export function BranchesView() {
     }
   }, [t]);
 
-  const loadLocations = useCallback(() => fetchLocations(searchTerm), [fetchLocations, searchTerm]);
+  const loadLocations = useCallback((page = pagination.current_page) => fetchLocations(searchTerm, page, pagination.per_page), [fetchLocations, searchTerm, pagination.current_page, pagination.per_page]);
+  const searchFromFirstPage = () => fetchLocations(searchTerm, 1, pagination.per_page);
 
   useEffect(() => {
     void fetchLocations('');
   }, [fetchLocations]);
 
   useEffect(() => {
-    erpApiService.list<ApiLocationGroup>('location-groups', { per_page: 100 })
+    erpApiService.listAll<ApiLocationGroup>('location-groups')
       .then(setLocationGroups)
       .catch(() => setLocationGroups([]));
   }, []);
@@ -210,19 +223,19 @@ export function BranchesView() {
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') void loadLocations();
+              if (event.key === 'Enter') void searchFromFirstPage();
             }}
             placeholder={t('branches.searchPlaceholder')}
           />
           <div className="flex items-end">
-            <button onClick={() => void loadLocations()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
+            <button onClick={() => void searchFromFirstPage()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
 
         <div className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          {t('branches.showingCount', { count: locations.length })}
+          {t('branches.showingCount', { count: pagination.total || locations.length })}
         </div>
 
         <TableShell>
@@ -262,6 +275,12 @@ export function BranchesView() {
             </tbody>
           </DataTable>
         </TableShell>
+        <Pagination
+          pagination={pagination}
+          loading={loading}
+          onPageChange={(page) => void fetchLocations(searchTerm, page, pagination.per_page)}
+          onPerPageChange={(perPage) => void fetchLocations(searchTerm, 1, perPage)}
+        />
       </SectionCard>
 
     </div>

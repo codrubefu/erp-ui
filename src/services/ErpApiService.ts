@@ -92,6 +92,7 @@ export type ApiLocationGroup = {
   name: string;
   description: string | null;
   locations?: ApiLocation[];
+  locations_count?: number;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -463,7 +464,20 @@ export class ErpApiService {
       : payload;
   }
 
-  async searchUsersByCode(search: string, page = 1, perPage = 15) {
+  async listAll<T>(resource: string, params: Record<string, string | number | undefined> = {}) {
+    const items: T[] = [];
+    let page = 1;
+    let lastPage = 1;
+    do {
+      const payload = await this.listPaginated<T>(resource, { ...params, page, per_page: 100 });
+      items.push(...payload.data);
+      lastPage = payload.meta?.last_page ?? payload.last_page ?? 1;
+      page += 1;
+    } while (page <= lastPage);
+    return items;
+  }
+
+    async searchUsersByCode(search: string, page = 1, perPage = 15) {
     const query = new URLSearchParams();
     query.set('search', search);
     query.set('per_page', String(perPage));

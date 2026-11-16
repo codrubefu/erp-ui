@@ -505,19 +505,6 @@ function clampPage(value: number, lastPage: number) {
   return Math.min(Math.max(1, value), lastPage);
 }
 
-async function listAllLocations() {
-  const items: ApiLocation[] = [];
-  let currentPage = 1;
-  let lastPage = 1;
-  do {
-    const payload = await erpApiService.listPaginated<ApiLocation>('locations', { per_page: 100, page: currentPage });
-    items.push(...payload.data);
-    lastPage = payload.meta?.last_page ?? payload.last_page ?? 1;
-    currentPage += 1;
-  } while (currentPage <= lastPage);
-  return items;
-}
-
 function groupLocationsByBranch(locations: ApiLocation[]) {
   const groups = new Map<string, { id: string; name: string; locations: ApiLocation[] }>();
 
@@ -742,7 +729,7 @@ export function UserManagementView({
     try {
       const [groupData, locationData, serviceData] = await Promise.all([
         erpApiService.list<ApiGroup>('groups', { per_page: 100 }),
-        listAllLocations(),
+        erpApiService.listAll<ApiLocation>('locations'),
         erpApiService.list<ApiService>('services', { per_page: 100, is_active: '1' }),
       ]);
       setGroups(groupData);
