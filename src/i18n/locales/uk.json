@@ -749,6 +749,8 @@
     "pageOf": "Сторінка {{page}} з {{lastPage}}",
     "previousPage": "Попередня",
     "nextPage": "Наступна",
+    "locationsSearchPlaceholder": "Пошук організації або філії",
+    "locationsSelectedCount": "Вибрано {{selected}} з {{total}} організацій",
     "searchPlaceholder": "Пошук за кодом, ім'ям, email або телефоном",
     "showingCount": "Показано {{count}} {{label}} з API",
     "user": "Користувач",

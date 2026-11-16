@@ -759,6 +759,8 @@
     "pageOf": "Page {{page}} of {{lastPage}}",
     "previousPage": "Previous",
     "nextPage": "Next",
+    "locationsSearchPlaceholder": "Search organization or branch",
+    "locationsSelectedCount": "{{selected}} of {{total}} organizations selected",
     "searchPlaceholder": "Search by code, name, email, or phone",
     "showingCount": "Showing {{count}} {{label}} from API",
     "user": "User",

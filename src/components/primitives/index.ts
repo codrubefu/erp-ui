@@ -5,6 +5,7 @@ export { Alert } from './feedback/Alert';
 export { SuccessMessage } from './feedback/SuccessMessage';
 export { StatusBadge } from './feedback/StatusBadge';
 export { DataTable, EmptyTableRow, TableCell, TableHeadCell, TableShell } from './tables/DataTable';
+export { Pagination, type PaginationState } from './tables/Pagination';
 export { Input } from './forms/Input';
 export { Select } from './forms/Select';
 export { Textarea } from './forms/Textarea';

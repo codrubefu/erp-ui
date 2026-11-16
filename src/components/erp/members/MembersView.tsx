@@ -494,6 +494,17 @@ function arrayValue(value: unknown) {
   return Array.isArray(value) ? value.map(String) : value ? String(value).split(',').map((item) => item.trim()).filter(Boolean) : [];
 }
 
+const BRANCHES_PER_PAGE = 5;
+const ORGANIZATIONS_PER_PAGE = 10;
+
+function pageCount(total: number, perPage: number) {
+  return Math.max(1, Math.ceil(total / perPage));
+}
+
+function clampPage(value: number, lastPage: number) {
+  return Math.min(Math.max(1, value), lastPage);
+}
+
 function groupLocationsByBranch(locations: ApiLocation[]) {
   const groups = new Map<string, { id: string; name: string; locations: ApiLocation[] }>();
 
@@ -575,6 +586,9 @@ export function UserManagementView({
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityError, setActivityError] = useState('');
   const [activityFilters, setActivityFilters] = useState({ type: '', from: '', to: '' });
+  const [locationSearch, setLocationSearch] = useState('');
+  const [branchPage, setBranchPage] = useState(1);
+  const [organizationPages, setOrganizationPages] = useState<Record<string, number>>({});
 
   const resolvedTitle = title ?? t('members.title');
   const resolvedAddLabel = addLabel ?? t('members.add');
@@ -586,6 +600,20 @@ export function UserManagementView({
   const selectedGroupIds = useMemo(() => selectedIds(form.group_ids), [form.group_ids]);
   const selectedLocationIds = useMemo(() => selectedIds(form.location_ids), [form.location_ids]);
   const locationsByBranch = useMemo(() => groupLocationsByBranch(locations), [locations]);
+  const filteredLocationsByBranch = useMemo(() => {
+    const term = locationSearch.trim().toLowerCase();
+    if (!term) return locationsByBranch;
+    return locationsByBranch
+      .map((group) => (
+        group.name.toLowerCase().includes(term)
+          ? group
+          : { ...group, locations: group.locations.filter((item) => item.name.toLowerCase().includes(term)) }
+      ))
+      .filter((group) => group.locations.length > 0);
+  }, [locationSearch, locationsByBranch]);
+  const branchLastPage = pageCount(filteredLocationsByBranch.length, BRANCHES_PER_PAGE);
+  const currentBranchPage = clampPage(branchPage, branchLastPage);
+  const visibleBranches = filteredLocationsByBranch.slice((currentBranchPage - 1) * BRANCHES_PER_PAGE, currentBranchPage * BRANCHES_PER_PAGE);
   const selectedServiceIds = useMemo(() => form.services.map((service) => String(service.id)), [form.services]);
   const selectedPaymentService = useMemo(() => {
     const serviceId = Number(paymentServiceId);
@@ -691,11 +719,17 @@ export function UserManagementView({
     setScanningCode(false);
   }, [activeFormTab]);
 
+  const resetLocationPagination = () => {
+    setLocationSearch('');
+    setBranchPage(1);
+    setOrganizationPages({});
+  };
+
   const loadLookups = useCallback(async () => {
     try {
       const [groupData, locationData, serviceData] = await Promise.all([
         erpApiService.list<ApiGroup>('groups', { per_page: 100 }),
-        erpApiService.list<ApiLocation>('locations', { per_page: 100 }),
+        erpApiService.listAll<ApiLocation>('locations'),
         erpApiService.list<ApiService>('services', { per_page: 100, is_active: '1' }),
       ]);
       setGroups(groupData);
@@ -844,6 +878,7 @@ export function UserManagementView({
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
     setInvoiceDownloadKey(null);
+    resetLocationPagination();
     setFormOpen(true);
   };
 
@@ -877,12 +912,14 @@ export function UserManagementView({
     setSuspendResumeAt('');
     setInvoiceLoadingId(null);
     setInvoiceDownloadKey(null);
+    resetLocationPagination();
     setFormOpen(true);
     void loadServicePayments(selectedUser, serviceAssignmentsFromUser(selectedUser));
   }, [loadServicePayments, navigate, resource]);
 
   const closeForm = () => {
     if (resource === 'clients') navigate('/erp/members');
+    resetLocationPagination();
     setFormOpen(false);
     setEditing(null);
     setForm(emptyForm);
@@ -1308,13 +1345,51 @@ export function UserManagementView({
     </div>
   );
 
+  const renderPager = (current: number, lastPage: number, onChange: (nextPage: number) => void, compact = false) => {
+    if (lastPage <= 1) return null;
+    const buttonClass = `inline-flex items-center rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 shadow-sm disabled:cursor-not-allowed disabled:opacity-50 ${compact ? 'h-8 px-2 text-xs' : 'h-9 px-3 text-sm'}`;
+    return (
+      <div className={`flex flex-wrap items-center justify-between gap-3 text-slate-500 ${compact ? 'text-xs' : 'text-sm'}`}>
+        <span>{t('users.pageOf', { page: current, lastPage })}</span>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => onChange(current - 1)} disabled={current <= 1} className={buttonClass}>
+            <ChevronLeft className="mr-1 h-4 w-4" />{t('users.previousPage')}
+          </button>
+          <button type="button" onClick={() => onChange(current + 1)} disabled={current >= lastPage} className={buttonClass}>
+            {t('users.nextPage')}<ChevronRight className="ml-1 h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderLocationCheckboxes = () => (
     <div className="space-y-4">
-      {locationsByBranch.length ? locationsByBranch.map((group) => {
+      {locationsByBranch.length ? (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <Input
+            label={t('common.search')}
+            value={locationSearch}
+            onChange={(event) => {
+              setLocationSearch(event.target.value);
+              setBranchPage(1);
+              setOrganizationPages({});
+            }}
+            placeholder={t('users.locationsSearchPlaceholder')}
+          />
+          <p className="pb-2 text-sm text-slate-500">
+            {t('users.locationsSelectedCount', { selected: selectedLocationIds.length, total: locations.length })}
+          </p>
+        </div>
+      ) : null}
+      {visibleBranches.length ? visibleBranches.map((group) => {
         const groupLocationIds = group.locations.map((location) => location.id);
         const selectedCount = groupLocationIds.filter((id) => selectedLocationIds.includes(String(id))).length;
         const allSelected = selectedCount === groupLocationIds.length;
         const partiallySelected = selectedCount > 0 && !allSelected;
+        const organizationLastPage = pageCount(group.locations.length, ORGANIZATIONS_PER_PAGE);
+        const organizationPage = clampPage(organizationPages[group.id] ?? 1, organizationLastPage);
+        const visibleLocations = group.locations.slice((organizationPage - 1) * ORGANIZATIONS_PER_PAGE, organizationPage * ORGANIZATIONS_PER_PAGE);
 
         return (
           <div key={group.id} className="rounded-lg border border-slate-200 bg-white">
@@ -1337,7 +1412,7 @@ export function UserManagementView({
               </label>
             </div>
             <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
-              {group.locations.map((location) => (
+              {visibleLocations.map((location) => (
                 <label key={location.id} className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
                   <input
                     type="checkbox"
@@ -1349,6 +1424,11 @@ export function UserManagementView({
                 </label>
               ))}
             </div>
+            {organizationLastPage > 1 ? (
+              <div className="border-t border-slate-100 px-4 py-3">
+                {renderPager(organizationPage, organizationLastPage, (nextPage) => setOrganizationPages((prev) => ({ ...prev, [group.id]: nextPage })), true)}
+              </div>
+            ) : null}
           </div>
         );
       }) : (
@@ -1356,6 +1436,7 @@ export function UserManagementView({
           {t('branches.empty')}
         </div>
       )}
+      {renderPager(currentBranchPage, branchLastPage, setBranchPage)}
     </div>
   );
 

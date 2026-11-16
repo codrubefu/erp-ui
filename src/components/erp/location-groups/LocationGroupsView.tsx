@@ -2,7 +2,7 @@ import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { erpApiService, type ApiLocationGroup } from '../../../services/ErpApiService';
-import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell } from '../../primitives';
+import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell, Pagination, type PaginationState } from '../../primitives';
 import { PageShell } from '../shared/PageShell';
 
 type LocationGroupForm = {
@@ -38,6 +38,7 @@ export function LocationGroupsView() {
   const { t } = useTranslation();
   const [groups, setGroups] = useState<ApiLocationGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState<PaginationState>({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -46,12 +47,23 @@ export function LocationGroupsView() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<LocationGroupForm>(emptyForm);
 
-  const fetchGroups = useCallback(async (search: string) => {
+  const fetchGroups = useCallback(async (search: string, page = 1, perPage = 15) => {
     setLoading(true);
     setError('');
     try {
-      const data = await erpApiService.list<ApiLocationGroup>('location-groups', { search, per_page: 100 });
-      setGroups(data);
+      const payload = await erpApiService.listPaginated<ApiLocationGroup>('location-groups', { search, page, per_page: perPage });
+      const lastPage = payload.meta?.last_page ?? payload.last_page ?? 1;
+      const currentPage = payload.meta?.current_page ?? payload.current_page ?? page;
+      if (payload.data.length === 0 && currentPage > 1 && currentPage > lastPage) {
+        return await fetchGroups(search, lastPage, perPage);
+      }
+      setGroups(payload.data);
+      setPagination({
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: payload.meta?.per_page ?? payload.per_page ?? perPage,
+        total: payload.meta?.total ?? payload.total ?? payload.data.length,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('locationGroups.loadError'));
     } finally {
@@ -59,7 +71,8 @@ export function LocationGroupsView() {
     }
   }, [t]);
 
-  const loadGroups = useCallback(() => fetchGroups(searchTerm), [fetchGroups, searchTerm]);
+  const loadGroups = useCallback((page = pagination.current_page) => fetchGroups(searchTerm, page, pagination.per_page), [fetchGroups, searchTerm, pagination.current_page, pagination.per_page]);
+  const searchFromFirstPage = () => fetchGroups(searchTerm, 1, pagination.per_page);
 
   useEffect(() => {
     void fetchGroups('');
@@ -158,12 +171,12 @@ export function LocationGroupsView() {
       }
     >
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
-        <Input label={t('common.search')} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void loadGroups(); }} placeholder={t('locationGroups.searchPlaceholder')} />
-        <div className="flex items-end"><button onClick={() => void loadGroups()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button></div>
+        <Input label={t('common.search')} value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void searchFromFirstPage(); }} placeholder={t('locationGroups.searchPlaceholder')} />
+        <div className="flex items-end"><button onClick={() => void searchFromFirstPage()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button></div>
       </div>
 
       {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
-      <div className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">{t('locationGroups.showingCount', { count: groups.length })}</div>
+      <div className="mb-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">{t('locationGroups.showingCount', { count: pagination.total || groups.length })}</div>
 
       <TableShell>
         <DataTable>
@@ -181,7 +194,7 @@ export function LocationGroupsView() {
               <tr key={group.id} className="group transition-colors hover:bg-indigo-50/30">
                 <TableCell className="font-semibold text-slate-900">{group.name}</TableCell>
                 <TableCell className="max-w-[420px] text-slate-600">{group.description || t('locationGroups.defaultDescription')}</TableCell>
-                <TableCell className="text-slate-600">{group.locations?.length ?? 0}</TableCell>
+                <TableCell className="text-slate-600">{group.locations_count ?? group.locations?.length ?? 0}</TableCell>
                 <TableCell className="text-slate-600">{formatDate(group.updated_at)}</TableCell>
                 <TableCell align="right">
                   <div className="flex justify-end gap-2">
@@ -196,6 +209,12 @@ export function LocationGroupsView() {
           </tbody>
         </DataTable>
       </TableShell>
+      <Pagination
+        pagination={pagination}
+        loading={loading}
+        onPageChange={(page) => void fetchGroups(searchTerm, page, pagination.per_page)}
+        onPerPageChange={(perPage) => void fetchGroups(searchTerm, 1, perPage)}
+      />
     </SectionCard>
   );
 }
