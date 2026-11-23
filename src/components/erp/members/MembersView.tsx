@@ -2,7 +2,7 @@ import { Ban, ChevronLeft, ChevronRight, Download, Edit3, Eye, EyeOff, FileText,
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Button, Input, SectionCard, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
+import { Button, Input, SectionCard, Select, StatusBadge, SuccessMessage, Textarea } from '../../primitives';
 import { erpApiService, type ApiActivity, type ApiCustomField, type ApiCustomFieldValue, type ApiCustomFieldValues, type ApiGroup, type ApiLocation, type ApiPaginated, type ApiPayment, type ApiService, type ApiUser, type ApiUserService, type ApiUserServiceAssignment, type ServiceAssignmentStatus } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 import { CancelPaymentPopup } from '../payments/CancelPaymentPopup';
@@ -57,6 +57,16 @@ export type UserManagementViewProps = {
   newEntityLabel?: string;
   showGroupsInList?: boolean;
   useRelationTabs?: boolean;
+};
+
+type UserListFilters = {
+  location_group_id: string;
+  location_id: string;
+};
+
+const emptyFilters: UserListFilters = {
+  location_group_id: '',
+  location_id: '',
 };
 
 const emptyForm: UserForm = {
@@ -548,6 +558,8 @@ export function UserManagementView({
   const [services, setServices] = useState<ApiService[]>([]);
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<UserListFilters>(emptyFilters);
+  const latestUsersRequest = useRef(0);
   const [perPage, setPerPage] = useState(15);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
@@ -611,6 +623,10 @@ export function UserManagementView({
       ))
       .filter((group) => group.locations.length > 0);
   }, [locationSearch, locationsByBranch]);
+  const filterLocationsByBranch = useMemo(
+    () => locationsByBranch.filter((group) => !filters.location_group_id || group.id === filters.location_group_id),
+    [filters.location_group_id, locationsByBranch],
+  );
   const branchLastPage = pageCount(filteredLocationsByBranch.length, BRANCHES_PER_PAGE);
   const currentBranchPage = clampPage(branchPage, branchLastPage);
   const visibleBranches = filteredLocationsByBranch.slice((currentBranchPage - 1) * BRANCHES_PER_PAGE, currentBranchPage * BRANCHES_PER_PAGE);
@@ -726,20 +742,15 @@ export function UserManagementView({
   };
 
   const loadLookups = useCallback(async () => {
-    try {
-      const [groupData, locationData, serviceData] = await Promise.all([
-        erpApiService.list<ApiGroup>('groups', { per_page: 100 }),
-        erpApiService.listAll<ApiLocation>('locations'),
-        erpApiService.list<ApiService>('services', { per_page: 100, is_active: '1' }),
-      ]);
-      setGroups(groupData);
-      setLocations(locationData);
-      setServices(serviceData);
-    } catch {
-      setGroups([]);
-      setLocations([]);
-      setServices([]);
-    }
+    // Independent lookups: a missing right on one of them must not empty the others.
+    const [groupData, locationData, serviceData] = await Promise.all([
+      erpApiService.list<ApiGroup>('groups', { per_page: 100 }).catch(() => []),
+      erpApiService.listAll<ApiLocation>('locations').catch(() => []),
+      erpApiService.list<ApiService>('services', { per_page: 100, is_active: '1' }).catch(() => []),
+    ]);
+    setGroups(groupData);
+    setLocations(locationData);
+    setServices(serviceData);
 
     try {
       setCustomFields(await erpApiService.list<ApiCustomField>('custom-fields', { entity_type: 'users' }));
@@ -748,26 +759,42 @@ export function UserManagementView({
     }
   }, []);
 
-  const fetchUsers = useCallback(async (search: string, limit: number, nextPage: number) => {
+  const fetchUsers = useCallback(async (search: string, activeFilters: UserListFilters, limit: number, nextPage: number) => {
+    const requestId = ++latestUsersRequest.current;
     setLoading(true);
     setError('');
     try {
       const payload = await erpApiService.listPaginated<ApiUser>(resource, {
         search: search.trim(),
+        ...activeFilters,
         page: nextPage,
         per_page: limit,
       });
+      if (requestId !== latestUsersRequest.current) return;
       setUsers(payload.data);
       setPagination(paginationFrom(payload, nextPage, limit));
       setPage(paginationFrom(payload, nextPage, limit).current_page);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedCountLabel }));
+      if (requestId === latestUsersRequest.current) setError(err instanceof Error ? err.message : t('users.loadError', { label: resolvedCountLabel }));
     } finally {
-      setLoading(false);
+      if (requestId === latestUsersRequest.current) setLoading(false);
     }
   }, [resolvedCountLabel, resource, t]);
 
-  const loadUsers = useCallback((nextPage = page) => fetchUsers(searchTerm, perPage, nextPage), [fetchUsers, searchTerm, perPage, page]);
+  const loadUsers = useCallback((nextPage = page) => fetchUsers(searchTerm, filters, perPage, nextPage), [fetchUsers, searchTerm, filters, perPage, page]);
+
+  const applyFilters = (nextFilters: UserListFilters) => {
+    setFilters(nextFilters);
+    setPage(1);
+    void fetchUsers(searchTerm, nextFilters, perPage, 1);
+  };
+
+  const changeBranchFilter = (branchId: string) => {
+    const keepsLocation = !branchId || locationsByBranch.some((group) => (
+      group.id === branchId && group.locations.some((item) => String(item.id) === filters.location_id)
+    ));
+    applyFilters({ location_group_id: branchId, location_id: keepsLocation ? filters.location_id : '' });
+  };
 
   const loadActivity = useCallback(async (userId = editing?.id) => {
     if (!userId) {
@@ -829,8 +856,9 @@ export function UserManagementView({
   }, [editing, loadServicePayments, loadUsers]);
 
   useEffect(() => {
+    setFilters(emptyFilters);
     void loadLookups();
-    void fetchUsers('', 15, 1);
+    void fetchUsers('', emptyFilters, 15, 1);
   }, [fetchUsers, loadLookups]);
 
   useEffect(() => {
@@ -851,9 +879,10 @@ export function UserManagementView({
 
   const resetFilters = () => {
     setSearchTerm('');
+    setFilters(emptyFilters);
     setPerPage(15);
     setPage(1);
-    void fetchUsers('', 15, 1);
+    void fetchUsers('', emptyFilters, 15, 1);
   };
 
   const startCreate = () => {
@@ -1956,7 +1985,7 @@ export function UserManagementView({
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 setPage(1);
-                void fetchUsers(searchTerm, perPage, 1);
+                void fetchUsers(searchTerm, filters, perPage, 1);
               }
             }}
             placeholder={t('users.searchPlaceholder')}
@@ -1969,7 +1998,7 @@ export function UserManagementView({
                 const nextPerPage = Number(event.target.value);
                 setPerPage(nextPerPage);
                 setPage(1);
-                void fetchUsers(searchTerm, nextPerPage, 1);
+                void fetchUsers(searchTerm, filters, nextPerPage, 1);
               }}
               className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
@@ -1979,8 +2008,24 @@ export function UserManagementView({
           <div className="flex items-end">
             <button onClick={() => {
               setPage(1);
-              void fetchUsers(searchTerm, perPage, 1);
+              void fetchUsers(searchTerm, filters, perPage, 1);
             }} className="h-10 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:col-span-3">
+            <Select label={t('branches.locationGroup')} value={filters.location_group_id} onChange={(event) => changeBranchFilter(event.target.value)}>
+              <option value="">{t('branches.allLocationGroups')}</option>
+              <option value="none">{t('branches.noLocationGroup')}</option>
+              {locationsByBranch.filter((group) => group.id !== 'none').map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+            </Select>
+            <Select label={t('users.organization')} value={filters.location_id} onChange={(event) => applyFilters({ ...filters, location_id: event.target.value })}>
+              <option value="">{t('users.allOrganizations')}</option>
+              {filters.location_group_id ? null : <option value="none">{t('users.noOrganization')}</option>}
+              {filterLocationsByBranch.map((group) => (
+                <optgroup key={group.id} label={group.id === 'none' ? t('branches.noLocationGroup') : group.name}>
+                  {group.locations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </optgroup>
+              ))}
+            </Select>
           </div>
         </div>
 
