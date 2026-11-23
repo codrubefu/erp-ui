@@ -1,7 +1,7 @@
 import { Edit3, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DataTable, EmptyTableRow, Input, SectionCard, SuccessMessage, TableCell, TableHeadCell, TableShell, Pagination, type PaginationState } from '../../primitives';
+import { DataTable, EmptyTableRow, Input, SectionCard, Select, SuccessMessage, TableCell, TableHeadCell, TableShell, Pagination, type PaginationState } from '../../primitives';
 import { erpApiService, type ApiLocation, type ApiLocationGroup } from '../../../services/ErpApiService';
 import { PageShell } from '../shared/PageShell';
 
@@ -10,6 +10,18 @@ type LocationForm = {
   description: string;
   location_group_id: string;
   user_ids: string;
+};
+
+type LocationFilters = {
+  location_group_id: string;
+  sort_by: 'name' | 'location_group' | 'users_count' | 'updated_at';
+  sort_dir: 'asc' | 'desc';
+};
+
+const defaultFilters: LocationFilters = {
+  location_group_id: '',
+  sort_by: 'name',
+  sort_dir: 'asc',
 };
 
 const emptyForm: LocationForm = {
@@ -54,8 +66,10 @@ export function BranchesView() {
   const [locations, setLocations] = useState<ApiLocation[]>([]);
   const [locationGroups, setLocationGroups] = useState<ApiLocationGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<LocationFilters>(defaultFilters);
   const [pagination, setPagination] = useState<PaginationState>({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
   const [loading, setLoading] = useState(false);
+  const latestRequest = useRef(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -63,15 +77,17 @@ export function BranchesView() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<LocationForm>(emptyForm);
 
-  const fetchLocations = useCallback(async (search: string, page = 1, perPage = 15) => {
+  const fetchLocations = useCallback(async (search: string, activeFilters: LocationFilters, page = 1, perPage = 15) => {
+    const requestId = ++latestRequest.current;
     setLoading(true);
     setError('');
     try {
-      const payload = await erpApiService.listPaginated<ApiLocation>('locations', { search, page, per_page: perPage });
+      const payload = await erpApiService.listPaginated<ApiLocation>('locations', { search, ...activeFilters, page, per_page: perPage });
+      if (requestId !== latestRequest.current) return;
       const lastPage = payload.meta?.last_page ?? payload.last_page ?? 1;
       const currentPage = payload.meta?.current_page ?? payload.current_page ?? page;
       if (payload.data.length === 0 && currentPage > 1 && currentPage > lastPage) {
-        return await fetchLocations(search, lastPage, perPage);
+        return await fetchLocations(search, activeFilters, lastPage, perPage);
       }
       setLocations(payload.data);
       setPagination({
@@ -81,17 +97,22 @@ export function BranchesView() {
         total: payload.meta?.total ?? payload.total ?? payload.data.length,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('branches.loadError'));
+      if (requestId === latestRequest.current) setError(err instanceof Error ? err.message : t('branches.loadError'));
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
   }, [t]);
 
-  const loadLocations = useCallback((page = pagination.current_page) => fetchLocations(searchTerm, page, pagination.per_page), [fetchLocations, searchTerm, pagination.current_page, pagination.per_page]);
-  const searchFromFirstPage = () => fetchLocations(searchTerm, 1, pagination.per_page);
+  const loadLocations = useCallback((page = pagination.current_page) => fetchLocations(searchTerm, filters, page, pagination.per_page), [fetchLocations, searchTerm, filters, pagination.current_page, pagination.per_page]);
+  const searchFromFirstPage = () => fetchLocations(searchTerm, filters, 1, pagination.per_page);
+  const applyFilters = (changes: Partial<LocationFilters>) => {
+    const nextFilters = { ...filters, ...changes };
+    setFilters(nextFilters);
+    void fetchLocations(searchTerm, nextFilters, 1, pagination.per_page);
+  };
 
   useEffect(() => {
-    void fetchLocations('');
+    void fetchLocations('', defaultFilters);
   }, [fetchLocations]);
 
   useEffect(() => {
@@ -217,7 +238,7 @@ export function BranchesView() {
           </div>
         }
       >
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
           <Input
             label={t('common.search')}
             value={searchTerm}
@@ -230,6 +251,24 @@ export function BranchesView() {
           <div className="flex items-end">
             <button onClick={() => void searchFromFirstPage()} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Select label={t('branches.locationGroup')} value={filters.location_group_id} onChange={(event) => applyFilters({ location_group_id: event.target.value })}>
+            <option value="">{t('branches.allLocationGroups')}</option>
+            <option value="none">{t('branches.noLocationGroup')}</option>
+            {locationGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+          </Select>
+          <Select label={t('branches.sortBy')} value={filters.sort_by} onChange={(event) => applyFilters({ sort_by: event.target.value as LocationFilters['sort_by'] })}>
+            <option value="name">{t('branches.name')}</option>
+            <option value="location_group">{t('branches.locationGroup')}</option>
+            <option value="users_count">{t('branches.users')}</option>
+            <option value="updated_at">{t('branches.updated')}</option>
+          </Select>
+          <Select label={t('branches.sortDirection')} value={filters.sort_dir} onChange={(event) => applyFilters({ sort_dir: event.target.value as LocationFilters['sort_dir'] })}>
+            <option value="asc">{t('branches.sortAsc')}</option>
+            <option value="desc">{t('branches.sortDesc')}</option>
+          </Select>
         </div>
 
         {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
@@ -278,8 +317,8 @@ export function BranchesView() {
         <Pagination
           pagination={pagination}
           loading={loading}
-          onPageChange={(page) => void fetchLocations(searchTerm, page, pagination.per_page)}
-          onPerPageChange={(perPage) => void fetchLocations(searchTerm, 1, perPage)}
+          onPageChange={(page) => void fetchLocations(searchTerm, filters, page, pagination.per_page)}
+          onPerPageChange={(perPage) => void fetchLocations(searchTerm, filters, 1, perPage)}
         />
       </SectionCard>
 
