@@ -1,5 +1,5 @@
 import { apiClient } from '../api/apiClient';
-import { apiHeaders, endpoint, extractErrorMessage, parseJsonResponse } from '../api/apiCore';
+import { apiFetch, endpoint, extractErrorMessage, parseJsonResponse } from '../api/apiCore';
 
 export type FinancialReportGroupBy = 'day' | 'month';
 export type ReportExportFormat = 'csv' | 'xlsx';
@@ -81,9 +81,7 @@ function queryFrom(filters: object) {
 }
 
 async function downloadExport(exportId: string) {
-  const response = await fetch(endpoint(`/reports/exports/${exportId}/download`), {
-    headers: apiHeaders(),
-  });
+  const response = await apiFetch(endpoint(`/reports/exports/${exportId}/download`));
   if (!response.ok) {
     const payload = await parseJsonResponse(response);
     throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
@@ -92,9 +90,7 @@ async function downloadExport(exportId: string) {
 }
 
 async function downloadFinancialDocument(document: FinancialDocument, format: 'pdf' | 'xml' = 'pdf') {
-  const response = await fetch(endpoint(`/reports/financial-documents/${document.type}/${document.id}/download/${format}`), {
-    headers: apiHeaders(),
-  });
+  const response = await apiFetch(endpoint(`/reports/financial-documents/${document.type}/${document.id}/download/${format}`));
   if (!response.ok) {
     const payload = await parseJsonResponse(response);
     throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
@@ -104,9 +100,7 @@ async function downloadFinancialDocument(document: FinancialDocument, format: 'p
 
 async function downloadFinancialDocuments(filters: FinancialReportFilters) {
   const query = queryFrom(filters);
-  const response = await fetch(endpoint(`/reports/financial-documents/download${query ? `?${query}` : ''}`), {
-    headers: apiHeaders(),
-  });
+  const response = await apiFetch(endpoint(`/reports/financial-documents/download${query ? `?${query}` : ''}`));
   if (!response.ok) {
     const payload = await parseJsonResponse(response);
     throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));

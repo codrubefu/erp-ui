@@ -1,5 +1,5 @@
 import { apiClient } from '../api/apiClient';
-import { apiHeaders, endpoint, extractErrorMessage, parseJsonResponse } from '../api/apiCore';
+import { apiFetch, endpoint, extractErrorMessage, parseJsonResponse } from '../api/apiCore';
 import type { ApiUser } from './ErpApiService';
 import type { NotificationChannel } from './notificationService';
 
@@ -41,7 +41,7 @@ function subjectPath(userId?: number) {
 }
 
 export async function downloadFromUrl(url: string) {
-  const response = await fetch(url, { headers: apiHeaders() });
+  const response = await apiFetch(url);
   if (!response.ok) {
     const payload = await parseJsonResponse(response);
     throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
@@ -54,7 +54,7 @@ export const gdprService = {
   createExport: (userId?: number) => apiClient<GdprExport>(`${subjectPath(userId)}/exports`, { method: 'POST' }),
   exportStatus: (exportId: string) => apiClient<GdprExport>(`/privacy/exports/${exportId}`),
   async downloadExport(exportId: string) {
-    const response = await fetch(endpoint(`/privacy/exports/${exportId}/download`), { headers: apiHeaders() });
+    const response = await apiFetch(endpoint(`/privacy/exports/${exportId}/download`));
     if (!response.ok) {
       const payload = await parseJsonResponse(response);
       throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));

@@ -7,6 +7,9 @@ import './utils/pwaInstall';
 import AppRoutes from './routes/AppRoutes';
 import { AuthProvider } from './context/AuthContext';
 import { loadRuntimeConfig } from './config/runtimeConfig';
+import { startAppUpdates } from './utils/appUpdate';
+
+startAppUpdates();
 
 loadRuntimeConfig().finally(() => {
   createRoot(document.getElementById('root')!).render(

@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiClientError } from '../api/apiClient';
+import { onSessionExpired } from '../api/apiCore';
 import { getAuthenticatedUser } from '../api/authApi';
 import { erpApiService, type AuthenticatedUser } from '../services/ErpApiService';
 import { extractUserRights, hasAllRights as hasAllRightsHelper, hasAnyRight as hasAnyRightHelper, hasRight as hasRightHelper } from '../permissions/permissions';
@@ -72,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     saveStoredUser(null);
     setError('');
   }, []);
+
+  useEffect(() => onSessionExpired(clearAuthenticatedUser), [clearAuthenticatedUser]);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,

@@ -18,6 +18,7 @@ import type {
   SectionId,
   Service,
 } from '../types/erp';
+import { applyPendingUpdate } from '../utils/appUpdate';
 
 const SECTION_IDS: SectionId[] = ['dashboard', 'profile-info', 'profile-security', 'profile-privacy', 'profile-announcements', 'profile-events', 'profile-services', 'branches', 'location-groups', 'admins', 'access', 'custom-fields', 'members', 'services', 'events', 'articles', 'campaigns', 'announcements', 'sms', 'payments', 'reports'];
 const USE_LOCAL_ERP_CACHE = import.meta.env.VITE_USE_LOCAL_ERP_CACHE === 'true';
@@ -160,10 +161,9 @@ export default function ERPAdminPanel() {
       setIsAuthenticated(Boolean(erpApiService.getToken()));
       return;
     }
-    if (erpApiService.getToken()) {
-      erpApiService.clearToken();
-      setIsAuthenticated(false);
-    }
+    erpApiService.clearToken();
+    setIsAuthenticated(false);
+    setCredentials({ username: '', password: '' });
   }, [auth.user]);
 
   useEffect(() => {
@@ -304,6 +304,7 @@ export default function ERPAdminPanel() {
   };
 
   const handleSidebarChange = (id: SectionId) => {
+    if (applyPendingUpdate(`/erp/${id}`)) return;
     setCurrent(id);
     navigate(`/erp/${id}`);
     setPage({ section: 'list', mode: null });
@@ -322,6 +323,7 @@ export default function ERPAdminPanel() {
       const redirectTo = typeof location.state === 'object' && location.state && 'from' in location.state
         ? String((location.state as { from?: string }).from)
         : '/erp/dashboard';
+      if (applyPendingUpdate(redirectTo)) return;
       navigate(redirectTo, { replace: true });
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Autentificarea a esuat.');

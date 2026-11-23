@@ -36,7 +36,7 @@ Meniul principal contine modulele operationale:
 - Administratori
 - Grupuri si drepturi
 - Campuri custom
-- Utilizatori / membri
+- Membri
 - Servicii
 - Anunturi / articole
 - Campanii
@@ -182,9 +182,9 @@ Tipuri suportate in interfata/API:
 - checkbox / boolean;
 - file, daca backend-ul permite tipul pentru entitatea respectiva.
 
-## 9. Utilizatori / membri
+## 9. Membri
 
-Modulul Utilizatori gestioneaza clientii si membrii organizatiei.
+Modulul Membri gestioneaza clientii si membrii organizatiei.
 
 ### Lista membri
 

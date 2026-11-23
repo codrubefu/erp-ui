@@ -1,4 +1,4 @@
-import { TOKEN_KEY, apiHeaders, clearApiToken, endpoint, extractErrorMessage, parseJsonResponse, unwrapApiPayload, type ApiEnvelope } from '../api/apiCore';
+import { TOKEN_KEY, apiFetch, clearApiToken, endpoint, extractErrorMessage, parseJsonResponse, unwrapApiPayload, type ApiEnvelope } from '../api/apiCore';
 
 export type ApiUser = {
   id: number;
@@ -387,17 +387,11 @@ export class ErpApiService {
   }
 
   private async requestRaw<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const headers = apiHeaders(options);
-
-    const response = await fetch(endpoint(path), {
-      ...options,
-      headers,
-    });
+    const response = await apiFetch(endpoint(path), options);
 
     const payload = await parseJsonResponse(response);
 
     if (!response.ok) {
-      if (response.status === 401) this.clearToken();
       throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
     }
 
@@ -533,9 +527,7 @@ export class ErpApiService {
   }
 
   async downloadPaymentReceipt(paymentId: number) {
-    const response = await fetch(endpoint(`/payments/${paymentId}/receipt`), {
-      headers: apiHeaders(),
-    });
+    const response = await apiFetch(endpoint(`/payments/${paymentId}/receipt`));
 
     if (!response.ok) {
       const payload = await parseJsonResponse(response);
@@ -546,9 +538,7 @@ export class ErpApiService {
   }
 
   async downloadServicePaymentNote(assignmentId: number) {
-    const response = await fetch(endpoint(`/service-assignments/${assignmentId}/payment-note`), {
-      headers: apiHeaders(),
-    });
+    const response = await apiFetch(endpoint(`/service-assignments/${assignmentId}/payment-note`));
 
     if (!response.ok) {
       const payload = await parseJsonResponse(response);
@@ -559,9 +549,7 @@ export class ErpApiService {
   }
 
   async downloadServiceInvoice(assignmentId: number, format: 'pdf' | 'xml' = 'pdf') {
-    const response = await fetch(endpoint(`/service-assignments/${assignmentId}/invoice/${format}`), {
-      headers: apiHeaders(),
-    });
+    const response = await apiFetch(endpoint(`/service-assignments/${assignmentId}/invoice/${format}`));
 
     if (!response.ok) {
       const payload = await parseJsonResponse(response);
@@ -616,7 +604,7 @@ export class ErpApiService {
 
   async downloadUserDocument(userId: number, documentId: number) {
     const { download_url } = await this.getUserDocumentDownloadUrl(userId, documentId);
-    const response = await fetch(download_url, { headers: apiHeaders() });
+    const response = await apiFetch(download_url);
     if (!response.ok) {
       const payload = await parseJsonResponse(response);
       throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));

@@ -49,6 +49,58 @@ export function apiHeaders(options: RequestInit = {}) {
   return headers;
 }
 
+type SessionExpiredListener = () => void;
+
+const sessionExpiredListeners = new Set<SessionExpiredListener>();
+let sessionCheck: Promise<boolean> | null = null;
+
+export function onSessionExpired(listener: SessionExpiredListener) {
+  sessionExpiredListeners.add(listener);
+  return () => {
+    sessionExpiredListeners.delete(listener);
+  };
+}
+
+function authorizationHeader() {
+  return apiHeaders().get('Authorization');
+}
+
+async function isSessionRejected() {
+  try {
+    const response = await fetch(endpoint('/me'), { headers: apiHeaders() });
+    return response.status === 401 || response.status === 403;
+  } catch {
+    return false; // API unreachable: says nothing about the session
+  }
+}
+
+// The API answers 401 without a valid session, but 403 also when a logged-in user
+// lacks a right. A 403 therefore only ends the session if /me is refused as well.
+async function handleAuthFailure(status: number, usedAuthorization: string | null) {
+  if (status === 403 && usedAuthorization) {
+    sessionCheck ??= isSessionRejected().finally(() => {
+      sessionCheck = null;
+    });
+    if (!(await sessionCheck)) return;
+  }
+
+  // A late answer for a previous token must not end a newer session.
+  if (authorizationHeader() !== usedAuthorization) return;
+  clearApiToken();
+  sessionExpiredListeners.forEach((listener) => listener());
+}
+
+/** fetch() for API calls: adds the API headers and reports a lost session. */
+export async function apiFetch(url: string, options: RequestInit = {}) {
+  const headers = apiHeaders(options);
+  const response = await fetch(url, { ...options, headers });
+  // On /login a 401 means wrong credentials.
+  if ((response.status === 401 || response.status === 403) && url !== endpoint('/login')) {
+    void handleAuthFailure(response.status, headers.get('Authorization'));
+  }
+  return response;
+}
+
 export function extractErrorMessage(payload: unknown, fallback: string) {
   if (payload && typeof payload === 'object') {
     const body = payload as ApiEnvelope<unknown>;

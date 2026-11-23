@@ -1,4 +1,5 @@
-import { TOKEN_KEY, erpApiService, getApiBaseUrl } from './ErpApiService';
+import { apiFetch } from '../api/apiCore';
+import { getApiBaseUrl } from './ErpApiService';
 
 export type EventStatus = 'active' | 'inactive' | 'cancelled';
 export type RecurrenceType = 'once' | 'weekly' | 'monthly';
@@ -150,18 +151,10 @@ function buildUrl(path: string, params?: Record<string, string | number | boolea
 
 async function request<T>(path: string, options: RequestInit = {}, params?: Record<string, string | number | boolean | undefined>) {
   try {
-    const headers = new Headers(options.headers);
-    headers.set('Accept', 'application/json');
-    if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-
-    const token = window.localStorage.getItem(TOKEN_KEY);
-    if (token) headers.set('Authorization', `Bearer ${token}`);
-
-    const response = await fetch(buildUrl(path, params), { ...options, headers });
+    const response = await apiFetch(buildUrl(path, params), options);
     const text = await response.text();
     const payload = text ? JSON.parse(text) : null;
     if (!response.ok) {
-      if (response.status === 401) erpApiService.clearToken();
       const normalized = new Error(payload?.message ?? 'Cererea catre API a esuat.') as ApiValidationError;
       normalized.status = response.status;
       normalized.errors = payload?.errors;

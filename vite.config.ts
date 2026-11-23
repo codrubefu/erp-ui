@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
@@ -14,14 +14,33 @@ function readDevProxyTarget() {
   }
 }
 
+const appVersion = Date.now().toString(36)
+
+// Published next to the build so open tabs can tell that a newer one was deployed.
+function versionFile(): Plugin {
+  return {
+    name: 'app-version-file',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version: appVersion }) })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [
+    versionFile(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // registered in src/utils/appUpdate.ts, which also reloads the page on update
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'OPTIMIZER',
@@ -45,10 +64,12 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             // runtime config + JSON data: always try network first so changes apply immediately
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith('.json'),
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith('.json') && url.pathname !== '/version.json',
             handler: 'NetworkFirst',
             options: { cacheName: 'json-data', networkTimeoutSeconds: 5 },
           },
