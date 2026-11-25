@@ -26,7 +26,7 @@ export type ApiUser = {
 };
 
 export const MEMBER_EXPORT_FIELDS = [
-  'user_code', 'last_name', 'first_name', 'phone', 'email', 'address', 'cnp', 'ci',
+  'last_name', 'first_name', 'phone', 'email', 'address', 'cnp', 'ci',
   'status', 'location_groups', 'locations', 'active_services', 'created_at',
 ] as const;
 
@@ -563,6 +563,10 @@ export class ErpApiService {
     }
 
     return response.blob();
+  }
+
+  async deleteMemberExport(exportId: string) {
+    await this.request(`/clients/exports/${exportId}`, { method: 'DELETE' });
   }
 
   async downloadPaymentReceipt(paymentId: number) {

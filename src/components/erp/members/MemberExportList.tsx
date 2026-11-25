@@ -17,6 +17,7 @@ export function MemberExportList({ refreshKey }: { refreshKey: number }) {
   const [exports, setExports] = useState<ApiMemberExport[]>([]);
   const [downloadingId, setDownloadingId] = useState('');
   const [error, setError] = useState('');
+  const [deletions, setDeletions] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +42,7 @@ export function MemberExportList({ refreshKey }: { refreshKey: number }) {
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [refreshKey]);
+  }, [refreshKey, deletions]);
 
   const download = async (item: ApiMemberExport) => {
     setDownloadingId(item.id);
@@ -50,6 +51,17 @@ export function MemberExportList({ refreshKey }: { refreshKey: number }) {
       downloadBlob(await erpApiService.downloadMemberExport(item.id), `${t('members.export.filename')}-${item.created_at.slice(0, 10)}.csv`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('members.export.failed'));
+      setDownloadingId('');
+      return;
+    }
+
+    try {
+      await erpApiService.deleteMemberExport(item.id);
+      setExports((items) => items.filter(({ id }) => id !== item.id));
+      // Restarts polling, so that a response requested before the deletion cannot bring the item back.
+      setDeletions((count) => count + 1);
+    } catch {
+      // The file was saved; the export stays listed and expires on its own.
     } finally {
       setDownloadingId('');
     }

@@ -502,7 +502,7 @@
       "filename": "members",
       "start": "Start export",
       "starting": "Submitting...",
-      "recent": "My exports (available for 24 hours)",
+      "recent": "My exports (available for 24 hours or until downloaded)",
       "progress": "In progress: {{processed}} of {{total}}",
       "status": {
         "pending": "Waiting",
@@ -511,7 +511,6 @@
         "failed": "Failed. Start a new export."
       },
       "fields": {
-        "user_code": "User code",
         "last_name": "Last name",
         "first_name": "First name",
         "phone": "Phone",
