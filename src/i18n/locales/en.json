@@ -490,6 +490,42 @@
     }
   },
   "members": {
+    "export": {
+      "button": "Export CSV",
+      "title": "Export members (CSV)",
+      "summary": "Members exported from the current filter: {{total}}",
+      "deselectAll": "Deselect all",
+      "sensitive": "Sensitive personal data. Must be selected again for every export.",
+      "download": "Download CSV",
+      "downloading": "Downloading...",
+      "failed": "Could not export members.",
+      "filename": "members",
+      "start": "Start export",
+      "starting": "Submitting...",
+      "recent": "My exports (available for 24 hours)",
+      "progress": "In progress: {{processed}} of {{total}}",
+      "status": {
+        "pending": "Waiting",
+        "processing": "In progress",
+        "ready": "Ready: {{total}} members",
+        "failed": "Failed. Start a new export."
+      },
+      "fields": {
+        "user_code": "User code",
+        "last_name": "Last name",
+        "first_name": "First name",
+        "phone": "Phone",
+        "email": "E-mail",
+        "address": "Address",
+        "cnp": "CNP",
+        "ci": "ID card (series and number)",
+        "status": "Status",
+        "location_groups": "Branch",
+        "locations": "Organization",
+        "active_services": "Active services",
+        "created_at": "Registration date"
+      }
+    },
     "title": "Member management",
     "add": "Add member",
     "countLabel": "members",
@@ -773,6 +809,9 @@
     "statusActive": "Active",
     "statusInactive": "Inactive",
     "statusExpired": "Expired",
+    "activeServiceFilter": "Active service",
+    "allMembers": "All members",
+    "withActiveService": "With active service",
     "noActiveService": "No active service",
     "addService": "Add service",
     "selectService": "Select service",

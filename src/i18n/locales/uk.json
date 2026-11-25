@@ -480,6 +480,42 @@
     }
   },
   "members": {
+    "export": {
+      "button": "Експорт CSV",
+      "title": "Експорт учасників (CSV)",
+      "summary": "Учасників для експорту за поточним фільтром: {{total}}",
+      "deselectAll": "Зняти вибір",
+      "sensitive": "Чутливі персональні дані. Вибираються знову для кожного експорту.",
+      "download": "Завантажити CSV",
+      "downloading": "Завантаження...",
+      "failed": "Не вдалося експортувати учасників.",
+      "filename": "members",
+      "start": "Почати експорт",
+      "starting": "Надсилання...",
+      "recent": "Мої експорти (доступні 24 години)",
+      "progress": "Виконується: {{processed}} з {{total}}",
+      "status": {
+        "pending": "В очікуванні",
+        "processing": "Виконується",
+        "ready": "Готово: {{total}} учасників",
+        "failed": "Помилка. Почніть новий експорт."
+      },
+      "fields": {
+        "user_code": "Код користувача",
+        "last_name": "Прізвище",
+        "first_name": "Ім'я",
+        "phone": "Телефон",
+        "email": "E-mail",
+        "address": "Адреса",
+        "cnp": "CNP",
+        "ci": "Посвідчення особи (серія та номер)",
+        "status": "Статус",
+        "location_groups": "Філія",
+        "locations": "Організація",
+        "active_services": "Активні послуги",
+        "created_at": "Дата реєстрації"
+      }
+    },
     "title": "Керування учасниками",
     "add": "Додати учасника",
     "countLabel": "учасники",
@@ -763,6 +799,9 @@
     "statusActive": "Активний",
     "statusInactive": "Неактивний",
     "statusExpired": "Прострочений",
+    "activeServiceFilter": "Активна послуга",
+    "allMembers": "Усі учасники",
+    "withActiveService": "З активною послугою",
     "noActiveService": "Немає активного послуги",
     "addService": "Додати послуга",
     "selectService": "Виберіть послуга",

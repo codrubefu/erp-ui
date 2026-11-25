@@ -490,6 +490,42 @@
     }
   },
   "members": {
+    "export": {
+      "button": "Export CSV",
+      "title": "Export membri (CSV)",
+      "summary": "Membri exportati din filtrul curent: {{total}}",
+      "deselectAll": "Deselecteaza tot",
+      "sensitive": "Date personale sensibile. Se aleg din nou la fiecare export.",
+      "download": "Descarca CSV",
+      "downloading": "Se descarca...",
+      "failed": "Nu am putut exporta membrii.",
+      "filename": "membri",
+      "start": "Porneste exportul",
+      "starting": "Se trimite...",
+      "recent": "Exporturile mele (disponibile 24 de ore)",
+      "progress": "In lucru: {{processed}} din {{total}}",
+      "status": {
+        "pending": "In asteptare",
+        "processing": "In lucru",
+        "ready": "Gata: {{total}} membri",
+        "failed": "Esuat. Porneste un export nou."
+      },
+      "fields": {
+        "user_code": "Cod utilizator",
+        "last_name": "Nume",
+        "first_name": "Prenume",
+        "phone": "Telefon",
+        "email": "E-mail",
+        "address": "Adresa",
+        "cnp": "CNP",
+        "ci": "CI (serie si numar)",
+        "status": "Status",
+        "location_groups": "Filiala",
+        "locations": "Organizatie",
+        "active_services": "Servicii active",
+        "created_at": "Data inregistrarii"
+      }
+    },
     "title": "Management membri",
     "add": "Adaugare membru",
     "countLabel": "membri",
@@ -773,6 +809,9 @@
     "statusActive": "Activ",
     "statusInactive": "Inactiv",
     "statusExpired": "Expirat",
+    "activeServiceFilter": "Serviciu activ",
+    "allMembers": "Toti membrii",
+    "withActiveService": "Cu serviciu activ",
     "noActiveService": "Fara serviciu activ",
     "addService": "Adauga serviciu",
     "selectService": "Selecteaza serviciul",

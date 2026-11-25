@@ -9,6 +9,8 @@ import { CancelPaymentPopup } from '../payments/CancelPaymentPopup';
 import { PaymentPopup, type PaymentPopupValues } from '../payments/PaymentPopup';
 import { serviceLifecycleService } from '../../../services/serviceLifecycleService';
 import { useAuth } from '../../../context/useAuth';
+import { MemberExportList } from './MemberExportList';
+import { MemberExportPopup } from './MemberExportPopup';
 import { PrivacyPanel } from '../profile/PrivacyPanel';
 import { UserDocumentsPanel } from './UserDocumentsPanel';
 
@@ -62,11 +64,15 @@ export type UserManagementViewProps = {
 type UserListFilters = {
   location_group_id: string;
   location_id: string;
+  active: '' | '0' | '1';
+  active_service: '' | '0' | '1';
 };
 
 const emptyFilters: UserListFilters = {
   location_group_id: '',
   location_id: '',
+  active: '',
+  active_service: '',
 };
 
 const emptyForm: UserForm = {
@@ -559,6 +565,10 @@ export function UserManagementView({
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<UserListFilters>(emptyFilters);
+  // What the visible list was loaded with; searchTerm may hold text not searched yet.
+  const [appliedQuery, setAppliedQuery] = useState({ search: '', ...emptyFilters });
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportRefreshKey, setExportRefreshKey] = useState(0);
   const latestUsersRequest = useRef(0);
   const [perPage, setPerPage] = useState(15);
   const [page, setPage] = useState(1);
@@ -660,6 +670,8 @@ export function UserManagementView({
   }, [editing, form.services, paymentForm.service_id, paymentServiceId, selectedPaymentService, servicePayments]);
 
   const userCustomFields = useMemo(() => sortedCustomFields(customFields), [customFields]);
+  const showMemberFilters = resource === 'clients';
+  const canExport = resource === 'clients' && hasAnyRight(['users.view']);
   const canCancelPayments = hasAnyRight(['payments.manage']);
   const canUseGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
   const canExportGdpr = hasAnyRight(['gdpr.export', 'gdpr.process']);
@@ -772,6 +784,7 @@ export function UserManagementView({
       });
       if (requestId !== latestUsersRequest.current) return;
       setUsers(payload.data);
+      setAppliedQuery({ search: search.trim(), ...activeFilters });
       setPagination(paginationFrom(payload, nextPage, limit));
       setPage(paginationFrom(payload, nextPage, limit).current_page);
     } catch (err) {
@@ -793,7 +806,7 @@ export function UserManagementView({
     const keepsLocation = !branchId || locationsByBranch.some((group) => (
       group.id === branchId && group.locations.some((item) => String(item.id) === filters.location_id)
     ));
-    applyFilters({ location_group_id: branchId, location_id: keepsLocation ? filters.location_id : '' });
+    applyFilters({ ...filters, location_group_id: branchId, location_id: keepsLocation ? filters.location_id : '' });
   };
 
   const loadActivity = useCallback(async (userId = editing?.id) => {
@@ -1971,6 +1984,11 @@ export function UserManagementView({
             <button onClick={() => void loadUsers()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <RefreshCw className="mr-2 inline h-4 w-4" />{t('common.refresh')}
             </button>
+            {canExport ? (
+              <button onClick={() => setExportOpen(true)} disabled={loading || !pagination.total} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                <Download className="mr-2 inline h-4 w-4" />{t('members.export.button')}
+              </button>
+            ) : null}
             <button onClick={startCreate} className="inline-flex h-10 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
               <Plus className="mr-2 inline h-4 w-4" />{resolvedAddLabel}
             </button>
@@ -2011,7 +2029,7 @@ export function UserManagementView({
               void fetchUsers(searchTerm, filters, perPage, 1);
             }} className="h-10 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white">{t('common.search')}</button>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:col-span-3">
+          <div className={`grid grid-cols-1 gap-3 md:col-span-3 ${showMemberFilters ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-2'}`}>
             <Select label={t('branches.locationGroup')} value={filters.location_group_id} onChange={(event) => changeBranchFilter(event.target.value)}>
               <option value="">{t('branches.allLocationGroups')}</option>
               <option value="none">{t('branches.noLocationGroup')}</option>
@@ -2026,10 +2044,26 @@ export function UserManagementView({
                 </optgroup>
               ))}
             </Select>
+            {showMemberFilters ? (
+              <Select label={t('common.status')} value={filters.active} onChange={(event) => applyFilters({ ...filters, active: event.target.value as UserListFilters['active'] })}>
+                <option value="">{t('users.allMembers')}</option>
+                <option value="1">{t('users.statusActive')}</option>
+                <option value="0">{t('users.statusInactive')}</option>
+              </Select>
+            ) : null}
+            {showMemberFilters ? (
+              <Select label={t('users.activeServiceFilter')} value={filters.active_service} onChange={(event) => applyFilters({ ...filters, active_service: event.target.value as UserListFilters['active_service'] })}>
+                <option value="">{t('users.allMembers')}</option>
+                <option value="1">{t('users.withActiveService')}</option>
+                <option value="0">{t('users.noActiveService')}</option>
+              </Select>
+            ) : null}
           </div>
         </div>
 
         {error ? <p className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p> : null}
+
+        {canExport ? <MemberExportList refreshKey={exportRefreshKey} /> : null}
 
         <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {t('users.showingCount', { count: pagination.total || users.length, label: resolvedCountLabel })}
@@ -2108,6 +2142,7 @@ export function UserManagementView({
         </div>
       </SectionCard>
 
+      {exportOpen ? <MemberExportPopup query={appliedQuery} total={pagination.total} onClose={() => setExportOpen(false)} onRequested={() => setExportRefreshKey((key) => key + 1)} /> : null}
     </div>
   );
 }

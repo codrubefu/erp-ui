@@ -25,6 +25,22 @@ export type ApiUser = {
   updated_at?: string | null;
 };
 
+export const MEMBER_EXPORT_FIELDS = [
+  'user_code', 'last_name', 'first_name', 'phone', 'email', 'address', 'cnp', 'ci',
+  'status', 'location_groups', 'locations', 'active_services', 'created_at',
+] as const;
+
+export type MemberExportField = typeof MEMBER_EXPORT_FIELDS[number];
+
+export type ApiMemberExport = {
+  id: string;
+  status: 'pending' | 'processing' | 'ready' | 'failed';
+  total: number | null;
+  processed: number;
+  created_at: string;
+  expires_at: string;
+};
+
 export type ApiNotificationConsents = {
   sms?: boolean;
   mail?: boolean;
@@ -524,6 +540,29 @@ export class ErpApiService {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  async requestMemberExport(params: Record<string, string>, fields: MemberExportField[], lang: string) {
+    const filters = Object.fromEntries(Object.entries(params).filter(([, value]) => value !== ''));
+    return this.request<ApiMemberExport>('/clients/exports', {
+      method: 'POST',
+      body: JSON.stringify({ ...filters, fields, lang }),
+    });
+  }
+
+  async listMemberExports() {
+    return this.request<ApiMemberExport[]>('/clients/exports');
+  }
+
+  async downloadMemberExport(exportId: string) {
+    const response = await apiFetch(endpoint(`/clients/exports/${exportId}/download`));
+
+    if (!response.ok) {
+      const payload = await parseJsonResponse(response);
+      throw new Error(extractErrorMessage(payload, `Cererea a esuat (${response.status}).`));
+    }
+
+    return response.blob();
   }
 
   async downloadPaymentReceipt(paymentId: number) {
